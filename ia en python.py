@@ -72,6 +72,8 @@ def chatbot_response(message):
         return "Je suis une IA, donc je vais toujours bien ! Comment puis-je vous aider avec Python ?"
     elif any(word in message for word in ["nom", "appelles", "es-tu"]):
         return "Je suis un chatbot Python qui peut répondre à des questions sur le code."
+    elif "merci" in message:
+        return "De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
     elif any(word in message for word in ["au revoir", "bye", "quit", "exit"]):
         return "Au revoir !"
     else:
