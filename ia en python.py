@@ -100,7 +100,7 @@ def print_colored(text, color, bold=False):
     print(f"{color_code}{text}{colors['end']}")
 
 if __name__ == "__main__":
-    print_colored("Bienvenue sur Chatbot !", "blue", bold=True)
+    print_colored("Bienvenue sur Chatpy !", "blue", bold=True)
     print("Posez-moi une question sur Python (tapez 'au revoir' pour quitter).")
     print("Tapez 'help' pour l'aide ou 'liste' pour voir les questions disponibles.\n")
 
