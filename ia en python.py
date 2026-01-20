@@ -1,5 +1,6 @@
 import re
 import os
+from difflib import get_close_matches
 
 def chatbot_response(message):
     message = message.lower().strip()
@@ -57,6 +58,11 @@ def chatbot_response(message):
         questions = "\n".join(f"- {q}" for q in faq.keys())
         return f"Voici les questions que je peux répondre :\n{questions}"
 
+    # Fuzzy matching for typos
+    matches = get_close_matches(message, faq.keys(), n=1, cutoff=0.6)
+    if matches:
+        return faq[matches[0]]
+
     # Recherche flexible par mots-clés
     for question, answer in faq.items():
         mots_cles = question.split()
@@ -68,9 +74,9 @@ def chatbot_response(message):
     # Réponses conversationnelles
     if any(word in message for word in ["bonjour", "salut", "hello", "hi"]):
         return "Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
-    elif any(word in message for word in ["comment", "ça va", "tu vas"]):
+    elif any(word in message for word in ["comment", "ça va", "tu vas bien"]):
         return "Je suis une IA, donc je vais toujours bien ! Comment puis-je vous aider avec Python ?"
-    elif any(word in message for word in ["nom", "appelles", "es-tu"]):
+    elif any(word in message for word in ["nom", "appelles", "qui es-tu"]):
         return "Je suis un chatbot Python qui peut répondre à des questions sur le code."
     elif "merci" in message:
         return "De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
