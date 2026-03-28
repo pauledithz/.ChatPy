@@ -115,8 +115,6 @@ Le chatbot peut répondre à des questions dans 7 catégories :
 
 ### **Score de confiance**
 
-![Score de confiance](Score de confiance.png)
-
 - **90-100%** : Très précis
 - **70-89%** : Assez précis
 - **50-69%** : Moins précis (alternatives suggérées)
