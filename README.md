@@ -114,6 +114,9 @@ Le chatbot peut répondre à des questions dans 7 catégories :
 - ✅ Tolère la casse : "COMMENT FAIRE UNE FONCTION" = "comment faire une fonction"
 
 ### **Score de confiance**
+
+![Score de confiance](Score de confiance.png)
+
 - **90-100%** : Très précis
 - **70-89%** : Assez précis
 - **50-69%** : Moins précis (alternatives suggérées)
