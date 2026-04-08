@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatPy - Assistant Python</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>🐍 ChatPy</h1>
+                <p>Assistant Python</p>
+            </div>
+            
+            <button class="new-chat-btn" id="newChatBtn">
+                + Nouvelle conversation
+            </button>
+            
+            <div class="categories">
+                <h3>📚 Catégories</h3>
+                <div id="categoriesList"></div>
+            </div>
+            
+            <div class="footer">
+                <p>© 2026 ChatPy</p>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-container">
+            <div class="chat-header">
+                <h2>ChatPy - Apprenez Python Facilement</h2>
+                <p>Posez vos questions sur Python</p>
+            </div>
+
+            <div class="messages" id="messagesContainer">
+                <div class="message bot-message">
+                    <div class="message-content">
+                        <p>👋 Bienvenue sur ChatPy ! Je suis ton assistant Python personnel.</p>
+                        <p>Pose-moi une question sur Python et je te donnerai la réponse. Vous pouvez aussi consulter la liste des questions disponibles.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="quick-questions" id="quickQuestions"></div>
+                
+                <form id="chatForm" class="input-form">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Posez votre question sur Python..."
+                        autocomplete="off"
+                    >
+                    <button type="submit" class="send-btn">
+                        ➤ Envoyer
+                    </button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal pour la liste complète -->
+    <div id="questionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Toutes les Questions Disponibles</h2>
+            <div id="allQuestionsContent"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
