@@ -1,0 +1,117 @@
+<link rel="stylesheet" href="style.css">
+<div class="page-shell" style="background:#0a0a0a; min-height:100vh; font-family: var(--font-sans, 'Inter', sans-serif); color: #f0f0f0;">
+
+  <nav class="nav">
+    <div class="nav-logo"><span class="logo-dot"></span> ChatPy</div>
+    <div class="nav-links">
+      <a href="#features">Fonctionnalités</a>
+      <a href="#docs">Docs</a>
+      <a href="#tarifs">Tarifs</a>
+    </div>
+    <button class="nav-cta" data-action="start">Commencer →</button>
+  </nav>
+
+  <div class="hero-wrapper">
+    <div class="grid-bg">
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;">
+        <defs>
+          <pattern id="smallGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-width="0.4" stroke-opacity="0.07"/>
+          </pattern>
+          <pattern id="largeGrid" width="160" height="160" patternUnits="userSpaceOnUse">
+            <rect width="160" height="160" fill="url(#smallGrid)"/>
+            <path d="M 160 0 L 0 0 0 160" fill="none" stroke="#ffffff" stroke-width="0.8" stroke-opacity="0.12"/>
+          </pattern>
+          <radialGradient id="fadeCenter" cx="50%" cy="40%" r="55%">
+            <stop offset="0%" stop-color="#0a0a0a" stop-opacity="0.0"/>
+            <stop offset="55%" stop-color="#0a0a0a" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#0a0a0a" stop-opacity="1"/>
+          </radialGradient>
+          <radialGradient id="glowTop" cx="50%" cy="0%" r="60%">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.04"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#largeGrid)"/>
+        <rect width="100%" height="100%" fill="url(#fadeCenter)"/>
+        <rect width="100%" height="100%" fill="url(#glowTop)"/>
+      </svg>
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;filter:blur(0.6px);">
+        <defs>
+          <pattern id="diagGrid" width="80" height="80" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
+            <path d="M 80 0 L 0 0 0 80" fill="none" stroke="#ffffff" stroke-width="0.3" stroke-opacity="0.04"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#diagGrid)"/>
+      </svg>
+      <div style="position:absolute;inset:0;backdrop-filter:blur(1.5px);-webkit-backdrop-filter:blur(1.5px);mask-image:radial-gradient(ellipse 70% 60% at 50% 50%, transparent 30%, black 100%);-webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 50%, transparent 30%, black 100%);"></div>
+    </div>
+
+    <section class="hero">
+      <div class="hero-badge"><span class="badge-pulse"></span> Disponible maintenant</div>
+      <h1>L'IA qui <span>comprend</span><br>vraiment vos besoins</h1>
+      <p>ChatPy est un assistant intelligent conçu pour vous aider à penser, écrire, coder et créer — plus vite et mieux qu'avant.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" data-action="start">Essayer gratuitement</button>
+        <button class="btn-secondary" data-action="demo">Voir la démo</button>
+      </div>
+
+      <div class="chat-preview">
+        <div class="chat-header">
+          <div class="chat-avatar">CP</div>
+          <div>
+            <div class="chat-name">ChatPy</div>
+            <div class="chat-status"><span class="chat-status-dot"></span> En ligne</div>
+          </div>
+        </div>
+        <div class="chat-body" id="chatBody"></div>
+        <div class="chat-input-bar">
+          <div class="chat-input-animated" id="inputDisplay"><span id="inputText"></span><span class="input-cursor"></span></div>
+          <button class="chat-send" id="sendBtn">
+            <svg viewBox="0 0 16 16"><path d="M2 2l12 6-12 6V9.5l8-1.5-8-1.5V2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-num">98%</div><div class="stat-label">Satisfaction</div></div>
+    <div class="stat"><div class="stat-num">2M+</div><div class="stat-label">Conversations</div></div>
+    <div class="stat"><div class="stat-num">0.3s</div><div class="stat-label">Temps de réponse</div></div>
+  </div>
+
+  <section class="features" id="features">
+    <div class="section-label">Fonctionnalités</div>
+    <div class="section-title">Tout ce dont vous avez besoin</div>
+    <div class="features-grid features-grid--four">
+      <div class="feat-card"><div class="feat-icon">✦</div><h3>Raisonnement avancé</h3><p>ChatPy analyse et structure vos problèmes complexes avec clarté.</p></div>
+      <div class="feat-card"><div class="feat-icon">{ }</div><h3>Génération de code</h3><p>Python, JS, SQL et plus — du code propre, commenté et expliqué.</p></div>
+      <div class="feat-card"><div class="feat-icon">✍</div><h3>Rédaction intelligente</h3><p>Emails, rapports, articles — adapté à votre style et ton.</p></div>
+      <div class="feat-card"><div class="feat-icon">◈</div><h3>Mémoire contextuelle</h3><p>ChatPy se souvient du fil de votre conversation pour des réponses cohérentes.</p></div>
+    </div>
+  </section>
+
+  <section class="features docs" id="docs">
+    <div class="section-label">Documentation</div>
+    <div class="section-title">Guide rapide pour commencer</div>
+    <div class="features-grid features-grid--three">
+      <div class="feat-card"><div class="feat-icon">1</div><h3>Créer un compte</h3><p>Inscrivez-vous en moins d'une minute et configurez votre profil.</p></div>
+      <div class="feat-card"><div class="feat-icon">2</div><h3>Lancer une conversation</h3><p>Posez une question, générez du code ou demandez un plan détaillé.</p></div>
+      <div class="feat-card"><div class="feat-icon">3</div><h3>Exporter vos résultats</h3><p>Sauvegardez vos réponses, snippets et idées pour votre workflow.</p></div>
+    </div>
+  </section>
+
+  <section class="cta-section" id="tarifs">
+    <h2>Prêt à essayer ChatPy ?</h2>
+    <p>Rejoignez des milliers d'utilisateurs qui pensent déjà plus vite.</p>
+    <button class="btn-primary" data-action="start">Créer un compte gratuit →</button>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-logo">ChatPy</div>
+    <p>© 2025 ChatPy — Tous droits réservés</p>
+  </footer>
+
+</div>
+<script src="script.js"></script>
