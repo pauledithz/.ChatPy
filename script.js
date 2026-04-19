@@ -22,6 +22,7 @@ const conversations = [
 const inputText = document.getElementById('inputText');
 const sendBtn = document.getElementById('sendBtn');
 const chatPreview = document.querySelector('.chat-preview');
+const signupModal = document.getElementById('signupModal');
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -142,10 +143,35 @@ document.querySelectorAll('.nav-links a').forEach((link) => {
   });
 });
 
+function openSignupModal() {
+  if (!signupModal) return;
+  signupModal.classList.remove('open');
+  // Force reflow so staggered animation restarts every time.
+  void signupModal.offsetWidth;
+  signupModal.classList.add('open');
+  signupModal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSignupModal() {
+  if (!signupModal) return;
+  signupModal.classList.remove('open');
+  signupModal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
 document.querySelectorAll('[data-action="start"]').forEach((button) => {
-  button.addEventListener('click', () => {
-    scrollToTarget('#tarifs');
-  });
+  button.addEventListener('click', openSignupModal);
+});
+
+document.querySelectorAll('[data-action="close-signup"]').forEach((button) => {
+  button.addEventListener('click', closeSignupModal);
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    closeSignupModal();
+  }
 });
 
 document.querySelectorAll('[data-action="demo"]').forEach((button) => {
