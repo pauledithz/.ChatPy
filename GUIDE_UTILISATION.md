@@ -6,7 +6,7 @@
 
 ```bash
 cd ~/.mobisystems
-python3 "ia en python.py"
+python3 "ia_en_python.py"
 ```
 
 **Ou d'une autre façon :**
@@ -175,7 +175,7 @@ print(f'Hello {nom}')
 
 ## 7️⃣ AJOUTER VOS PROPRES QUESTIONS
 
-**Ouvrez le fichier** `ia en python.py` et trouvez :
+**Ouvrez le fichier** `ia_en_python.py` et trouvez :
 
 ```python
 faq_categories = {
