@@ -6,7 +6,7 @@ Petit projet autour de **ChatPy** : un chatbot Python en ligne de commande (FAQ 
 
 | Fichier | Rôle |
 |--------|------|
-| `ia en python.py` | Chatbot CLI : questions Python, score de confiance, suggestions |
+| `ia_en_python.py` | Chatbot CLI : questions Python, score de confiance, suggestions |
 | `chatpy_landing_animated.html` | Page vitrine (HTML) |
 | `style.css`, `script.js` | Styles et démo animée du chat sur la landing |
 | `ChatPY_logo.PNG` | Favicon / logo |
@@ -36,10 +36,10 @@ Puis : `http://localhost:8080/chatpy_landing_animated.html`
 
 ```bash
 cd /chemin/vers/ChatPy-1
-python3 "ia en python.py"
+python3 "ia_en_python.py"
 ```
 
-Ou : `python "ia en python.py"` selon votre installation.
+Ou : `python "ia_en_python.py"` selon votre installation.
 
 ### Commandes utiles
 
@@ -98,7 +98,7 @@ Ou : `python "ia en python.py"` selon votre installation.
 
 ### Ajouter des questions / réponses
 
-Dans `ia en python.py`, fonction **`chatbot_response()`**, modifiez le dictionnaire **`faq_categories`** (questions normalisées côté logique via `normaliser_texte` à l’usage, mais les clés de la FAQ sont les formulations de référence) :
+Dans `ia_en_python.py`, fonction **`chatbot_response()`**, modifiez le dictionnaire **`faq_categories`** (questions normalisées côté logique via `normaliser_texte` à l’usage, mais les clés de la FAQ sont les formulations de référence) :
 
 ```python
 def chatbot_response(message):
@@ -123,13 +123,13 @@ Dans la classe **`ChatBot`**, attribut **`self.relations`** : associez une quest
 |----------|-------------|
 | Seuil minimum de similarité | Dans `chatbot_response()`, condition `if sim > 0.5:` (vers la ligne 121) |
 | Nombre de suggestions affichées | Dans `obtenir_suggestions()`, tranche `[:2]` (vers la ligne 202) |
-| Couleurs / emojis dans le terminal | Appels à `print_colored()` et chaînes affichées dans `ia en python.py` |
+| Couleurs / emojis dans le terminal | Appels à `print_colored()` et chaînes affichées dans `ia_en_python.py` |
 
 ---
 
 ## Dépannage
 
-- **Le script ne démarre pas** : `python3 --version` ; fichier en UTF-8 ; chemin avec espaces : gardez les guillemets autour de `"ia en python.py"`.  
+- **Le script ne démarre pas** : `python3 --version` ; fichier en UTF-8 ; chemin avec espaces : gardez les guillemets autour de `"ia_en_python.py"`.  
 - **Accents bizarres** : terminal en UTF-8 (souvent OK sur macOS / Linux).  
 - **Pas de couleurs ANSI** : le programme fonctionne quand même, sans couleurs.  
 
@@ -138,7 +138,7 @@ Dans la classe **`ChatBot`**, attribut **`self.relations`** : associez une quest
 ## Architecture du script Python
 
 ```
-ia en python.py
+ia_en_python.py
 ├── normaliser_texte()     # entrée utilisateur
 ├── calcul_similarite()    # SequenceMatcher
 ├── chatbot_response()     # FAQ + matching + commandes spéciales
