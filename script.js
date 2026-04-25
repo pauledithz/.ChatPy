@@ -84,35 +84,40 @@ function addRow(type, content, isTyping) {
     cursor.remove();
   }
   
-  async function runConversation() {
+  let conversationRunning = false;
+
+async function runConversation() {
+  if (conversationRunning) return;
+  conversationRunning = true;
+  try {
     const conv = conversations[currentConv % conversations.length];
     currentConv++;
-  
+
     await typeInInput(conv.user);
     await sleep(300);
-  
+
     sendBtn.classList.add('active');
     await sleep(200);
     sendBtn.classList.remove('active');
     inputText.textContent = '';
-  
+
     const { bubble: userBubble } = addRow('user', conv.user, false);
     userBubble.className = 'msg msg-user';
     userBubble.textContent = conv.user;
-  
+
     await sleep(600);
-  
+
     const { row: typingRow, bubble: typingBubble } = addRow('ai', '', true);
     await sleep(1400 + Math.random() * 600);
-  
+
     typingRow.remove();
-  
+
     const { bubble: aiBubble } = addRow('ai', '', false);
     aiBubble.className = 'msg msg-ai';
     await typeInBubble(aiBubble, conv.ai);
-  
+
     await sleep(3200);
-  
+
     const allRows = chatBody.querySelectorAll('.msg-row');
     for (const r of allRows) {
       r.style.transition = 'opacity 0.5s ease';
@@ -120,12 +125,17 @@ function addRow(type, content, isTyping) {
     }
     await sleep(600);
     chatBody.innerHTML = '';
-  
+
     await sleep(800);
-    runConversation();
+  } catch (e) {
+    console.error('runConversation error', e);
+  } finally {
+    conversationRunning = false;
+    // Schedule next conversation loop with a small delay to avoid stack recursion
+    setTimeout(runConversation, 800);
   }
-  
-  setTimeout(runConversation, 800);
+}
+
 
 function scrollToTarget(selector) {
   const element = document.querySelector(selector);
