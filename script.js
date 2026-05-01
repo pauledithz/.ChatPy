@@ -23,6 +23,10 @@ const inputText = document.getElementById('inputText');
 const sendBtn = document.getElementById('sendBtn');
 const chatPreview = document.querySelector('.chat-preview');
 const signupModal = document.getElementById('signupModal');
+const signupPanel = document.getElementById('signupPanel');
+const mainContent = document.getElementById('mainContent');
+let lastFocusedElement = null;
+let _modalKeydownHandler = null;
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -155,19 +159,69 @@ document.querySelectorAll('.nav-links a').forEach((link) => {
 
 function openSignupModal() {
   if (!signupModal) return;
+  // save last focused element
+  lastFocusedElement = document.activeElement;
+
+  // show modal and mark main content hidden for assistive tech
   signupModal.classList.remove('open');
   // Force reflow so staggered animation restarts every time.
   void signupModal.offsetWidth;
   signupModal.classList.add('open');
   signupModal.setAttribute('aria-hidden', 'false');
+  if (mainContent) mainContent.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = 'hidden';
+
+  // focus the first focusable control in the modal (fallback to panel)
+  const focusable = signupModal.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])');
+  const focusableArr = Array.prototype.slice.call(focusable).filter(el => el.offsetParent !== null);
+  if (focusableArr.length) {
+    focusableArr[0].focus();
+  } else if (signupPanel) {
+    signupPanel.focus();
+  }
+
+  // trap focus inside modal
+  _modalKeydownHandler = function(e) {
+    if (e.key === 'Escape') {
+      closeSignupModal();
+      return;
+    }
+    if (e.key === 'Tab') {
+      if (focusableArr.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = focusableArr[0];
+      const last = focusableArr[focusableArr.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+  };
+  document.addEventListener('keydown', _modalKeydownHandler);
 }
 
 function closeSignupModal() {
   if (!signupModal) return;
   signupModal.classList.remove('open');
   signupModal.setAttribute('aria-hidden', 'true');
+  if (mainContent) mainContent.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = '';
+  if (_modalKeydownHandler) {
+    document.removeEventListener('keydown', _modalKeydownHandler);
+    _modalKeydownHandler = null;
+  }
+  if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+    lastFocusedElement.focus();
+  }
 }
 
 document.querySelectorAll('[data-action="start"]').forEach((button) => {

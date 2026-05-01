@@ -1,4 +1,6 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
+:focus-visible { outline: 3px solid rgba(255,255,255,0.12); outline-offset: 2px; }
+button:focus, a:focus, input:focus, textarea:focus, [role="dialog"]:focus { outline: 3px solid rgba(255,255,255,0.12); outline-offset: 2px; }
 html {
   scroll-behavior: smooth;
   height: 100%;
