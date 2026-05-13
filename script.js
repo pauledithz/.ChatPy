@@ -252,33 +252,3 @@ document.querySelectorAll('[data-action="demo"]').forEach((button) => {
     );
   });
 });
-// Social provider buttons (Google OAuth popup flow)
-document.querySelectorAll('.social-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const provider = btn.getAttribute('data-provider');
-    if (provider === 'google') {
-      const popup = window.open('/auth/google', 'google_oauth', 'width=500,height=650');
-      const onMessage = (e) => {
-        try {
-          if (e.origin !== window.location.origin) return;
-        } catch (err) {
-          // If origin can't be read, ignore
-        }
-        if (e.data && e.data.type === 'oauth') {
-          if (e.data.status === 'success') {
-            closeSignupModal();
-            console.log('Google auth success', e.data.user);
-            alert('Connecté: ' + (e.data.user.email || e.data.user.name || 'Utilisateur'));
-          } else {
-            console.error('Google auth error', e.data.error);
-            alert('Échec de la connexion: ' + (e.data.error || 'Erreur'));
-          }
-          window.removeEventListener('message', onMessage);
-        }
-      };
-      window.addEventListener('message', onMessage);
-    } else {
-      alert('Provider non implémenté: ' + provider);
-    }
-  });
-});
