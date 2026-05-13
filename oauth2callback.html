@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>OAuth callback</title>
+</head>
+<body>
+<script>
+(async function(){
+  try {
+    const params = new URLSearchParams(location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    const error = params.get('error');
+    const targetOrigin = window.opener?.location?.origin || window.location.origin;
+
+    if (error) {
+      window.opener.postMessage({type:'oauth', status:'error', error}, targetOrigin);
+      window.close();
+      return;
+    }
+
+    // Send code to backend to exchange for tokens
+    const resp = await fetch('/auth/google/exchange', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({code, state})
+    });
+
+    const data = await resp.json();
+    if (data.ok) {
+      window.opener.postMessage({type:'oauth', status:'success', user: data.user}, targetOrigin);
+    } else {
+      window.opener.postMessage({type:'oauth', status:'error', error: data.error || data.detail || 'exchange_failed'}, targetOrigin);
+    }
+  } catch (err) {
+    window.opener.postMessage({type:'oauth', status:'error', error: err.toString()}, window.location.origin);
+  }
+  window.close();
+})();
+</script>
+</body>
+</html>
