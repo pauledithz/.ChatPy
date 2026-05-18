@@ -252,3 +252,5 @@ document.querySelectorAll('[data-action="demo"]').forEach((button) => {
     );
   });
 });
+
+setTimeout(runConversation, 800);
