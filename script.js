@@ -36,7 +36,23 @@ function addRow(type, content, isTyping) {
   
     const avatar = document.createElement('div');
     avatar.className = 'msg-mini-avatar ' + (type === 'user' ? 'avatar-user' : 'avatar-ai');
-    avatar.textContent = type === 'user' ? 'U' : 'CP';
+    if (type === 'user') {
+      const photo = document.createElement('img');
+      photo.src = 'Persone professionelle.jpg';
+      photo.alt = 'Utilisateur';
+      photo.width = 36;
+      photo.height = 36;
+      photo.decoding = 'async';
+      avatar.appendChild(photo);
+    } else {
+      const logo = document.createElement('img');
+      logo.src = 'ChatPY_logo.PNG';
+      logo.alt = 'ChatPy';
+      logo.width = 36;
+      logo.height = 36;
+      logo.decoding = 'async';
+      avatar.appendChild(logo);
+    }
   
     const bubble = document.createElement('div');
   
