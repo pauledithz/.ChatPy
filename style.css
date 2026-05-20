@@ -87,38 +87,6 @@ body {
 .btn-primary:hover { background: #ddd; }
 .btn-secondary { background: transparent; color: #aaa; border: 0.5px solid #333; padding: 12px 28px; border-radius: 8px; font-size: 15px; cursor: pointer; }
 .btn-secondary:hover { border-color: #666; color: #fff; }
-.social-btn {
-  border: 0.5px solid #2a2a2a;
-  background: #161616;
-  color: #f0f0f0;
-  border-radius: 8px;
-  min-height: 2.5rem;
-  font-size: 14px;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.65rem 0.8rem;
-  text-align: left;
-}
-.social-btn:hover {
-  border-color: #4a4a4a;
-  background: #1d1d1d;
-}
-.social-icon {
-  width: 1.2rem;
-  height: 1.2rem;
-  flex: 0 0 1.2rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.social-icon svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
 .signup-modal {
   position: fixed;
   inset: 0;
@@ -140,68 +108,52 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 2;
-  width: min(30rem, calc(100% - 2rem));
-  background: #111;
-  border: 0.5px solid #2a2a2a;
-  border-radius: 14px;
-  padding: 1.4rem;
+  width: min(31rem, calc(100% - 2rem));
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
 }
 .signup-close {
   position: absolute;
-  right: 0.7rem;
   top: 0.55rem;
+  right: 0.55rem;
+  z-index: 5;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
-  background: transparent;
-  color: #777;
-  font-size: 1.6rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ccc;
+  font-size: 1.45rem;
   line-height: 1;
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 .signup-close:hover {
-  color: #ddd;
-}
-.signup-kicker {
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: #666;
-  margin-bottom: 0.5rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
 }
 .signup-panel h2 {
   font-size: 1.4rem;
   color: #fff;
   margin-bottom: 0.35rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 .signup-subtitle {
-  color: #999;
+  color: #888;
   font-size: 14px;
-  margin-bottom: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
 }
-.signup-providers {
-  display: grid;
-  gap: 0.6rem;
-}
-.signup-providers .social-btn {
-  opacity: 0;
-  transform: translateY(10px) scale(0.98);
-}
-.signup-modal.open .signup-providers .social-btn {
-  animation: providerIn 0.45s ease forwards;
-}
-.signup-modal.open .signup-providers .social-btn:nth-child(1) { animation-delay: 0.05s; }
-.signup-modal.open .signup-providers .social-btn:nth-child(2) { animation-delay: 0.13s; }
-.signup-modal.open .signup-providers .social-btn:nth-child(3) { animation-delay: 0.21s; }
-.signup-modal.open .signup-providers .social-btn:nth-child(4) { animation-delay: 0.29s; }
-
-@keyframes providerIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.form-header {
+  text-align: left;
+  margin-bottom: 0.25rem;
+  padding-right: 2.5rem;
 }
 
 .chat-preview {
@@ -320,4 +272,154 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
   }
+}
+
+/* Formulaire compte (base Uiverse.io by mahiatlinux, thème ChatPy) */
+.form {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: #111;
+  padding: 1.5rem 1.5rem 1.75rem;
+  width: min(450px, 100%);
+  max-width: 100%;
+  border-radius: 14px;
+  border: 0.5px solid #2a2a2a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  box-sizing: border-box;
+}
+
+.form ::placeholder {
+  font-family: inherit;
+  color: #666;
+}
+
+.form button {
+  align-self: flex-end;
+}
+
+.flex-column > label {
+  color: #e0e0e0;
+  font-weight: 600;
+}
+
+.inputForm {
+  border: 0.5px solid #2a2a2a;
+  border-radius: 10px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  background-color: #161616;
+}
+
+.inputForm svg {
+  flex-shrink: 0;
+  color: #777;
+  fill: currentColor;
+}
+
+.inputForm svg path {
+  fill: currentColor;
+}
+
+.input {
+  margin-left: 10px;
+  border-radius: 10px;
+  border: none;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  color: #f0f0f0;
+}
+
+.input:focus {
+  outline: none;
+}
+
+.inputForm:focus-within {
+  border-color: #555;
+  background-color: #1a1a1a;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.flex-row > div > label {
+  font-size: 14px;
+  color: #ccc;
+  font-weight: 400;
+}
+
+.form .span {
+  font-size: 14px;
+  margin-left: 5px;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.form .span:hover {
+  border-bottom-color: rgba(255, 255, 255, 0.35);
+}
+
+.button-submit {
+  margin: 20px 0 10px 0;
+  background-color: #fff;
+  border: none;
+  color: #0a0a0a;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 10px;
+  height: 50px;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.button-submit:hover {
+  background-color: #ddd;
+}
+
+.p {
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+.btn {
+  margin-top: 10px;
+  width: 100%;
+  height: 50px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 500;
+  gap: 10px;
+  border: 0.5px solid #2a2a2a;
+  background-color: #161616;
+  color: #f0f0f0;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.btn:hover {
+  border-color: #555;
+  background-color: #1d1d1d;
+}
+
+.form .btn.apple svg path {
+  fill: currentColor;
 }
