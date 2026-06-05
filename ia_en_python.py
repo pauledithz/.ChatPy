@@ -230,7 +230,7 @@ class ChatBot:
 bot = ChatBot()
 
 if __name__ == "__main__":
-    print_colored("🤖 Bienvenue sur ChatPy!", "blue", bold=True)
+    print_colored("☕️ Bienvenue sur ChatPy!", "blue", bold=True)
     print("Posez-moi une question sur Python (tapez 'au revoir' pour quitter).")
     print("Tapez 'help' pour l'aide ou 'liste' pour voir les questions disponibles.")
     print("Tapez 'historique' pour voir toute la conversation.\n")
