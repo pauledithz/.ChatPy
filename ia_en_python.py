@@ -86,7 +86,7 @@ def chatbot_response(message):
 
     # Commandes spéciales
     if message in ["help", "aide", "?"]:
-        return "Tapez 'liste' pour voir toutes les questions disponibles.\nTapez 'au revoir' pour quitter.\nOu posez une question sur Python."
+        return "Tapez 'liste' pour voir toutes les questions du catalogue.\nTapez 'au revoir' pour quitter.\nOu posez une question sur Python."
     elif message == "liste":
         result = "Voici les questions que je peux répondre :\n\n"
         for category, questions in faq_categories.items():
