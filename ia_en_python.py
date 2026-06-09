@@ -138,7 +138,7 @@ def chatbot_response(message):
         return "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
     elif any(word in message for word in ["comment", "ça va", "tu vas bien"]):
         return "🤖 Je suis une IA, donc je vais toujours bien ! Comment puis-je vous aider avec Python ?"
-    elif any(word in message for word in ["nom", "appelles", "qui es-tu">>]):
+    elif any(word in message for word in ["nom", "appelles", "qui es-tu"]):
         return "📖 Je suis un chatbot Python qui peut répondre à des questions sur le code."
     elif "merci" in message:
         return "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
