@@ -137,13 +137,13 @@ def chatbot_response(message):
     if any(word in message for word in ["bonjour", "salut", "hello", "hi"]):
         return "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
     elif any(word in message for word in ["comment", "ça va", "tu vas bien"]):
-        return "🤖 Je suis une IA, donc je vais toujours bien ! Comment puis-je vous aider avec Python ?"
+        return "🤖 Je suis une Intelligence Artificielle, donc je vais toujours bien ! Comment puis-je vous aider avec Python aujourd'hui ?"
     elif any(word in message for word in ["nom", "appelles", "qui es-tu"]):
         return "📖 Je suis un chatbot Python qui peut répondre à des questions sur le code."
     elif "merci" in message:
         return "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
     elif any(word in message for word in ["au revoir", "bye", "quit", "exit"]):
-        return "👋 Au revoir ! Continue à apprendre Python !"
+        return "👋 Au revoir ! Continue à apprendre Python le plus possible !"
     else:
         return "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
 
@@ -249,12 +249,12 @@ if __name__ == "__main__":
             response = bot.traiter_message(user_input)
             
             # Affichage claire de la réponse
-            print_colored("\n✨ Bot:", "green")
+            print_colored("\n✨ Bot:", "blue")
             print(response)
             print()  # Ligne vide pour séparer
             
             if any(word in user_input.lower() for word in ["au revoir", "bye", "quit", "exit"]):
-                print_colored("À bientôt ! Continue à apprendre Python 🚀", "blue", bold=True)
+                print_colored("À bientôt ! Continue à apprendre Python tout les jours 🚀", "blue", bold=True)
                 break
         except KeyboardInterrupt:
             print("\n\nAu revoir !")
