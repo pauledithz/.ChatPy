@@ -75,7 +75,7 @@ def chatbot_response(message):
             "de quoi tu parles": "Je parle principalement du langage Python et je peux répondre à des questions sur la programmation Python.",
             "qu'est-ce que tu nous apprends": "Je peux t'apprendre les bases de Python, donner des exemples de code et expliquer des concepts de programmation.",
             "à quoi tu sers": "Je sers à répondre à tes questions sur Python et à t'aider à apprendre à programmer.",
-            "qui t'a créé": "J'ai été créé par un humain pour t'aider à apprendre Python.",
+            "qui t'a créé": "J'ai été créé par Zoungrana paul-emmanuel pour t'aider à apprendre Python.",
         }
     }
     
