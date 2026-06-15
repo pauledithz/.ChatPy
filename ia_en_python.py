@@ -76,6 +76,13 @@ def chatbot_response(message):
             "qu'est-ce que tu nous apprends": "Je peux t'apprendre les bases de Python, donner des exemples de code et expliquer des concepts de programmation.",
             "à quoi tu sers": "Je sers à répondre à tes questions sur Python et à t'aider à apprendre à programmer.",
             "qui t'a créé": "J'ai été créé par Zoungrana paul-emmanuel pour t'aider à apprendre Python.",
+            "comment devenir un expert en Python": "Pour devenir un expert en Python, il faut apprendre les bases, comprendre les concepts de programmation, et pratiquer régulièrement. Il faut aussi suivre des cours, des tutoriels, et des livres. Et enfin, il faut se mettre à jour avec les nouvelles versions de Python et les nouvelles fonctionnalités.",
+            "ques-ce-que je peux faire avec Python": "Python est un langage de programmation polyvalent qui peut être utilisé pour de nombreux projets. Voici quelques exemples : \n- Développement web (Django, Flask)\n- Data science (pandas, numpy, matplotlib)\n- Machine learning (scikit-learn, TensorFlow, PyTorch)\n- IA (OpenAI, GPT-3, GPT-4)\n- Automatisation (Selenium, Scrapy)\n- Systèmes d'exploitation (Linux, Windows, MacOS)\n- Base de données (SQLite, MySQL, PostgreSQL)\n- Interface graphique (Tkinter, PyQt, PySide)\n- Réseau (socket, threading, multiprocessing)\n- Sécurité (cryptographie, cybersécurité)\n- Simulation (Pygame, Pysimple2D)",
+        },
+        "Job et apprentissage python": {
+            "comment devenir un développeur Python": "Pour devenir un développeur Python, il faut apprendre les bases, comprendre les concepts de programmation, et pratiquer régulièrement. Il faut aussi suivre des cours, des tutoriels, et des livres. Et enfin, il faut se mettre à jour avec les nouvelles versions de Python et les nouvelles fonctionnalités.",
+            "comment trouver un job en Python": "Pour trouver un job en Python, il faut avoir une bonne expérience en programmation, avoir des compétences en Python, et avoir des compétences en mathématiques. Il faut aussi avoir des compétences en ingénierie logicielle, et avoir des compétences da,s d'autre language.",
+            "comment devenir ai engineer": "Pour devenir AI engineer, tu dois maîtriser les fondamentaux en programmation (Python surtout), les mathématiques (algèbre linéaire, statistiques, calcul) et les frameworks de machine learning comme TensorFlow ou PyTorch.",
         }
     }
     
