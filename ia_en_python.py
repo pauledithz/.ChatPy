@@ -86,7 +86,7 @@ def chatbot_response(message):
         }
     }
     
-    # Créer un dictionnaire plat pour la compatibilité
+    # Créer un dictionnaire plat pour la compatibilité 
     faq = {}
     for cat, questions in faq_categories.items():
         faq.update(questions)
