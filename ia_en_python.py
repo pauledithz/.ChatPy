@@ -31,6 +31,7 @@ def chatbot_response(message):
         },
         "Fonctions": {
             "qu'est-ce qu'une fonction": "Une fonction en Python est un bloc de code réutilisable qui s'exécute lorsqu'on l'appelle avec son nom.\nExemple :\ndef ma_fonction():\n    print('Hello')",
+            "À quoi sert une fonction": "Une fonction sert à regrouper un bloc de code qui peut être réutilisé plusieurs fois dans le programme.\nExemple :\ndef ma_fonction():\n    print('Hello')\n\ndef addition(a, b):\n    return a + b",
             "comment faire une fonction": "Utilisez le mot-clé def.\nExemple :\ndef ma_fonction():\n    print('Hello')\n\ndef addition(a, b):\n    return a + b",
             "comment documenter une fonction": "Utilisez une docstring.\nExemple :\ndef f():\n    '''Ceci est une docstring'''\n    pass",
         },
