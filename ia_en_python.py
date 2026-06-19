@@ -5,7 +5,7 @@ from difflib import get_close_matches, SequenceMatcher
 
 def normaliser_texte(texte):
     """Supprime accents, ponctuation et normalise le texte"""
-    # Supprimer accents
+    # Supprimer accents 
     texte = unicodedata.normalize('NFKD', texte)
     texte = texte.encode('ASCII', 'ignore').decode('ASCII')
     # Supprimer ponctuation et espaces multiples
@@ -36,7 +36,9 @@ def chatbot_response(message):
             "comment documenter une fonction": "Utilisez une docstring.\nExemple :\ndef f():\n    '''Ceci est une docstring'''\n    pass",
         },
         "Conditions et Boucles": {
+            "À quoi sert une condition": "Une condition sert à vérifier si une certaine condition est vraie ou fausse.\nExemple :\nif x > 0:\n    print('positif')\nelif x < 0:\n    print('négatif')\nelse:\n    print('zéro')",
             "comment faire une condition": "Utilisez if, elif, else.\nExemple :\nif x > 0:\n    print('positif')\nelif x < 0:\n    print('négatif')\nelse:\n    print('zéro')",
+            "À quoi sert une boucle": "Une boucle sert à répéter un bloc de code un certain nombre de fois ou jusqu'à ce qu'une certaine condition soit vraie.\nExemple :\nfor i in range(5):\n    print(i)\n\ni = 0\nwhile i < 5:\n    print(i)\n    i += 1",
             "comment faire une boucle": "En Python, vous pouvez utiliser 'for' ou 'while' pour faire des boucles.\nExemple avec for :\nfor i in range(5):\n    print(i)\n\nExemple avec while :\ni = 0\nwhile i < 5:\n    print(i)\n    i += 1",
             "comment faire une boucle infinie": "Utilisez while True:.\nExemple :\nwhile True:\n    print('boucle infinie')\n    # N'oubliez pas de break pour sortir",
             "comment faire une exception": "Utilisez try/except.\nExemple :\ntry:\n    # code risqué\n    x = 1 / 0\nexcept ZeroDivisionError as e:\n    print(f'Erreur: {e}')",
