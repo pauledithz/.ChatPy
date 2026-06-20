@@ -23,6 +23,7 @@ def chatbot_response(message):
     # FAQ organisée par catégories
     faq_categories = {
         "Bases": {
+            "qu'est-ce qu'une variable": "Une variable, c'est un espace de stockage nommé dans lequel on garde une valeur pour pouvoir la réutiliser plus tard dans un programme.",
             "comment déclarer une variable": "En Python, il suffit d'écrire le nom de la variable, un égal, puis la valeur.\nExemple :\nx = 5\nnom = 'Alice'",
             "comment afficher un message": "Utilisez la fonction print().\nExemple :\nprint('Bonjour !')\nprint(f'Hello {nom}')",
             "comment lire une entrée utilisateur": "Utilisez input().\nExemple :\nnom = input('Votre nom ? ')",
@@ -241,7 +242,7 @@ bot = ChatBot()
 
 if __name__ == "__main__":
     print_colored("☕️ Bienvenue sur ChatPy!", "blue", bold=True)
-    print("Posez-moi une question sur Python (tapez 'au revoir' pour quitter).")
+    print("Posez-moi une question sur Python ou sur le travail informatique. (tapez 'au revoir' pour quitter).")
     print("Tapez 'help' pour l'aide ou 'liste' pour voir les questions disponibles.")
     print("Tapez 'historique' pour voir toute la conversation.\n")
 
