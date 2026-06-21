@@ -86,7 +86,7 @@ def chatbot_response(message):
         "Job et apprentissage python": {
             "comment devenir un développeur Python": "Pour devenir un développeur Python, il faut apprendre les bases, comprendre les concepts de programmation, et pratiquer régulièrement. Il faut aussi suivre des cours, des tutoriels, et des livres. Et enfin, il faut se mettre à jour avec les nouvelles versions de Python et les nouvelles fonctionnalités.",
             "comment trouver un job en Python": "Pour trouver un job en Python, il faut avoir une bonne expérience en programmation, avoir des compétences en Python, et avoir des compétences en mathématiques. Il faut aussi avoir des compétences en ingénierie logicielle, et avoir des compétences da,s d'autre language.",
-            "comment devenir ai engineer": "Pour devenir AI engineer, tu dois maîtriser les fondamentaux en programmation (Python surtout), les mathématiques (algèbre linéaire, statistiques, calcul) et les frameworks de machine learning comme TensorFlow ou PyTorch."
+            "comment devenir ai engineer": "Pour devenir AI engineer, tu dois maîtriser les fondamentaux en programmation (Python surtout), les mathématiques (algèbre linéaire, statistiques, calcul) et les frameworks de machine learning comme TensorFlow ou PyTorch.",
         }
     }
     
