@@ -76,9 +76,9 @@ def chatbot_response(message):
             "comment arrêter un programme": "Utilisez exit() ou break dans une boucle.\nExemple :\nif condition:\n    exit()",
         },
         "À propos": {
-            "de quoi tu parles": "Je parle principalement du langage Python et je peux répondre à des questions sur la programmation Python.",
-            "qu'est-ce que tu nous apprends": "Je peux t'apprendre les bases de Python, donner des exemples de code et expliquer des concepts de programmation.",
-            "à quoi tu sers": "Je sers à répondre à tes questions sur Python et à t'aider à apprendre à programmer.",
+            "de quoi tu parles": "Je parle principalement du langage Python et je peux répondre à des questions sur la programmation Python et sur le travail informatique !",
+            "qu'est-ce que tu nous apprends": "Je peux t'apprendre les bases de Python, donner des exemples de code et expliquer des concepts de programmation sur le monde informatique.",
+            "à quoi tu sers": "Je sers à répondre à tes questions sur Python et à t'aider à apprendre à programmer ainsi que de comprendre le monde informatique.",
             "qui t'a créé": "J'ai été créé par Zoungrana paul-emmanuel pour t'aider à apprendre Python.",
             "comment devenir un expert en Python": "Pour devenir un expert en Python, il faut apprendre les bases, comprendre les concepts de programmation, et pratiquer régulièrement. Il faut aussi suivre des cours, des tutoriels, et des livres. Et enfin, il faut se mettre à jour avec les nouvelles versions de Python et les nouvelles fonctionnalités.",
             "ques-ce-que je peux faire avec Python": "Python est un langage de programmation polyvalent qui peut être utilisé pour de nombreux projets. Voici quelques exemples : \n- Développement web (Django, Flask)\n- Data science (pandas, numpy, matplotlib)\n- Machine learning (scikit-learn, TensorFlow, PyTorch)\n- IA (OpenAI, GPT-3, GPT-4)\n- Automatisation (Selenium, Scrapy)\n- Systèmes d'exploitation (Linux, Windows, MacOS)\n- Base de données (SQLite, MySQL, PostgreSQL)\n- Interface graphique (Tkinter, PyQt, PySide)\n- Réseau (socket, threading, multiprocessing)\n- Sécurité (cryptographie, cybersécurité)\n- Simulation (Pygame, Pysimple2D)",
