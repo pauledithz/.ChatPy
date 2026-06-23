@@ -155,7 +155,7 @@ def chatbot_response(message):
     elif "merci" in message:
         return "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
     elif any(word in message for word in ["au revoir", "bye", "quit", "exit"]):
-        return "👋 Au revoir ! Continue à apprendre Pythonle plus possible !"
+        return "👋 Au revoir ! Continue à apprendre Python le plus possible !"
     else:
         return "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
 
