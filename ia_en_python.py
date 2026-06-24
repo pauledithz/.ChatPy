@@ -15,8 +15,6 @@ def calcul_similarite(texte1, texte2):
     """Calcule la similarité entre deux textes (0 à 1)"""
     return SequenceMatcher(None, texte1, texte2).ratio()
 
-# CORRECTIF 1 : faq_categories défini une seule fois au lieu d'être
-# reconstruit à chaque appel de chatbot_response()
 faq_categories = {
     "Bases": {
         "qu'est-ce qu'une variable": "Une variable, c'est un espace de stockage nommé dans lequel on garde une valeur pour pouvoir la réutiliser plus tard dans un programme.",
@@ -87,8 +85,6 @@ faq_categories = {
     }
 }
 
-# CORRECTIF 2 : table de correspondance normalisé → original construite une seule fois
-# Évite le double parcours de faq.keys() dans le fuzzy matching
 faq = {}
 for _cat, _questions in faq_categories.items():
     faq.update(_questions)
@@ -156,7 +152,6 @@ def chatbot_response(message):
         return "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
 
 
-# CORRECTIF 3 : codes ANSI corrects pour les couleurs en mode gras
 def print_colored(text, color, bold=False):
     codes = {
         "blue":   ("\033[94m",   "\033[1;94m"),
