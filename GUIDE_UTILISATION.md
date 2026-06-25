@@ -5,25 +5,20 @@
 **Depuis le terminal :**
 
 ```bash
-cd ~/.mobisystems
+cd /chemin/vers/ChatPy-2
 python3 "ia_en_python.py"
-```
-
-**Ou d'une autre façon :**
-
-```bash
-python3 ~/.mobisystems/ia\ en\ python.py
 ```
 
 Tu devrais voir :
 ```
-🤖 Bienvenue sur ChatPy!
-Posez-moi une question sur Python (tapez 'au revoir' pour quitter).
-Tapez 'help' pour l'aide ou 'liste' pour voir les questions disponibles.
-Tapez 'historique' pour voir toute la conversation.
+☕️ Bienvenue sur ChatPy!
+Posez-moi une question sur Python ou sur le travail informatique. (tapez 'au revoir' pour quitter).
+Tapez 'help' pour l'aide | 'liste' pour les questions | 'quiz' pour vous tester | 'historique' pour la conversation.
 
-📝 Vous: 
+📝 Vous:
 ```
+
+> **Nouveau :** l'historique de tes sessions précédentes est rechargé automatiquement au démarrage.
 
 ---
 
@@ -67,17 +62,55 @@ Le chatbot comprendra quand même ! 🎉
 
 ---
 
-### **Étape 4 : Voir votre historique**
+### **Étape 4 : Tester vos connaissances avec le quiz**
+
+```
+📝 Vous: quiz
+```
+
+Le chatbot pose une question aléatoire tirée de la FAQ et attend ta réponse.
+Il compare ta réponse avec la bonne réponse et te donne un score :
+
+```
+🎯 Mode Quiz — répondez de mémoire, tapez 'fin' pour arrêter.
+
+❓ qu'est-ce qu'une liste ?
+📝 Votre réponse : c'est une structure qui contient des éléments
+✅ Bonne réponse ! (similarité : 74%)
+💡 Réponse attendue :
+Une liste est une structure de données qui peut contenir plusieurs éléments.
+Exemple :
+ma_liste = [1, 2, 3, 'hello']
+
+❓ comment faire une fonction ?
+📝 Votre réponse : fin
+
+📊 Score final : 1/1 (100%)
+```
+
+**Interprétation du score de similarité :**
+
+| Score | Signification |
+|-------|--------------|
+| ≥ 70 % | ✅ Bonne réponse |
+| 35–69 % | ⚠️ Presque — la bonne réponse s'affiche pour apprendre |
+| < 35 % | ❌ Pas tout à fait — la bonne réponse s'affiche pour apprendre |
+
+Tape `fin` à n'importe quel moment pour arrêter le quiz et voir ton score total.
+
+---
+
+### **Étape 5 : Voir votre historique**
 
 ```
 📝 Vous: historique
 ```
 
-Tu verras toutes les questions et réponses précédentes.
+Tu verras toutes les questions et réponses, **y compris celles des sessions précédentes** — l'historique est sauvegardé automatiquement dans le fichier `.chatpy_history.json`.
 
 ---
 
-### **Étape 5 : Quitter**
+### **Étape 6 : Quitter**
 
 ```
 📝 Vous: au revoir
@@ -91,10 +124,16 @@ Tu verras toutes les questions et réponses précédentes.
 
 ### **Exemple 1 : Débutant**
 ```
-🤖 Bienvenue sur ChatPy!
+☕️ Bienvenue sur ChatPy!
 📝 Vous: aide
 
-✨ Bot: Tapez 'liste' pour voir toutes les questions...
+✨ Bot: Commandes disponibles :
+  liste      — voir toutes les questions du catalogue
+  quiz       — tester vos connaissances Python
+  historique — relire la conversation
+  au revoir  — quitter
+
+  Ou posez directement une question sur Python.
 
 📝 Vous: liste
 
@@ -115,7 +154,7 @@ print(f'Hello {nom}')
 
 📝 Vous: au revoir
 
-À bientôt ! Continue à apprendre Python 🚀
+À bientôt ! Continue à apprendre Python tout les jours ! 🚀
 ```
 
 ---
@@ -134,15 +173,46 @@ print(f'Hello {nom}')
 
 ---
 
-## 4️⃣ TOUCHES SPÉCIALES
+### **Exemple 3 : Session de quiz**
+```
+📝 Vous: quiz
+
+🎯 Mode Quiz — répondez de mémoire, tapez 'fin' pour arrêter.
+
+❓ comment importer un module ?
+📝 Votre réponse : avec import
+⚠️  Presque ! (similarité : 42%)
+💡 Réponse attendue :
+Utilisez le mot-clé 'import'.
+Exemple :
+import math
+
+from math import sqrt
+
+❓ qu'est-ce qu'une variable ?
+📝 Votre réponse : un espace de stockage pour garder une valeur
+✅ Bonne réponse ! (similarité : 78%)
+💡 Réponse attendue :
+Une variable, c'est un espace de stockage nommé...
+
+❓ comment faire une boucle ?
+📝 Votre réponse : fin
+
+📊 Score final : 1/2 (50%)
+```
+
+---
+
+## 4️⃣ TOUTES LES COMMANDES
 
 | Commande | Résultat |
 |----------|----------|
-| `liste` | Voir toutes les questions |
-| `help` ou `aide` | Obtenir de l'aide |
-| `historique` | Voir toute la conversation |
-| `au revoir` / `bye` / `exit` | Quitter le chatbot |
-| `bonjour` / `salut` | Réponse personnalisée |
+| `liste` | Voir toutes les questions par catégorie |
+| `quiz` | Lancer une session de quiz interactif |
+| `help` ou `aide` ou `?` | Obtenir de l'aide |
+| `historique` | Voir toute la conversation (sessions incluses) |
+| `au revoir` / `bye` / `exit` / `quit` | Quitter le chatbot |
+| `bonjour` / `salut` | Réponse de bienvenue |
 
 ---
 
@@ -165,9 +235,9 @@ print(f'Hello {nom}')
 ## 6️⃣ INTERPRÉTER LE SCORE DE CONFIANCE
 
 ```
-💡 Confiance: 95%  → ✅ Très fiable
+💡 Confiance: 100% → ✅ Correspondance exacte
 💡 Confiance: 75%  → ✅ Assez fiable
-💡 Confiance: 60%  → ⚠️ Alternative proposée
+💡 Confiance: 60%  → ⚠️ Alternative proposée en plus
 💡 Confiance: 40%  → ⚠️ Résultat approximatif
 ```
 
@@ -175,7 +245,7 @@ print(f'Hello {nom}')
 
 ## 7️⃣ AJOUTER VOS PROPRES QUESTIONS
 
-**Ouvrez le fichier** `ia_en_python.py` et trouvez :
+**Ouvrez le fichier** `ia_en_python.py` et trouvez le dictionnaire `faq_categories` **en haut du fichier** (ligne ~20) :
 
 ```python
 faq_categories = {
@@ -183,16 +253,25 @@ faq_categories = {
         "comment déclarer une variable": "Réponse...",
 ```
 
-**Ajoutez votre question :**
+**Ajoutez votre question dans la bonne catégorie :**
 
 ```python
 faq_categories = {
     "Bases": {
         "comment déclarer une variable": "Réponse...",
-        "ma nouvelle question": "Ma nouvelle réponse",  # 👈 Ajoutez ici
+        "ma nouvelle question": "Ma nouvelle réponse avec exemple",  # 👈 Ajoutez ici
 ```
 
-**Sauvegardez** et relancez le chatbot.
+**Sauvegardez** et relancez le chatbot — la nouvelle question apparaît dans `liste` et dans le `quiz` automatiquement.
+
+---
+
+## 8️⃣ HISTORIQUE PERSISTANT
+
+Chaque message est automatiquement sauvegardé dans le fichier **`.chatpy_history.json`** dans le dossier du projet.
+
+- Il est rechargé au prochain démarrage — tu ne perds plus ta conversation.
+- Pour repartir de zéro : supprime `.chatpy_history.json` (il sera recréé vide).
 
 ---
 
@@ -201,13 +280,15 @@ faq_categories = {
 Ouvre ton terminal et tape :
 
 ```bash
-python3 ~/.mobisystems/ia\ en\ python.py
+cd /chemin/vers/ChatPy-2
+python3 "ia_en_python.py"
 ```
 
 Puis essaie :
 ```
 📝 Vous: liste
 📝 Vous: qu'est-ce qu'une fonction?
+📝 Vous: quiz
 📝 Vous: historique
 ```
 
