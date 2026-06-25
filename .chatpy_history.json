@@ -62,5 +62,85 @@
   {
     "role": "assistant",
     "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
+  },
+  {
+    "role": "utilisateur",
+    "message": "liste"
+  },
+  {
+    "role": "assistant",
+    "message": "Voici les questions que je peux répondre :\n\n\n📚 Bases:\n  • qu'est-ce qu'une variable\n  • comment déclarer une variable\n  • comment afficher un message\n  • comment lire une entrée utilisateur\n  • comment convertir une chaîne en entier\n  • comment convertir un entier en chaîne\n\n📚 Fonctions:\n  • qu'est-ce qu'une fonction\n  • À quoi sert une fonction\n  • comment faire une fonction\n  • comment documenter une fonction\n\n📚 Conditions et Boucles:\n  • À quoi sert une condition\n  • comment faire une condition\n  • À quoi sert une boucle\n  • comment faire une boucle\n  • comment faire une boucle infinie\n  • comment faire une exception\n  • comment vérifier si un élément est dans une liste\n\n📚 Structures de données:\n  • qu'est-ce qu'une liste\n  • comment obtenir la longueur d'une liste\n  • comment ajouter un élément à une liste\n  • comment supprimer un élément d'une liste\n  • comment trier une liste\n  • comment afficher tous les éléments d'une liste\n  • comment inverser une liste\n  • comment copier une liste\n  • comment faire une liste en compréhension\n  • qu'est-ce qu'un dictionnaire\n  • comment faire une boucle sur un dictionnaire\n  • comment créer un tuple\n  • comment décompresser un tuple\n\n📚 Modules et Fichiers:\n  • comment importer un module\n  • comment lire un fichier\n  • comment écrire dans un fichier\n  • comment importer une fonction d'un autre fichier\n  • comment installer un module\n  • comment installer plusieurs modules à la fois\n\n📚 Utile:\n  • comment faire une pause dans un programme\n  • comment générer un nombre aléatoire\n  • comment afficher la version de Python\n  • comment afficher la documentation d'une fonction\n  • comment arrêter un programme\n\n📚 À propos:\n  • de quoi tu parles\n  • qu'est-ce que tu nous apprends\n  • à quoi tu sers\n  • qui t'a créé\n  • comment devenir un expert en Python\n  • ques-ce-que je peux faire avec Python\n  • Comment créer une intelligence artificiel\n\n📚 Job et apprentissage python:\n  • comment devenir un développeur Python\n  • comment trouver un job en Python\n  • comment devenir ai engineer\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "/opt/homebrew/bin/python3 \"/Users/paulo26/Documents/travaux informatique/.ChatPy-2/ia_en_python.py\""
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "salut"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "help"
+  },
+  {
+    "role": "assistant",
+    "message": "Commandes disponibles :\n  liste      — voir toutes les questions du catalogue\n  quiz       — tester vos connaissances Python\n  historique — relire la conversation\n  au revoir  — quitter\n\nOu posez directement une question sur Python."
+  },
+  {
+    "role": "utilisateur",
+    "message": "comment apprendre python"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Pour devenir un expert en Python, il faut apprendre les bases, comprendre les concepts de programmation, et pratiquer régulièrement. Il faut aussi suivre des cours, des tutoriels, et des livres. Et enfin, il faut se mettre à jour avec les nouvelles versions de Python et les nouvelles fonctionnalités.\n\n💡 Confiance: 64%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "je faire lequiz"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ En Python, vous pouvez utiliser 'for' ou 'while' pour faire des boucles.\nExemple avec for :\nfor i in range(5):\n    print(i)\n\nExemple avec while :\ni = 0\nwhile i < 5:\n    print(i)\n    i += 1\n\n💡 Confiance: 51%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "je veux faire le quiz"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Python est un langage de programmation polyvalent qui peut être utilisé pour de nombreux projets. Voici quelques exemples : \n- Développement web (Django, Flask)\n- Data science (pandas, numpy, matplotlib)\n- Machine learning (scikit-learn, TensorFlow, PyTorch)\n- IA (OpenAI, GPT-3, GPT-4)\n- Automatisation (Selenium, Scrapy)\n- Systèmes d'exploitation (Linux, Windows, MacOS)\n- Base de données (SQLite, MySQL, PostgreSQL)\n- Interface graphique (Tkinter, PyQt, PySide)\n- Réseau (socket, threading, multiprocessing)\n- Sécurité (cryptographie, cybersécurité)\n- Simulation (Pygame, Pysimple2D)\n\n💡 Confiance: 51%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "n'importe quoi toi mdr"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Utilisez le mot-clé 'import'.\nExemple :\nimport math\n\nfrom math import sqrt\n\n💡 Confiance: 58%\n\nℹ️ D'autres réponses possibles :\n  • de quoi tu parles (51%)\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "ok"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "quite"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ J'ai été créé par Zoungrana paul-emmanuel pour t'aider à apprendre Python.\n\n💡 Confiance: 58%\n\nℹ️ D'autres réponses possibles :\n  • à quoi tu sers (52%)\n"
   }
 ]
