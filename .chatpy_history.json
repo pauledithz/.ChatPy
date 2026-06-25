@@ -1,0 +1,66 @@
+[
+  {
+    "role": "utilisateur",
+    "message": "help"
+  },
+  {
+    "role": "assistant",
+    "message": "Commandes disponibles :\n  liste      — voir toutes les questions du catalogue\n  quiz       — tester vos connaissances Python\n  historique — relire la conversation\n  au revoir  — quitter\n\nOu posez directement une question sur Python."
+  },
+  {
+    "role": "utilisateur",
+    "message": "au revoir"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
+  },
+  {
+    "role": "utilisateur",
+    "message": "qu'est-ce qu'une variable"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Une variable, c'est un espace de stockage nommé dans lequel on garde une valeur pour pouvoir la réutiliser plus tard dans un programme.\n\n💡 Confiance: 100%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "comment faire une fonction"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Utilisez le mot-clé def.\nExemple :\ndef ma_fonction():\n    print('Hello')\n\ndef addition(a, b):\n    return a + b\n\n💡 Confiance: 100%\n\n📌 Questions liées:\n  1. comment faire une exception\n  2. comment documenter une fonction\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "à quoi sert une fonction"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Une fonction sert à regrouper un bloc de code qui peut être réutilisé plusieurs fois dans le programme.\nExemple :\ndef ma_fonction():\n    print('Hello')\n\ndef addition(a, b):\n    return a + b\n\n💡 Confiance: 100%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "ok merci"
+  },
+  {
+    "role": "assistant",
+    "message": "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
+  },
+  {
+    "role": "utilisateur",
+    "message": "aurevoir"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "au revoir"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
+  }
+]
