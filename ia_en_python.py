@@ -1,7 +1,11 @@
 import re
 import os
+import json
+import random
 import unicodedata
 from difflib import get_close_matches, SequenceMatcher
+
+HISTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".chatpy_history.json")
 
 def normaliser_texte(texte):
     """Supprime accents, ponctuation et normalise le texte"""
@@ -97,7 +101,12 @@ def chatbot_response(message):
 
     # Commandes spéciales
     if message in ["help", "aide", "?"]:
-        return "Tapez 'liste' pour voir toutes les questions du catalogue.\nTapez 'au revoir' pour quitter.\nOu posez une question sur Python."
+        return ("Commandes disponibles :\n"
+                "  liste      — voir toutes les questions du catalogue\n"
+                "  quiz       — tester vos connaissances Python\n"
+                "  historique — relire la conversation\n"
+                "  au revoir  — quitter\n\n"
+                "Ou posez directement une question sur Python.")
     elif message == "liste":
         result = "Voici les questions que je peux répondre :\n\n"
         for category, questions in faq_categories.items():
@@ -164,12 +173,52 @@ def print_colored(text, color, bold=False):
     print(f"{code}{text}\033[0m")
 
 
+def mode_quiz():
+    """Lance une session de quiz interactif sur les questions de la FAQ."""
+    questions = list(faq.items())
+    score = 0
+    total = 0
+
+    print_colored("\n🎯 Mode Quiz — répondez de mémoire, tapez 'fin' pour arrêter.\n", "yellow", bold=True)
+
+    while True:
+        question, bonne_reponse = random.choice(questions)
+        print_colored(f"❓ {question} ?", "blue")
+
+        try:
+            reponse = input("📝 Votre réponse : ").strip()
+        except (KeyboardInterrupt, EOFError):
+            break
+
+        if reponse.lower() in ("fin", "exit", "quit"):
+            break
+
+        sim = int(calcul_similarite(normaliser_texte(reponse), normaliser_texte(bonne_reponse)) * 100)
+        total += 1
+
+        if sim >= 70:
+            score += 1
+            print_colored(f"✅ Bonne réponse ! (similarité : {sim}%)", "green")
+        elif sim >= 35:
+            print_colored(f"⚠️  Presque ! (similarité : {sim}%)", "yellow")
+        else:
+            print_colored(f"❌ Pas tout à fait. (similarité : {sim}%)", "red")
+
+        print(f"💡 Réponse attendue :\n{bonne_reponse}\n")
+
+    if total > 0:
+        print_colored(f"\n📊 Score final : {score}/{total} ({int(score/total*100)}%)\n", "blue", bold=True)
+    else:
+        print("Aucune question répondue.\n")
+
+
 class ChatBot:
     """Classe pour gérer le chatbot avec mémoire de conversation"""
     def __init__(self):
         self.historique = []
         self.dernieres_categories = []
         self.questions_posees = set()
+        self._charger_historique()
         self.relations = {
             "qu'est-ce qu'une fonction": ["comment faire une fonction", "comment documenter une fonction"],
             "comment faire une fonction": ["comment faire une exception", "comment documenter une fonction"],
@@ -177,6 +226,21 @@ class ChatBot:
             "comment faire une boucle": ["comment faire une condition", "comment arrêter un programme"],
             "comment déclarer une variable": ["comment afficher un message", "comment convertir une chaîne en entier"],
         }
+
+    def _charger_historique(self):
+        if os.path.exists(HISTORY_FILE):
+            try:
+                with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                    self.historique = json.load(f)
+            except (json.JSONDecodeError, IOError):
+                self.historique = []
+
+    def _sauvegarder_historique(self):
+        try:
+            with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
+                json.dump(self.historique, f, ensure_ascii=False, indent=2)
+        except IOError:
+            pass
 
     def ajouter_message(self, role, message):
         self.historique.append({"role": role, "message": message})
@@ -206,6 +270,7 @@ class ChatBot:
                 response += f"  {i}. {sug}\n"
         self.ajouter_message("assistant", response)
         self.questions_posees.add(normaliser_texte(message))
+        self._sauvegarder_historique()
         return response
 
     def afficher_historique(self):
@@ -222,8 +287,7 @@ bot = ChatBot()
 if __name__ == "__main__":
     print_colored("☕️ Bienvenue sur ChatPy!", "blue", bold=True)
     print("Posez-moi une question sur Python ou sur le travail informatique. (tapez 'au revoir' pour quitter).")
-    print("Tapez 'help' pour l'aide ou 'liste' pour voir les questions disponibles.")
-    print("Tapez 'historique' pour voir toute la conversation.\n")
+    print("Tapez 'help' pour l'aide | 'liste' pour les questions | 'quiz' pour vous tester | 'historique' pour la conversation.\n")
 
     while True:
         try:
@@ -233,6 +297,10 @@ if __name__ == "__main__":
 
             if user_input.lower() == "historique":
                 bot.afficher_historique()
+                continue
+
+            if user_input.lower() == "quiz":
+                mode_quiz()
                 continue
 
             response = bot.traiter_message(user_input)
