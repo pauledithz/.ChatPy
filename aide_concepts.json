@@ -1,0 +1,209 @@
+{
+  "variable": {
+    "titre": "Les variables en Python",
+    "mots_cles": ["variable", "variables", "stocker", "valeur", "assigner", "nom"],
+    "definition": "Une variable est un espace nommé en mémoire qui stocke une valeur réutilisable.",
+    "niveaux": [
+      {
+        "niveau": "🟢 Débutant — Créer et utiliser une variable",
+        "code": "x = 5\nnom = 'Alice'\npi = 3.14\nest_actif = True\n\nprint(x)    # 5\nprint(nom)  # Alice"
+      },
+      {
+        "niveau": "🟡 Intermédiaire — Types et conversion",
+        "code": "x = 42\nprint(type(x))             # <class 'int'>\nprint(isinstance(x, int))  # True\n\n# Conversion entre types\ns = str(x)    # '42'\nf = float(x)  # 42.0\ni = int('10') # 10\n\n# Plusieurs variables en une ligne\na, b, c = 1, 2, 3\na, b = b, a  # échange de valeurs"
+      },
+      {
+        "niveau": "🔴 Avancé — Portée (scope) et annotations de type",
+        "code": "# Variable globale vs locale\nx = 10\n\ndef ma_fonction():\n    x = 20  # variable locale — n'écrase pas la globale\n    print(x)  # 20\n\nma_fonction()\nprint(x)  # 10\n\n# Pour modifier la globale depuis une fonction :\ndef incrementer():\n    global x\n    x += 1\n\n# Annotations de type (Python 3.6+)\nage: int = 25\nnom: str = 'Alice'\nscores: list[int] = [10, 20, 30]"
+      }
+    ],
+    "erreurs_courantes": [
+      "Utiliser une variable avant de lui assigner une valeur → NameError: name 'x' is not defined",
+      "Confondre = (assignation) et == (comparaison dans un if)",
+      "Modifier une variable globale sans écrire 'global x' dans la fonction"
+    ],
+    "a_retenir": "En Python, une variable n'a pas de type fixe — elle peut changer de type à tout moment (langage dynamiquement typé)."
+  },
+
+  "fonction": {
+    "titre": "Les fonctions en Python",
+    "mots_cles": ["fonction", "fonctions", "def", "return", "appel", "parametre", "argument"],
+    "definition": "Une fonction est un bloc de code réutilisable qui s'exécute quand on l'appelle par son nom.",
+    "niveaux": [
+      {
+        "niveau": "🟢 Débutant — Définir et appeler une fonction",
+        "code": "# Définir une fonction\ndef dire_bonjour():\n    print('Bonjour !')\n\n# Appeler la fonction\ndire_bonjour()  # Bonjour !\n\n# Fonction avec paramètres et retour\ndef addition(a, b):\n    return a + b\n\nresultat = addition(3, 4)\nprint(resultat)  # 7"
+      },
+      {
+        "niveau": "🟡 Intermédiaire — Valeurs par défaut et arguments nommés",
+        "code": "# Valeur par défaut\ndef saluer(nom, message='Bonjour'):\n    print(f'{message}, {nom} !')\n\nsaluer('Alice')            # Bonjour, Alice !\nsaluer('Bob', 'Bonsoir')   # Bonsoir, Bob !\n\n# *args : nombre variable d'arguments\ndef somme(*nombres):\n    return sum(nombres)\n\nprint(somme(1, 2, 3, 4))  # 10\n\n# **kwargs : arguments nommés variables\ndef afficher_infos(**infos):\n    for cle, val in infos.items():\n        print(f'{cle} : {val}')\n\nafficher_infos(nom='Alice', age=30)"
+      },
+      {
+        "niveau": "🔴 Avancé — Lambda, closures et décorateurs",
+        "code": "# Fonction lambda (anonyme, sur une ligne)\ncarre = lambda x: x ** 2\nprint(carre(5))  # 25\n\n# Tri avec lambda\npersonnes = [('Alice', 30), ('Bob', 25)]\npersonnes.sort(key=lambda p: p[1])  # trier par âge\n\n# Closure (fonction qui mémorise son contexte)\ndef compteur():\n    n = 0\n    def incrementer():\n        nonlocal n\n        n += 1\n        return n\n    return incrementer\n\nc = compteur()\nprint(c())  # 1\nprint(c())  # 2\n\n# Décorateur (enveloppe une fonction)\ndef logger(func):\n    def wrapper(*args, **kwargs):\n        print(f'Appel de {func.__name__}')\n        return func(*args, **kwargs)\n    return wrapper\n\n@logger\ndef addition(a, b):\n    return a + b\n\naddition(2, 3)  # Appel de addition → 5"
+      }
+    ],
+    "erreurs_courantes": [
+      "Oublier le return — la fonction renvoie None par défaut",
+      "Confondre la définition (def) et l'appel (ma_fonction())",
+      "Utiliser une valeur mutable (liste, dict) comme valeur par défaut → comportement inattendu"
+    ],
+    "a_retenir": "Une bonne fonction fait une seule chose et la fait bien. Si elle dépasse 20 lignes, envisagez de la découper."
+  },
+
+  "boucle": {
+    "titre": "Les boucles en Python",
+    "mots_cles": ["boucle", "boucles", "for", "while", "iteration", "repeter", "range"],
+    "definition": "Une boucle répète un bloc de code un certain nombre de fois ou tant qu'une condition est vraie.",
+    "niveaux": [
+      {
+        "niveau": "🟢 Débutant — for et while",
+        "code": "# Boucle for avec range\nfor i in range(5):\n    print(i)  # 0, 1, 2, 3, 4\n\n# Boucle for sur une liste\nfruits = ['pomme', 'banane', 'cerise']\nfor fruit in fruits:\n    print(fruit)\n\n# Boucle while\ncompteur = 0\nwhile compteur < 3:\n    print(compteur)\n    compteur += 1  # Ne pas oublier !"
+      },
+      {
+        "niveau": "🟡 Intermédiaire — enumerate, zip, break, continue",
+        "code": "# enumerate : index + valeur\nfor i, fruit in enumerate(['pomme', 'banane']):\n    print(f'{i}: {fruit}')  # 0: pomme, 1: banane\n\n# zip : parcourir deux listes ensemble\nnoms = ['Alice', 'Bob']\nages = [30, 25]\nfor nom, age in zip(noms, ages):\n    print(f'{nom} a {age} ans')\n\n# break : arrêter la boucle\nfor i in range(10):\n    if i == 5:\n        break\n    print(i)  # 0, 1, 2, 3, 4\n\n# continue : passer à l'itération suivante\nfor i in range(5):\n    if i == 2:\n        continue\n    print(i)  # 0, 1, 3, 4"
+      },
+      {
+        "niveau": "🔴 Avancé — Compréhensions et générateurs",
+        "code": "# List comprehension (boucle en une ligne)\ncarres = [x**2 for x in range(6)]\nprint(carres)  # [0, 1, 4, 9, 16, 25]\n\n# Avec condition\npairs = [x for x in range(10) if x % 2 == 0]\nprint(pairs)  # [0, 2, 4, 6, 8]\n\n# Dict comprehension\ncarres_dict = {x: x**2 for x in range(5)}\nprint(carres_dict)  # {0:0, 1:1, 2:4, 3:9, 4:16}\n\n# Générateur (économise la mémoire sur de grandes séquences)\ngen = (x**2 for x in range(1_000_000))  # ne calcule rien encore\nprint(next(gen))  # 0  — calcule à la demande"
+      }
+    ],
+    "erreurs_courantes": [
+      "Oublier d'incrémenter le compteur dans un while → boucle infinie",
+      "Modifier une liste pendant qu'on la parcourt → comportement imprévisible",
+      "Confondre range(5) (0 à 4) avec range(1, 6) (1 à 5)"
+    ],
+    "a_retenir": "Préférez 'for' quand vous connaissez à l'avance le nombre d'itérations, 'while' quand vous attendez une condition."
+  },
+
+  "condition": {
+    "titre": "Les conditions en Python",
+    "mots_cles": ["condition", "conditions", "if", "elif", "else", "booleen", "comparaison"],
+    "definition": "Une condition exécute un bloc de code seulement si une expression est vraie (True).",
+    "niveaux": [
+      {
+        "niveau": "🟢 Débutant — if / elif / else",
+        "code": "x = 10\n\nif x > 0:\n    print('positif')\nelif x < 0:\n    print('négatif')\nelse:\n    print('zéro')\n\n# Opérateurs de comparaison\n# == égal   != différent\n# >  plus grand   < plus petit\n# >= supérieur ou égal   <= inférieur ou égal"
+      },
+      {
+        "niveau": "🟡 Intermédiaire — Opérateurs logiques et expression ternaire",
+        "code": "age = 20\na_carte = True\n\n# and, or, not\nif age >= 18 and a_carte:\n    print('Accès autorisé')\n\nif not a_carte:\n    print('Carte requise')\n\n# Expression ternaire (if en une ligne)\nstatut = 'majeur' if age >= 18 else 'mineur'\nprint(statut)  # majeur\n\n# Vérifier plusieurs valeurs avec 'in'\nlangage = 'Python'\nif langage in ['Python', 'JavaScript', 'Go']:\n    print('Langage connu')"
+      },
+      {
+        "niveau": "🔴 Avancé — match / case (Python 3.10+)",
+        "code": "# match / case : comme un switch dans d'autres langages\ncommande = 'quitter'\n\nmatch commande:\n    case 'aide':\n        print('Affiche l aide')\n    case 'liste':\n        print('Affiche la liste')\n    case 'quitter' | 'exit' | 'bye':\n        print('Au revoir !')\n    case _:  # cas par défaut\n        print('Commande inconnue')\n\n# match avec capture de valeur\npoint = (1, 0)\nmatch point:\n    case (0, 0):\n        print('Origine')\n    case (x, 0):\n        print(f'Sur axe X : {x}')\n    case (x, y):\n        print(f'Point ({x}, {y})')"
+      }
+    ],
+    "erreurs_courantes": [
+      "Écrire 'if x = 5' au lieu de 'if x == 5' (= est une assignation, == est une comparaison)",
+      "Oublier les deux-points ':' après if / elif / else",
+      "Mauvaise indentation — Python utilise l'indentation pour délimiter les blocs"
+    ],
+    "a_retenir": "En Python, False, 0, '', [], {} et None sont tous évalués comme False dans un if."
+  },
+
+  "liste": {
+    "titre": "Les listes en Python",
+    "mots_cles": ["liste", "listes", "tableau", "array", "append", "element", "index"],
+    "definition": "Une liste est une collection ordonnée et modifiable qui peut contenir n'importe quel type de valeur.",
+    "niveaux": [
+      {
+        "niveau": "🟢 Débutant — Créer, accéder et modifier",
+        "code": "# Créer une liste\nfruits = ['pomme', 'banane', 'cerise']\nnombres = [1, 2, 3, 4, 5]\nmixte = [1, 'hello', True, 3.14]\n\n# Accéder par index (commence à 0)\nprint(fruits[0])   # pomme\nprint(fruits[-1])  # cerise (dernier)\n\n# Modifier\nfruits[1] = 'mangue'\n\n# Ajouter / supprimer\nfruits.append('kiwi')   # ajouter à la fin\nfruits.remove('pomme')  # supprimer par valeur\ndel fruits[0]           # supprimer par index\n\nprint(len(fruits))      # longueur"
+      },
+      {
+        "niveau": "🟡 Intermédiaire — Slicing, tri et copie",
+        "code": "nombres = [5, 2, 8, 1, 9, 3]\n\n# Slicing [debut:fin:pas]\nprint(nombres[1:4])   # [2, 8, 1]\nprint(nombres[:3])    # [5, 2, 8]\nprint(nombres[::2])   # [5, 8, 9]  (un sur deux)\nprint(nombres[::-1])  # [3, 9, 1, 8, 2, 5]  (inversé)\n\n# Tri\nnombres.sort()             # modifie la liste\ntrie = sorted(nombres)     # retourne une nouvelle liste\ntrie_inv = sorted(nombres, reverse=True)\n\n# Copie (attention : = ne copie pas !)\noriginal = [1, 2, 3]\ncopie = original.copy()  # ou list(original) ou original[:]\ncopie.append(4)\nprint(original)  # [1, 2, 3] — non modifié"
+      },
+      {
+        "niveau": "🔴 Avancé — Compréhensions et fonctions de haut niveau",
+        "code": "# List comprehension\ncarres = [x**2 for x in range(10)]\npairs = [x for x in range(20) if x % 2 == 0]\nmaj = [mot.upper() for mot in ['bonjour', 'monde']]\n\n# map et filter\nnombres = [1, 2, 3, 4, 5]\ndoubles = list(map(lambda x: x * 2, nombres))\npairs = list(filter(lambda x: x % 2 == 0, nombres))\n\n# Aplatir une liste de listes\nmatrice = [[1, 2], [3, 4], [5, 6]]\nplat = [x for ligne in matrice for x in ligne]\nprint(plat)  # [1, 2, 3, 4, 5, 6]\n\n# sorted avec clé personnalisée\nmots = ['banane', 'pomme', 'kiwi']\npar_longueur = sorted(mots, key=len)\nprint(par_longueur)  # ['kiwi', 'pomme', 'banane']"
+      }
+    ],
+    "erreurs_courantes": [
+      "Accéder à un index hors limites → IndexError: list index out of range",
+      "Copier avec = au lieu de .copy() → les deux variables pointent la même liste",
+      "Modifier une liste pendant une boucle for qui la parcourt"
+    ],
+    "a_retenir": "Les listes sont mutables (modifiables). Pour une collection non modifiable, utilisez un tuple ()."
+  },
+
+  "dictionnaire": {
+    "titre": "Les dictionnaires en Python",
+    "mots_cles": ["dictionnaire", "dict", "cle", "valeur", "key", "value", "json"],
+    "definition": "Un dictionnaire associe des clés uniques à des valeurs, comme un annuaire téléphonique.",
+    "niveaux": [
+      {
+        "niveau": "🟢 Débutant — Créer, lire et modifier",
+        "code": "# Créer un dictionnaire\npersonne = {\n    'nom': 'Alice',\n    'age': 30,\n    'ville': 'Paris'\n}\n\n# Accéder à une valeur\nprint(personne['nom'])   # Alice\n\n# Modifier / ajouter\npersonne['age'] = 31\npersonne['email'] = 'alice@example.com'\n\n# Supprimer\ndel personne['ville']\n\n# Vérifier si une clé existe\nif 'nom' in personne:\n    print('Clé présente')"
+      },
+      {
+        "niveau": "🟡 Intermédiaire — Parcourir et méthodes utiles",
+        "code": "scores = {'Alice': 95, 'Bob': 82, 'Charlie': 78}\n\n# Parcourir\nfor cle in scores:              # clés uniquement\n    print(cle)\n\nfor val in scores.values():     # valeurs uniquement\n    print(val)\n\nfor cle, val in scores.items(): # clés et valeurs\n    print(f'{cle}: {val}')\n\n# get() : valeur par défaut si clé absente\nprint(scores.get('David', 0))   # 0\n\n# setdefault() : ajoute la clé si absente\nscores.setdefault('Eve', 0)\n\n# Fusionner deux dicts (Python 3.9+)\nextras = {'Frank': 88}\ntous = scores | extras"
+      },
+      {
+        "niveau": "🔴 Avancé — Dict comprehension et collections spécialisées",
+        "code": "# Dict comprehension\ncarres = {x: x**2 for x in range(6)}\nprint(carres)  # {0:0, 1:1, 2:4, 3:9, 4:16, 5:25}\n\n# Inverser clés/valeurs\norig = {'a': 1, 'b': 2, 'c': 3}\ninverse = {v: k for k, v in orig.items()}\n\n# defaultdict — valeur par défaut automatique\nfrom collections import defaultdict\ncompteur = defaultdict(int)\nfor lettre in 'mississippi':\n    compteur[lettre] += 1\nprint(dict(compteur))  # {'m':1, 'i':4, 's':4, 'p':2}\n\n# Counter — compter des occurrences\nfrom collections import Counter\nmots = ['chat', 'chien', 'chat', 'oiseau', 'chat']\nprint(Counter(mots))   # Counter({'chat': 3, 'chien': 1, ...})"
+      }
+    ],
+    "erreurs_courantes": [
+      "Accéder à une clé inexistante → KeyError : utilisez .get() à la place",
+      "Utiliser une liste comme clé → TypeError (les clés doivent être immuables)",
+      "Oublier que les clés d'un dict sont uniques — assigner une clé existante l'écrase"
+    ],
+    "a_retenir": "Les dictionnaires sont très rapides pour les recherches par clé (temps constant O(1)), peu importe la taille."
+  },
+
+  "exception": {
+    "titre": "Les exceptions en Python",
+    "mots_cles": ["exception", "erreur", "try", "except", "finally", "raise", "error"],
+    "definition": "Une exception est une erreur qui interrompt le programme. On peut la capturer avec try/except pour y réagir proprement.",
+    "niveaux": [
+      {
+        "niveau": "🟢 Débutant — try / except",
+        "code": "# Capturer une erreur\ntry:\n    x = int(input('Entrez un nombre : '))\n    print(10 / x)\nexcept ValueError:\n    print('Ce n est pas un nombre !')\nexcept ZeroDivisionError:\n    print('Division par zéro impossible !')\n\n# Capturer n'importe quelle erreur (déconseillé en production)\ntry:\n    resultat = 1 / 0\nexcept Exception as e:\n    print(f'Erreur : {e}')"
+      },
+      {
+        "niveau": "🟡 Intermédiaire — finally et else",
+        "code": "# finally : s'exécute toujours (erreur ou pas)\ntry:\n    f = open('fichier.txt', 'r')\n    contenu = f.read()\nexcept FileNotFoundError:\n    print('Fichier introuvable')\nelse:\n    print('Lecture réussie :', contenu)  # si pas d erreur\nfinally:\n    print('Fin de la tentative')  # toujours exécuté\n\n# Bonne pratique : utiliser with (ferme automatiquement)\ntry:\n    with open('fichier.txt', 'r') as f:\n        contenu = f.read()\nexcept FileNotFoundError:\n    print('Fichier introuvable')"
+      },
+      {
+        "niveau": "🔴 Avancé — Créer ses propres exceptions",
+        "code": "# Définir une exception personnalisée\nclass AgeInvalideError(Exception):\n    def __init__(self, age):\n        super().__init__(f'Age invalide : {age}. Doit être entre 0 et 120.')\n        self.age = age\n\n# Lever une exception avec raise\ndef verifier_age(age):\n    if not 0 <= age <= 120:\n        raise AgeInvalideError(age)\n    return age\n\ntry:\n    verifier_age(200)\nexcept AgeInvalideError as e:\n    print(e)  # Age invalide : 200. Doit être entre 0 et 120.\n\n# Hiérarchie des exceptions courantes :\n# Exception\n# ├── ValueError       (valeur incorrecte)\n# ├── TypeError        (mauvais type)\n# ├── IndexError       (index hors limites)\n# ├── KeyError         (clé dict absente)\n# ├── FileNotFoundError (fichier manquant)\n# └── ZeroDivisionError (division par 0)"
+      }
+    ],
+    "erreurs_courantes": [
+      "Utiliser 'except Exception' sans logger l'erreur — on perd l'information sur ce qui a échoué",
+      "Mettre trop de code dans le try — difficile de savoir quelle ligne a levé l'erreur",
+      "Ne pas fermer un fichier ouvert si une exception survient — utilisez 'with open()'"
+    ],
+    "a_retenir": "Ne capturez que les exceptions que vous savez gérer. Laisser propager une erreur inconnue est souvent préférable à la cacher."
+  },
+
+  "classe": {
+    "titre": "Les classes et la POO en Python",
+    "mots_cles": ["classe", "class", "objet", "poo", "heritage", "self", "init", "methode", "attribut"],
+    "definition": "Une classe est un modèle pour créer des objets qui regroupent des données (attributs) et des comportements (méthodes).",
+    "niveaux": [
+      {
+        "niveau": "🟢 Débutant — Définir une classe simple",
+        "code": "class Animal:\n    def __init__(self, nom, espece):\n        self.nom = nom        # attribut\n        self.espece = espece\n\n    def parler(self):\n        print(f'{self.nom} fait du bruit.')\n\n# Créer des objets (instances)\nchat = Animal('Minou', 'chat')\nchien = Animal('Rex', 'chien')\n\nprint(chat.nom)   # Minou\nchat.parler()     # Minou fait du bruit."
+      },
+      {
+        "niveau": "🟡 Intermédiaire — Héritage",
+        "code": "class Animal:\n    def __init__(self, nom):\n        self.nom = nom\n\n    def parler(self):\n        print(f'{self.nom} fait du bruit.')\n\n# Classe enfant qui hérite de Animal\nclass Chien(Animal):\n    def parler(self):  # redéfinit la méthode\n        print(f'{self.nom} dit : Ouaf !')\n\nclass Chat(Animal):\n    def __init__(self, nom, couleur):\n        super().__init__(nom)  # appelle __init__ du parent\n        self.couleur = couleur\n\n    def parler(self):\n        print(f'{self.nom} dit : Miaou !')\n\nrex = Chien('Rex')\nrex.parler()      # Rex dit : Ouaf !\n\nminou = Chat('Minou', 'noir')\nminou.parler()    # Minou dit : Miaou !"
+      },
+      {
+        "niveau": "🔴 Avancé — Propriétés et méthodes spéciales",
+        "code": "class Cercle:\n    def __init__(self, rayon):\n        self._rayon = rayon  # _ = conventionnellement 'privé'\n\n    @property\n    def rayon(self):\n        return self._rayon\n\n    @rayon.setter\n    def rayon(self, valeur):\n        if valeur < 0:\n            raise ValueError('Le rayon ne peut pas être négatif')\n        self._rayon = valeur\n\n    @property\n    def aire(self):\n        import math\n        return math.pi * self._rayon ** 2\n\n    def __repr__(self):\n        return f'Cercle(rayon={self._rayon})'\n\n    def __eq__(self, autre):\n        return self._rayon == autre._rayon\n\nc = Cercle(5)\nprint(c.aire)    # 78.53...\nprint(c)         # Cercle(rayon=5)\nc.rayon = 10     # passe par le setter\nc.rayon = -1     # ValueError !"
+      }
+    ],
+    "erreurs_courantes": [
+      "Oublier 'self' comme premier paramètre de chaque méthode → TypeError",
+      "Confondre la classe (modèle) et l'instance (objet créé depuis la classe)",
+      "Ne pas appeler super().__init__() dans une classe enfant → les attributs du parent ne sont pas initialisés"
+    ],
+    "a_retenir": "La POO permet de regrouper données et comportements. Mais pour des scripts simples, des fonctions suffisent souvent."
+  }
+}
