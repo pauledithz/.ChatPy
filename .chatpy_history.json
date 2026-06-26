@@ -582,5 +582,61 @@
   {
     "role": "assistant",
     "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
+  },
+  {
+    "role": "utilisateur",
+    "message": "aide boucle"
+  },
+  {
+    "role": "assistant",
+    "message": "📖 Les boucles en Python\n\nDéfinition : Une boucle répète un bloc de code un certain nombre de fois ou tant qu'une condition est vraie.\n\n━━ 🟢 Débutant — for et while\n# Boucle for avec range\nfor i in range(5):\n    print(i)  # 0, 1, 2, 3, 4\n\n# Boucle for sur une liste\nfruits = ['pomme', 'banane', 'cerise']\nfor fruit in fruits:\n    print(fruit)\n\n# Boucle while\ncompteur = 0\nwhile compteur < 3:\n    print(compteur)\n    compteur += 1  # Ne pas oublier !\n\n━━ 🟡 Intermédiaire — enumerate, zip, break, continue\n# enumerate : index + valeur\nfor i, fruit in enumerate(['pomme', 'banane']):\n    print(f'{i}: {fruit}')  # 0: pomme, 1: banane\n\n# zip : parcourir deux listes ensemble\nnoms = ['Alice', 'Bob']\nages = [30, 25]\nfor nom, age in zip(noms, ages):\n    print(f'{nom} a {age} ans')\n\n# break : arrêter la boucle\nfor i in range(10):\n    if i == 5:\n        break\n    print(i)  # 0, 1, 2, 3, 4\n\n# continue : passer à l'itération suivante\nfor i in range(5):\n    if i == 2:\n        continue\n    print(i)  # 0, 1, 3, 4\n\n━━ 🔴 Avancé — Compréhensions et générateurs\n# List comprehension (boucle en une ligne)\ncarres = [x**2 for x in range(6)]\nprint(carres)  # [0, 1, 4, 9, 16, 25]\n\n# Avec condition\npairs = [x for x in range(10) if x % 2 == 0]\nprint(pairs)  # [0, 2, 4, 6, 8]\n\n# Dict comprehension\ncarres_dict = {x: x**2 for x in range(5)}\nprint(carres_dict)  # {0:0, 1:1, 2:4, 3:9, 4:16}\n\n# Générateur (économise la mémoire sur de grandes séquences)\ngen = (x**2 for x in range(1_000_000))  # ne calcule rien encore\nprint(next(gen))  # 0  — calcule à la demande\n\n⚠️  Erreurs courantes :\n  • Oublier d'incrémenter le compteur dans un while → boucle infinie\n  • Modifier une liste pendant qu'on la parcourt → comportement imprévisible\n  • Confondre range(5) (0 à 4) avec range(1, 6) (1 à 5)\n\n💡 À retenir : Préférez 'for' quand vous connaissez à l'avance le nombre d'itérations, 'while' quand vous attendez une condition."
+  },
+  {
+    "role": "utilisateur",
+    "message": "aide classe"
+  },
+  {
+    "role": "assistant",
+    "message": "📖 Les classes et la POO en Python\n\nDéfinition : Une classe est un modèle pour créer des objets qui regroupent des données (attributs) et des comportements (méthodes).\n\n━━ 🟢 Débutant — Définir une classe simple\nclass Animal:\n    def __init__(self, nom, espece):\n        self.nom = nom        # attribut\n        self.espece = espece\n\n    def parler(self):\n        print(f'{self.nom} fait du bruit.')\n\n# Créer des objets (instances)\nchat = Animal('Minou', 'chat')\nchien = Animal('Rex', 'chien')\n\nprint(chat.nom)   # Minou\nchat.parler()     # Minou fait du bruit.\n\n━━ 🟡 Intermédiaire — Héritage\nclass Animal:\n    def __init__(self, nom):\n        self.nom = nom\n\n    def parler(self):\n        print(f'{self.nom} fait du bruit.')\n\n# Classe enfant qui hérite de Animal\nclass Chien(Animal):\n    def parler(self):  # redéfinit la méthode\n        print(f'{self.nom} dit : Ouaf !')\n\nclass Chat(Animal):\n    def __init__(self, nom, couleur):\n        super().__init__(nom)  # appelle __init__ du parent\n        self.couleur = couleur\n\n    def parler(self):\n        print(f'{self.nom} dit : Miaou !')\n\nrex = Chien('Rex')\nrex.parler()      # Rex dit : Ouaf !\n\nminou = Chat('Minou', 'noir')\nminou.parler()    # Minou dit : Miaou !\n\n━━ 🔴 Avancé — Propriétés et méthodes spéciales\nclass Cercle:\n    def __init__(self, rayon):\n        self._rayon = rayon  # _ = conventionnellement 'privé'\n\n    @property\n    def rayon(self):\n        return self._rayon\n\n    @rayon.setter\n    def rayon(self, valeur):\n        if valeur < 0:\n            raise ValueError('Le rayon ne peut pas être négatif')\n        self._rayon = valeur\n\n    @property\n    def aire(self):\n        import math\n        return math.pi * self._rayon ** 2\n\n    def __repr__(self):\n        return f'Cercle(rayon={self._rayon})'\n\n    def __eq__(self, autre):\n        return self._rayon == autre._rayon\n\nc = Cercle(5)\nprint(c.aire)    # 78.53...\nprint(c)         # Cercle(rayon=5)\nc.rayon = 10     # passe par le setter\nc.rayon = -1     # ValueError !\n\n⚠️  Erreurs courantes :\n  • Oublier 'self' comme premier paramètre de chaque méthode → TypeError\n  • Confondre la classe (modèle) et l'instance (objet créé depuis la classe)\n  • Ne pas appeler super().__init__() dans une classe enfant → les attributs du parent ne sont pas initialisés\n\n💡 À retenir : La POO permet de regrouper données et comportements. Mais pour des scripts simples, des fonctions suffisent souvent."
+  },
+  {
+    "role": "utilisateur",
+    "message": "aide xyz"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Concept 'xyz' introuvable.\nSujets disponibles : variable, fonction, boucle, condition, liste, dictionnaire, exception, classe\nExemple : aide variable  |  aide boucle  |  aide classe"
+  },
+  {
+    "role": "utilisateur",
+    "message": "qu'est-ce qu'une variable"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Une variable, c'est un espace de stockage nommé dans lequel on garde une valeur pour pouvoir la réutiliser plus tard dans un programme.\n\n💡 Confiance: 100%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "aide variable"
+  },
+  {
+    "role": "assistant",
+    "message": "📖 Les variables en Python\n\nDéfinition : Une variable est un espace nommé en mémoire qui stocke une valeur réutilisable.\n\n━━ 🟢 Débutant — Créer et utiliser une variable\nx = 5\nnom = 'Alice'\npi = 3.14\nest_actif = True\n\nprint(x)    # 5\nprint(nom)  # Alice\n\n━━ 🟡 Intermédiaire — Types et conversion\nx = 42\nprint(type(x))             # <class 'int'>\nprint(isinstance(x, int))  # True\n\n# Conversion entre types\ns = str(x)    # '42'\nf = float(x)  # 42.0\ni = int('10') # 10\n\n# Plusieurs variables en une ligne\na, b, c = 1, 2, 3\na, b = b, a  # échange de valeurs\n\n━━ 🔴 Avancé — Portée (scope) et annotations de type\n# Variable globale vs locale\nx = 10\n\ndef ma_fonction():\n    x = 20  # variable locale — n'écrase pas la globale\n    print(x)  # 20\n\nma_fonction()\nprint(x)  # 10\n\n# Pour modifier la globale depuis une fonction :\ndef incrementer():\n    global x\n    x += 1\n\n# Annotations de type (Python 3.6+)\nage: int = 25\nnom: str = 'Alice'\nscores: list[int] = [10, 20, 30]\n\n⚠️  Erreurs courantes :\n  • Utiliser une variable avant de lui assigner une valeur → NameError: name 'x' is not defined\n  • Confondre = (assignation) et == (comparaison dans un if)\n  • Modifier une variable globale sans écrire 'global x' dans la fonction\n\n💡 À retenir : En Python, une variable n'a pas de type fixe — elle peut changer de type à tout moment (langage dynamiquement typé)."
+  },
+  {
+    "role": "utilisateur",
+    "message": "merci beaucoup"
+  },
+  {
+    "role": "assistant",
+    "message": "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
+  },
+  {
+    "role": "utilisateur",
+    "message": "au revoir"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
   }
 ]

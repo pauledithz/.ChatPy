@@ -50,6 +50,7 @@ Ou : `python "ia_en_python.py"` selon votre installation.
 | `liste` | Affiche toutes les questions par catégorie |
 | `liste <catégorie>` | Questions d'une seule catégorie (ex : `liste fonctions`) — accepte les abréviations et les fautes légères |
 | `cherche <mot>` | Toutes les questions contenant ce mot-clé (ex : `cherche liste`) |
+| `aide <sujet>` | Explication détaillée débutant → avancé (ex : `aide boucle`, `aide classe`) |
 | `quiz` | Lance une session de quiz interactif pour tester vos connaissances |
 | `help`, `aide`, `?` | Rappel des commandes |
 | `historique` | Conversation depuis le début (sessions incluses) |
@@ -112,25 +113,47 @@ Ou : `python "ia_en_python.py"` selon votre installation.
   - moins de 50 % : pas de réponse fiable
 - **Mémoire persistante** : l'historique est sauvegardé dans `.chatpy_history.json` et rechargé à chaque démarrage
 - **Mode quiz** : questions aléatoires tirées de la FAQ avec score de similarité
+- **Aide détaillée** : 8 concepts Python expliqués sur 3 niveaux (débutant → avancé), chargés depuis `aide_concepts.json`
 
 ---
 
 ## Personnaliser le chatbot
 
-### Ajouter des questions / réponses
+### Ajouter des questions / réponses FAQ
 
-Dans `ia_en_python.py`, modifiez le dictionnaire **`faq_categories`** en haut du fichier (variable globale) :
+Ouvrez **`faq.json`** et ajoutez votre question dans la bonne catégorie :
 
-```python
-faq_categories = {
-    "Bases": {
-        "votre question": "Votre réponse avec exemples",
-    },
+```json
+{
+  "Bases": {
+    "ma nouvelle question": "Ma nouvelle réponse avec exemples",
     ...
+  }
 }
 ```
 
-Sauvegardez et relancez le chatbot — les nouvelles questions apparaissent dans `liste` et dans le quiz automatiquement.
+Sauvegardez et relancez — la nouvelle question apparaît dans `liste` et dans le `quiz` automatiquement.
+
+### Ajouter un concept détaillé (`aide`)
+
+Ouvrez **`aide_concepts.json`** et ajoutez une entrée en suivant le modèle existant :
+
+```json
+{
+  "mon_concept": {
+    "titre": "Mon concept en Python",
+    "mots_cles": ["mot1", "mot2"],
+    "definition": "Définition courte.",
+    "niveaux": [
+      { "niveau": "🟢 Débutant — ...", "code": "# exemple\n..." },
+      { "niveau": "🟡 Intermédiaire — ...", "code": "# exemple\n..." },
+      { "niveau": "🔴 Avancé — ...", "code": "# exemple\n..." }
+    ],
+    "erreurs_courantes": ["erreur 1", "erreur 2"],
+    "a_retenir": "Résumé clé."
+  }
+}
+```
 
 ### Questions liées après une réponse
 
@@ -142,10 +165,12 @@ Dans la classe **`ChatBot`**, attribut **`self.relations`** : associez une quest
 
 | Objectif | Où modifier |
 |----------|-------------|
+| Ajouter / modifier des questions FAQ | `faq.json` |
+| Ajouter un concept détaillé | `aide_concepts.json` |
 | Seuil minimum de similarité | Dans `chatbot_response()`, condition `if sim > 0.5:` |
 | Nombre de suggestions affichées | Dans `obtenir_suggestions()`, tranche `[:2]` |
 | Couleurs / emojis dans le terminal | Appels à `print_colored()` dans `ia_en_python.py` |
-| Fichier de sauvegarde de l'historique | Constante `HISTORY_FILE` en haut du fichier |
+| Chemins des fichiers JSON | Constantes `FAQ_FILE`, `AIDE_CONCEPTS_FILE`, `HISTORY_FILE` en haut de `ia_en_python.py` |
 
 ---
 
@@ -161,19 +186,24 @@ Dans la classe **`ChatBot`**, attribut **`self.relations`** : associez une quest
 ## Architecture du script Python
 
 ```
-ia_en_python.py
-├── HISTORY_FILE               # chemin vers .chatpy_history.json
-├── faq_categories             # dictionnaire FAQ global (toutes les catégories)
-├── faq                        # dictionnaire plat dérivé de faq_categories
-├── norm_vers_original         # table normalisé → original pour le matching
-├── normaliser_texte()         # nettoyage de l'entrée utilisateur
+Fichiers de données (modifiables sans toucher au code Python) :
+├── faq.json              → toutes les questions/réponses du chatbot
+├── aide_concepts.json    → 8 concepts expliqués sur 3 niveaux
+└── .chatpy_history.json  → historique persistant (créé automatiquement)
+
+ia_en_python.py :
+├── _DIR / HISTORY_FILE / FAQ_FILE / AIDE_CONCEPTS_FILE  # chemins
+├── normaliser_texte()         # nettoyage de l'entrée
 ├── calcul_similarite()        # SequenceMatcher (0 à 1)
-├── chatbot_response()         # FAQ + matching + commandes spéciales
+├── _charger_json()            # lecture robuste des fichiers JSON
+├── faq_categories / faq / norm_vers_original  # données chargées au démarrage
+├── _formater_concept()        # mise en forme d'un concept pour le terminal
+├── _chercher_concept()        # recherche dans aide_concepts.json
+├── chatbot_response()         # FAQ + matching + toutes les commandes
 ├── print_colored()            # sortie terminal colorée / gras
 ├── mode_quiz()                # session quiz interactif
 └── class ChatBot
-    ├── _charger_historique()  # lecture de .chatpy_history.json au démarrage
-    ├── _sauvegarder_historique() # écriture après chaque message
+    ├── _charger_historique() / _sauvegarder_historique()
     ├── ajouter_message / obtenir_contexte
     ├── obtenir_suggestions / traiter_message
     └── afficher_historique
