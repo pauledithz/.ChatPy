@@ -838,5 +838,53 @@
   {
     "role": "assistant",
     "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
+  },
+  {
+    "role": "utilisateur",
+    "message": "salut"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "tu vas bien"
+  },
+  {
+    "role": "assistant",
+    "message": "🤖 Je suis une Intelligence Artificielle, donc je vais toujours bien ! Comment puis-je vous aider avec Python aujourd'hui ?"
+  },
+  {
+    "role": "utilisateur",
+    "message": "à quoi sert une fonction"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Une fonction sert à regrouper un bloc de code qui peut être réutilisé plusieurs fois dans le programme.\nExemple :\ndef ma_fonction():\n    print('Hello')\n\ndef addition(a, b):\n    return a + b\n\n💡 Confiance: 100%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "aide fonction"
+  },
+  {
+    "role": "assistant",
+    "message": "📖 Les fonctions en Python\n\nDéfinition : Une fonction est un bloc de code réutilisable qui s'exécute quand on l'appelle par son nom.\n\n━━ 🟢 Débutant — Définir et appeler une fonction\n# Définir une fonction\ndef dire_bonjour():\n    print('Bonjour !')\n\n# Appeler la fonction\ndire_bonjour()  # Bonjour !\n\n# Fonction avec paramètres et retour\ndef addition(a, b):\n    return a + b\n\nresultat = addition(3, 4)\nprint(resultat)  # 7\n\n━━ 🟡 Intermédiaire — Valeurs par défaut et arguments nommés\n# Valeur par défaut\ndef saluer(nom, message='Bonjour'):\n    print(f'{message}, {nom} !')\n\nsaluer('Alice')            # Bonjour, Alice !\nsaluer('Bob', 'Bonsoir')   # Bonsoir, Bob !\n\n# *args : nombre variable d'arguments\ndef somme(*nombres):\n    return sum(nombres)\n\nprint(somme(1, 2, 3, 4))  # 10\n\n# **kwargs : arguments nommés variables\ndef afficher_infos(**infos):\n    for cle, val in infos.items():\n        print(f'{cle} : {val}')\n\nafficher_infos(nom='Alice', age=30)\n\n━━ 🔴 Avancé — Lambda, closures et décorateurs\n# Fonction lambda (anonyme, sur une ligne)\ncarre = lambda x: x ** 2\nprint(carre(5))  # 25\n\n# Tri avec lambda\npersonnes = [('Alice', 30), ('Bob', 25)]\npersonnes.sort(key=lambda p: p[1])  # trier par âge\n\n# Closure (fonction qui mémorise son contexte)\ndef compteur():\n    n = 0\n    def incrementer():\n        nonlocal n\n        n += 1\n        return n\n    return incrementer\n\nc = compteur()\nprint(c())  # 1\nprint(c())  # 2\n\n# Décorateur (enveloppe une fonction)\ndef logger(func):\n    def wrapper(*args, **kwargs):\n        print(f'Appel de {func.__name__}')\n        return func(*args, **kwargs)\n    return wrapper\n\n@logger\ndef addition(a, b):\n    return a + b\n\naddition(2, 3)  # Appel de addition → 5\n\n⚠️  Erreurs courantes :\n  • Oublier le return — la fonction renvoie None par défaut\n  • Confondre la définition (def) et l'appel (ma_fonction())\n  • Utiliser une valeur mutable (liste, dict) comme valeur par défaut → comportement inattendu\n\n💡 À retenir : Une bonne fonction fait une seule chose et la fait bien. Si elle dépasse 20 lignes, envisagez de la découper."
+  },
+  {
+    "role": "utilisateur",
+    "message": "merci"
+  },
+  {
+    "role": "assistant",
+    "message": "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
+  },
+  {
+    "role": "utilisateur",
+    "message": "au revoir"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
   }
 ]
