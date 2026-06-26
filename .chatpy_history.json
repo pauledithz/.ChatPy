@@ -470,5 +470,117 @@
   {
     "role": "assistant",
     "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "liste fonctions"
+  },
+  {
+    "role": "assistant",
+    "message": "📚 Fonctions:\n  • qu'est-ce qu'une fonction\n  • À quoi sert une fonction\n  • comment faire une fonction\n  • comment documenter une fonction"
+  },
+  {
+    "role": "utilisateur",
+    "message": "cherche liste"
+  },
+  {
+    "role": "assistant",
+    "message": "🔍 Questions contenant 'liste' :\n\n📚 Conditions et Boucles:\n  • comment vérifier si un élément est dans une liste\n\n📚 Structures de données:\n  • qu'est-ce qu'une liste\n  • comment obtenir la longueur d'une liste\n  • comment ajouter un élément à une liste\n  • comment supprimer un élément d'une liste\n  • comment trier une liste\n  • comment afficher tous les éléments d'une liste\n  • comment inverser une liste\n  • comment copier une liste\n  • comment faire une liste en compréhension\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "liste structur"
+  },
+  {
+    "role": "assistant",
+    "message": "📚 Structures de données:\n  • qu'est-ce qu'une liste\n  • comment obtenir la longueur d'une liste\n  • comment ajouter un élément à une liste\n  • comment supprimer un élément d'une liste\n  • comment trier une liste\n  • comment afficher tous les éléments d'une liste\n  • comment inverser une liste\n  • comment copier une liste\n  • comment faire une liste en compréhension\n  • qu'est-ce qu'un dictionnaire\n  • comment faire une boucle sur un dictionnaire\n  • comment créer un tuple\n  • comment décompresser un tuple"
+  },
+  {
+    "role": "utilisateur",
+    "message": "liste inexistant"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Catégorie 'inexistant' introuvable.\nCatégories disponibles : Bases, Fonctions, Conditions et Boucles, Structures de données, Modules et Fichiers, Utile, À propos, Job et apprentissage python"
+  },
+  {
+    "role": "utilisateur",
+    "message": "cherche xyz"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Aucune question ne contient 'xyz'.\nEssayez un mot plus général ou tapez 'liste' pour tout voir."
+  },
+  {
+    "role": "utilisateur",
+    "message": "liste boucle"
+  },
+  {
+    "role": "assistant",
+    "message": "📚 Conditions et Boucles:\n  • À quoi sert une condition\n  • comment faire une condition\n  • À quoi sert une boucle\n  • comment faire une boucle\n  • comment faire une boucle infinie\n  • comment faire une exception\n  • comment vérifier si un élément est dans une liste"
+  },
+  {
+    "role": "utilisateur",
+    "message": "cherche boucle"
+  },
+  {
+    "role": "assistant",
+    "message": "🔍 Questions contenant 'boucle' :\n\n📚 Conditions et Boucles:\n  • À quoi sert une boucle\n  • comment faire une boucle\n  • comment faire une boucle infinie\n\n📚 Structures de données:\n  • comment faire une boucle sur un dictionnaire\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "cherche condition"
+  },
+  {
+    "role": "assistant",
+    "message": "🔍 Questions contenant 'condition' :\n\n📚 Conditions et Boucles:\n  • À quoi sert une condition\n  • comment faire une condition\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "cherche fonction"
+  },
+  {
+    "role": "assistant",
+    "message": "🔍 Questions contenant 'fonction' :\n\n📚 Fonctions:\n  • qu'est-ce qu'une fonction\n  • À quoi sert une fonction\n  • comment faire une fonction\n  • comment documenter une fonction\n\n📚 Modules et Fichiers:\n  • comment importer une fonction d'un autre fichier\n\n📚 Utile:\n  • comment afficher la documentation d'une fonction\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "cherche print"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Aucune question ne contient 'print'.\nEssayez un mot plus général ou tapez 'liste' pour tout voir."
+  },
+  {
+    "role": "utilisateur",
+    "message": "cherche vaiable"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Aucune question ne contient 'vaiable'.\nEssayez un mot plus général ou tapez 'liste' pour tout voir."
+  },
+  {
+    "role": "utilisateur",
+    "message": "cherche variable"
+  },
+  {
+    "role": "assistant",
+    "message": "🔍 Questions contenant 'variable' :\n\n📚 Bases:\n  • qu'est-ce qu'une variable\n  • comment déclarer une variable\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "cherche message"
+  },
+  {
+    "role": "assistant",
+    "message": "🔍 Questions contenant 'message' :\n\n📚 Bases:\n  • comment afficher un message\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "quit"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
   }
 ]

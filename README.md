@@ -47,7 +47,9 @@ Ou : `python "ia_en_python.py"` selon votre installation.
 | Saisie | Effet |
 |--------|--------|
 | *(une question en langage naturel)* | Réponse + score de confiance + questions liées si disponibles |
-| `liste` | Affiche les questions disponibles par catégorie |
+| `liste` | Affiche toutes les questions par catégorie |
+| `liste <catégorie>` | Questions d'une seule catégorie (ex : `liste fonctions`) — accepte les abréviations et les fautes légères |
+| `cherche <mot>` | Toutes les questions contenant ce mot-clé (ex : `cherche liste`) |
 | `quiz` | Lance une session de quiz interactif pour tester vos connaissances |
 | `help`, `aide`, `?` | Rappel des commandes |
 | `historique` | Conversation depuis le début (sessions incluses) |

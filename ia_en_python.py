@@ -102,12 +102,64 @@ def chatbot_response(message):
     # Commandes spéciales
     if message in ["help", "aide", "?"]:
         return ("Commandes disponibles :\n"
-                "  liste      — voir toutes les questions du catalogue\n"
-                "  quiz       — tester vos connaissances Python\n"
-                "  historique — relire la conversation\n"
-                "  au revoir  — quitter\n\n"
+                "  liste              — toutes les questions par catégorie\n"
+                "  liste <catégorie>  — questions d'une seule catégorie (ex: liste fonctions)\n"
+                "  cherche <mot>      — questions contenant un mot-clé (ex: cherche liste)\n"
+                "  quiz               — tester vos connaissances Python\n"
+                "  historique         — relire la conversation\n"
+                "  au revoir          — quitter\n\n"
                 "Ou posez directement une question sur Python.")
-    elif message == "liste":
+
+    # liste <catégorie> — afficher uniquement une catégorie
+    if message.startswith("liste "):
+        nom_cat = message[6:].strip()
+        nom_cat_norm = normaliser_texte(nom_cat)
+
+        # Correspondance par inclusion (ex: "fonctions" → "Fonctions")
+        cats_trouvees = [c for c in faq_categories if nom_cat_norm in normaliser_texte(c)]
+
+        # Fallback : fuzzy matching sur les noms de catégories
+        if not cats_trouvees:
+            noms_norm = {normaliser_texte(c): c for c in faq_categories}
+            matches = get_close_matches(nom_cat_norm, noms_norm.keys(), n=2, cutoff=0.4)
+            cats_trouvees = [noms_norm[m] for m in matches]
+
+        if cats_trouvees:
+            result = ""
+            for cat in cats_trouvees:
+                result += f"📚 {cat}:\n"
+                for q in faq_categories[cat]:
+                    result += f"  • {q}\n"
+                result += "\n"
+            return result.strip()
+        else:
+            dispo = ", ".join(faq_categories.keys())
+            return f"❌ Catégorie '{nom_cat}' introuvable.\nCatégories disponibles : {dispo}"
+
+    # cherche <mot> — rechercher un mot-clé dans toutes les questions
+    if message.startswith("cherche "):
+        mot_cle = message[8:].strip()
+        mot_cle_norm = normaliser_texte(mot_cle)
+
+        resultats = []
+        for cat, questions in faq_categories.items():
+            for q in questions:
+                if mot_cle_norm in normaliser_texte(q):
+                    resultats.append((cat, q))
+
+        if resultats:
+            result = f"🔍 Questions contenant '{mot_cle}' :\n"
+            cat_actuelle = None
+            for cat, q in resultats:
+                if cat != cat_actuelle:
+                    result += f"\n📚 {cat}:\n"
+                    cat_actuelle = cat
+                result += f"  • {q}\n"
+            return result
+        else:
+            return f"❌ Aucune question ne contient '{mot_cle}'.\nEssayez un mot plus général ou tapez 'liste' pour tout voir."
+
+    if message == "liste":
         result = "Voici les questions que je peux répondre :\n\n"
         for category, questions in faq_categories.items():
             result += f"\n📚 {category}:\n"
@@ -287,7 +339,7 @@ bot = ChatBot()
 if __name__ == "__main__":
     print_colored("☕️ Bienvenue sur ChatPy!", "blue", bold=True)
     print("Posez-moi une question sur Python ou sur le travail informatique. (tapez 'au revoir' pour quitter).")
-    print("Tapez 'help' pour l'aide | 'liste' pour les questions | 'quiz' pour vous tester | 'historique' pour la conversation.\n")
+    print("Tapez 'help' pour l'aide | 'liste' pour les questions | 'cherche <mot>' pour filtrer | 'quiz' pour vous tester | 'historique' pour la conversation.\n")
 
     while True:
         try:
