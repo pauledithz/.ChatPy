@@ -142,5 +142,333 @@
   {
     "role": "assistant",
     "message": "✓ J'ai été créé par Zoungrana paul-emmanuel pour t'aider à apprendre Python.\n\n💡 Confiance: 58%\n\nℹ️ D'autres réponses possibles :\n  • à quoi tu sers (52%)\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "bonjour madame"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "help"
+  },
+  {
+    "role": "assistant",
+    "message": "Commandes disponibles :\n  liste      — voir toutes les questions du catalogue\n  quiz       — tester vos connaissances Python\n  historique — relire la conversation\n  au revoir  — quitter\n\nOu posez directement une question sur Python."
+  },
+  {
+    "role": "utilisateur",
+    "message": "comment vas tu"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Utilisez des parenthèses.\nExemple :\nt = (1, 2, 3)\n\n💡 Confiance: 61%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "qui t'as créer"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ J'ai été créé par Zoungrana paul-emmanuel pour t'aider à apprendre Python.\n\n💡 Confiance: 92%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "Mode Quizz"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "Quizz"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "Quizz"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "exit"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
+  },
+  {
+    "role": "utilisateur",
+    "message": "qui t'a creer"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ J'ai été créé par Zoungrana paul-emmanuel pour t'aider à apprendre Python.\n\n💡 Confiance: 96%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "quite"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ J'ai été créé par Zoungrana paul-emmanuel pour t'aider à apprendre Python.\n\n💡 Confiance: 58%\n\nℹ️ D'autres réponses possibles :\n  • à quoi tu sers (52%)\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "help"
+  },
+  {
+    "role": "assistant",
+    "message": "Commandes disponibles :\n  liste      — voir toutes les questions du catalogue\n  quiz       — tester vos connaissances Python\n  historique — relire la conversation\n  au revoir  — quitter\n\nOu posez directement une question sur Python."
+  },
+  {
+    "role": "utilisateur",
+    "message": "liste"
+  },
+  {
+    "role": "assistant",
+    "message": "Voici les questions que je peux répondre :\n\n\n📚 Bases:\n  • qu'est-ce qu'une variable\n  • comment déclarer une variable\n  • comment afficher un message\n  • comment lire une entrée utilisateur\n  • comment convertir une chaîne en entier\n  • comment convertir un entier en chaîne\n\n📚 Fonctions:\n  • qu'est-ce qu'une fonction\n  • À quoi sert une fonction\n  • comment faire une fonction\n  • comment documenter une fonction\n\n📚 Conditions et Boucles:\n  • À quoi sert une condition\n  • comment faire une condition\n  • À quoi sert une boucle\n  • comment faire une boucle\n  • comment faire une boucle infinie\n  • comment faire une exception\n  • comment vérifier si un élément est dans une liste\n\n📚 Structures de données:\n  • qu'est-ce qu'une liste\n  • comment obtenir la longueur d'une liste\n  • comment ajouter un élément à une liste\n  • comment supprimer un élément d'une liste\n  • comment trier une liste\n  • comment afficher tous les éléments d'une liste\n  • comment inverser une liste\n  • comment copier une liste\n  • comment faire une liste en compréhension\n  • qu'est-ce qu'un dictionnaire\n  • comment faire une boucle sur un dictionnaire\n  • comment créer un tuple\n  • comment décompresser un tuple\n\n📚 Modules et Fichiers:\n  • comment importer un module\n  • comment lire un fichier\n  • comment écrire dans un fichier\n  • comment importer une fonction d'un autre fichier\n  • comment installer un module\n  • comment installer plusieurs modules à la fois\n\n📚 Utile:\n  • comment faire une pause dans un programme\n  • comment générer un nombre aléatoire\n  • comment afficher la version de Python\n  • comment afficher la documentation d'une fonction\n  • comment arrêter un programme\n\n📚 À propos:\n  • de quoi tu parles\n  • qu'est-ce que tu nous apprends\n  • à quoi tu sers\n  • qui t'a créé\n  • comment devenir un expert en Python\n  • ques-ce-que je peux faire avec Python\n  • Comment créer une intelligence artificiel\n\n📚 Job et apprentissage python:\n  • comment devenir un développeur Python\n  • comment trouver un job en Python\n  • comment devenir ai engineer\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "/opt/homebrew/bin/python3 \\\"/Users/paulo26/Documents/travaux informatique/.ChatPy-2/ia_en_python.py\\\""
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "ok"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "mode quizz"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "Mode Quizz"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "Quizz"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "easter"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "easter"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "easter"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "easter"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "easter"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "qui est ton créateur"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ J'ai été créé par Zoungrana paul-emmanuel pour t'aider à apprendre Python.\n\n💡 Confiance: 68%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "qui t'as créer"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ J'ai été créé par Zoungrana paul-emmanuel pour t'aider à apprendre Python.\n\n💡 Confiance: 92%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "montr moi l'easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "C'est quoi l'easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Je sers à répondre à tes questions sur Python et à t'aider à apprendre à programmer ainsi que de comprendre le monde informatique.\n\n💡 Confiance: 54%\n\nℹ️ D'autres réponses possibles :\n  • qu'est-ce qu'une liste (53%)\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "Qu'est ce qu'un easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Une liste est une structure de données qui peut contenir plusieurs éléments.\nExemple :\nma_liste = [1, 2, 3, 'hello']\n\n💡 Confiance: 79%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "tu as un easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "montre moi ton easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "Zoungrana easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "help"
+  },
+  {
+    "role": "assistant",
+    "message": "Commandes disponibles :\n  liste      — voir toutes les questions du catalogue\n  quiz       — tester vos connaissances Python\n  historique — relire la conversation\n  au revoir  — quitter\n\nOu posez directement une question sur Python."
+  },
+  {
+    "role": "utilisateur",
+    "message": "Qu'est ce qu'un easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Une liste est une structure de données qui peut contenir plusieurs éléments.\nExemple :\nma_liste = [1, 2, 3, 'hello']\n\n💡 Confiance: 79%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "Qu'est ce qu'une liste"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Une liste est une structure de données qui peut contenir plusieurs éléments.\nExemple :\nma_liste = [1, 2, 3, 'hello']\n\n💡 Confiance: 100%\n\n📌 Questions liées:\n  1. comment ajouter un élément à une liste\n  2. comment trier une liste\n"
+  },
+  {
+    "role": "utilisateur",
+    "message": "ajouter un easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Utilisez append().\nExemple :\nma_liste.append(4)\n\n💡 Confiance: 54%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "qui est ton créateur"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ J'ai été créé par Zoungrana paul-emmanuel pour t'aider à apprendre Python.\n\n💡 Confiance: 68%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "as tu un easter egg"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
   }
 ]
