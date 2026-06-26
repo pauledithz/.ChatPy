@@ -32,6 +32,47 @@ Tapez 'help' pour l'aide | 'liste' pour les questions | 'quiz' pour vous tester 
 
 Tu vas voir toutes les questions disponibles par catégorie.
 
+Tu peux aussi filtrer par catégorie directement :
+
+```
+📝 Vous: liste fonctions
+```
+
+```
+✨ Bot:
+📚 Fonctions:
+  • qu'est-ce qu'une fonction
+  • À quoi sert une fonction
+  • comment faire une fonction
+  • comment documenter une fonction
+```
+
+Le nom de la catégorie n'a pas besoin d'être parfait — `liste structur` trouvera "Structures de données".
+
+---
+
+### **Étape 1b : Chercher par mot-clé**
+
+```
+📝 Vous: cherche liste
+```
+
+```
+✨ Bot:
+🔍 Questions contenant 'liste' :
+
+📚 Conditions et Boucles:
+  • comment vérifier si un élément est dans une liste
+
+📚 Structures de données:
+  • qu'est-ce qu'une liste
+  • comment obtenir la longueur d'une liste
+  • comment ajouter un élément à une liste
+  ...
+```
+
+Utile pour trouver rapidement toutes les questions sur un sujet sans parcourir `liste` entièrement.
+
 ---
 
 ### **Étape 2 : Poser une question**
@@ -208,6 +249,8 @@ Une variable, c'est un espace de stockage nommé...
 | Commande | Résultat |
 |----------|----------|
 | `liste` | Voir toutes les questions par catégorie |
+| `liste <catégorie>` | Questions d'une seule catégorie (ex : `liste fonctions`) |
+| `cherche <mot>` | Toutes les questions contenant un mot-clé (ex : `cherche boucle`) |
 | `quiz` | Lancer une session de quiz interactif |
 | `help` ou `aide` ou `?` | Obtenir de l'aide |
 | `historique` | Voir toute la conversation (sessions incluses) |
@@ -287,6 +330,8 @@ python3 "ia_en_python.py"
 Puis essaie :
 ```
 📝 Vous: liste
+📝 Vous: liste fonctions
+📝 Vous: cherche boucle
 📝 Vous: qu'est-ce qu'une fonction?
 📝 Vous: quiz
 📝 Vous: historique
