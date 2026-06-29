@@ -958,5 +958,45 @@
   {
     "role": "assistant",
     "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
+  },
+  {
+    "role": "utilisateur",
+    "message": "salut"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "tu vas bien"
+  },
+  {
+    "role": "assistant",
+    "message": "🤖 Je suis une Intelligence Artificielle, donc je vais toujours bien ! Comment puis-je vous aider avec Python aujourd'hui ?"
+  },
+  {
+    "role": "utilisateur",
+    "message": "ok merci"
+  },
+  {
+    "role": "assistant",
+    "message": "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
+  },
+  {
+    "role": "utilisateur",
+    "message": "quizz"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "quit"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
   }
 ]
