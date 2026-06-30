@@ -343,10 +343,50 @@ class ChatBot:
 
 bot = ChatBot()
 
+
+def afficher_demarrage():
+    VERSION = "v1.0.0"
+    nb_questions = len(faq)
+    nb_categories = len(faq_categories)
+    nb_concepts = len(aide_concepts)
+
+    def colorize(texte, color, bold=False):
+        codes = {"blue": ("\033[94m", "\033[1;94m"), "green": ("\033[92m", "\033[1;92m"), "yellow": ("\033[93m", "\033[1;93m")}
+        normal, gras = codes.get(color, ("\033[0m", "\033[1m"))
+        code = gras if bold else normal
+        return f"{code}{texte}\033[0m"
+
+    lignes_mascotte = [
+        r"       ____  _           _   ____",
+        r"      / ___|| |__   __ _| |_|  _ \ _   _",
+        r"     | |    | '_ \ / _` | __| |_) | | | |",
+        r"     | |___ | | | | (_| | |_|  __/| |_| |",
+        r"      \____||_| |_|\__,_|\__|_|    \__, |",
+        r"                                   |___/ ",
+    ]
+
+    lignes_info = [
+        colorize(f"ChatPy {VERSION}  —  Chatbot FAQ Python", "blue", bold=True),
+        "",
+        f"📚  {nb_questions} questions · {nb_categories} catégories · {nb_concepts} concepts",
+        "🐍  Fonctionne 100% hors-ligne",
+        "",
+        colorize("💡  Tapez 'help' pour voir les commandes", "yellow"),
+    ]
+
+    largeur = max(len(l) for l in lignes_mascotte)
+    nb_lignes = max(len(lignes_mascotte), len(lignes_info))
+
+    print()
+    for i in range(nb_lignes):
+        ligne_m = lignes_mascotte[i] if i < len(lignes_mascotte) else ""
+        info = lignes_info[i] if i < len(lignes_info) else ""
+        print(f"{colorize(ligne_m.ljust(largeur), 'blue', bold=True)}  │  {info}")
+    print()
+
+
 if __name__ == "__main__":
-    print_colored("☕️ Bienvenue sur ChatPy!", "blue", bold=True)
-    print("Posez-moi une question sur Python ou sur le travail informatique. (tapez 'au revoir' pour quitter).")
-    print("Tapez 'help' | 'liste' | 'cherche <mot>' | 'aide <sujet>' | 'quiz' | 'historique'\n")
+    afficher_demarrage()
 
     while True:
         try:

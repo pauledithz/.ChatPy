@@ -998,5 +998,45 @@
   {
     "role": "assistant",
     "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
+  },
+  {
+    "role": "utilisateur",
+    "message": "au revoir"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
+  },
+  {
+    "role": "utilisateur",
+    "message": "help"
+  },
+  {
+    "role": "assistant",
+    "message": "Commandes disponibles :\n  liste              — toutes les questions par catégorie\n  liste <catégorie>  — questions d'une seule catégorie (ex: liste fonctions)\n  cherche <mot>      — questions contenant un mot-clé (ex: cherche liste)\n  aide <sujet>       — explication détaillée débutant→avancé (ex: aide boucle)\n  quiz               — tester vos connaissances Python\n  historique         — relire la conversation\n  au revoir          — quitter\n\nOu posez directement une question sur Python."
+  },
+  {
+    "role": "utilisateur",
+    "message": "salut"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "salut"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "quit"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
   }
 ]
