@@ -42,6 +42,19 @@ python3 "ia_en_python.py"
 
 Ou : `python "ia_en_python.py"` selon votre installation.
 
+Au démarrage, un écran d'accueil s'affiche avec la mascotte, la version, les stats de la FAQ et un rappel pour `help` :
+
+```
+       ____  _           _   ____          │  ChatPy v1.0.0  —  Chatbot FAQ Python
+      / ___|| |__   __ _| |_|  _ \ _   _  │
+     | |    | '_ \ / _` | __| |_) | | | | │  📚  51 questions · 8 catégories · 8 concepts
+     | |___ | | | | (_| | |_|  __/| |_| | │  🐍  Fonctionne 100% hors-ligne
+      \____||_| |_|\__,_|\__|_|    \__, |  │
+                                   |___/   │  💡  Tapez 'help' pour voir les commandes
+```
+
+Les stats (nombre de questions, catégories, concepts) se mettent à jour automatiquement selon le contenu de `faq.json` et `aide_concepts.json`.
+
 ### Commandes disponibles
 
 | Saisie | Effet |
@@ -201,6 +214,7 @@ ia_en_python.py :
 ├── _chercher_concept()        # recherche dans aide_concepts.json
 ├── chatbot_response()         # FAQ + matching + toutes les commandes
 ├── print_colored()            # sortie terminal colorée / gras
+├── afficher_demarrage()       # écran d'accueil mascotte + stats au lancement
 ├── mode_quiz()                # session quiz interactif
 └── class ChatBot
     ├── _charger_historique() / _sauvegarder_historique()
