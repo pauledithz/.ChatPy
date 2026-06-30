@@ -11,9 +11,12 @@ python3 "ia_en_python.py"
 
 Tu devrais voir :
 ```
-☕️ Bienvenue sur ChatPy!
-Posez-moi une question sur Python ou sur le travail informatique. (tapez 'au revoir' pour quitter).
-Tapez 'help' pour l'aide | 'liste' pour les questions | 'quiz' pour vous tester | 'historique' pour la conversation.
+       ____  _           _   ____          │  ChatPy v1.0.0  —  Chatbot FAQ Python
+      / ___|| |__   __ _| |_|  _ \ _   _  │
+     | |    | '_ \ / _` | __| |_) | | | | │  📚  51 questions · 8 catégories · 8 concepts
+     | |___ | | | | (_| | |_|  __/| |_| | │  🐍  Fonctionne 100% hors-ligne
+      \____||_| |_|\__,_|\__|_|    \__, |  │
+                                   |___/   │  💡  Tapez 'help' pour voir les commandes
 
 📝 Vous:
 ```
@@ -201,7 +204,13 @@ Tu verras toutes les questions et réponses, **y compris celles des sessions pr�
 
 ### **Exemple 1 : Débutant**
 ```
-☕️ Bienvenue sur ChatPy!
+       ____  _           _   ____          │  ChatPy v1.0.0  —  Chatbot FAQ Python
+      / ___|| |__   __ _| |_|  _ \ _   _  │
+     | |    | '_ \ / _` | __| |_) | | | | │  📚  51 questions · 8 catégories · 8 concepts
+     | |___ | | | | (_| | |_|  __/| |_| | │  🐍  Fonctionne 100% hors-ligne
+      \____||_| |_|\__,_|\__|_|    \__, |  │
+                                   |___/   │  💡  Tapez 'help' pour voir les commandes
+
 📝 Vous: aide
 
 ✨ Bot: Commandes disponibles :
