@@ -345,7 +345,7 @@ bot = ChatBot()
 
 
 def afficher_demarrage():
-    VERSION = "v1.0.0"
+    VERSION = "v1.5.3"
     nb_questions = len(faq)
     nb_categories = len(faq_categories)
     nb_concepts = len(aide_concepts)
