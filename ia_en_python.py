@@ -115,6 +115,7 @@ def chatbot_response(message):
                 "  aide <sujet>       — explication détaillée débutant→avancé (ex: aide boucle)\n"
                 "  quiz               — tester vos connaissances Python\n"
                 "  historique         — relire la conversation\n"
+                "  clear              — effacer l'écran (l'historique reste sauvegardé)\n"
                 "  au revoir          — quitter\n\n"
                 "Ou posez directement une question sur Python.")
 
@@ -396,6 +397,12 @@ if __name__ == "__main__":
 
             if user_input.lower() == "historique":
                 bot.afficher_historique()
+                continue
+
+            if user_input.lower() == "clear":
+                os.system('cls' if os.name == 'nt' else 'clear')
+                print_colored("🧹 Écran effacé. L'historique est conservé dans le fichier.", "yellow")
+                print()
                 continue
 
             if user_input.lower() == "quiz":

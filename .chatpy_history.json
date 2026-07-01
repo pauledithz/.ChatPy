@@ -1046,5 +1046,37 @@
   {
     "role": "assistant",
     "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
+  },
+  {
+    "role": "utilisateur",
+    "message": "salut"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "car"
+  },
+  {
+    "role": "assistant",
+    "message": "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "salut"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "quit"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
   }
 ]
