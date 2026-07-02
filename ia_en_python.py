@@ -23,6 +23,11 @@ def calcul_similarite(texte1, texte2):
     return SequenceMatcher(None, texte1, texte2).ratio()
 
 
+def _contient_mot(message, mots):
+    """Vrai si l'un des mots/phrases apparaît comme mot(s) entier(s) dans message (pas comme sous-chaîne)."""
+    return any(re.search(r'\b' + re.escape(mot) + r'\b', message) for mot in mots)
+
+
 def _charger_json(chemin, nom):
     try:
         with open(chemin, 'r', encoding='utf-8') as f:
@@ -207,15 +212,15 @@ def chatbot_response(message):
         return response
 
     # Réponses conversationnelles
-    if any(word in message for word in ["bonjour", "salut", "hello", "hi"]):
+    if _contient_mot(message, ["bonjour", "salut", "hello", "hi"]):
         return "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
-    elif any(word in message for word in ["ça va bien", "tu vas bien"]):
+    elif _contient_mot(message, ["ça va bien", "tu vas bien"]):
         return "🤖 Je suis une Intelligence Artificielle, donc je vais toujours bien ! Comment puis-je vous aider avec Python aujourd'hui ?"
-    elif any(word in message for word in ["nom", "appelles", "qui es-tu"]):
+    elif _contient_mot(message, ["nom", "appelles", "qui es-tu"]):
         return "📖 Je suis un chatbot Python qui peut répondre à des questions sur le code."
-    elif "merci" in message:
+    elif _contient_mot(message, ["merci"]):
         return "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
-    elif any(word in message for word in ["au revoir", "bye", "quit", "exit"]):
+    elif _contient_mot(message, ["au revoir", "bye", "quit", "exit"]):
         return "👋 Au revoir ! Continue à apprendre Python le plus possible !"
     else:
         return "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
@@ -414,7 +419,7 @@ if __name__ == "__main__":
             print(response)
             print()
 
-            if any(word in user_input.lower() for word in ["au revoir", "bye", "quit", "exit"]):
+            if _contient_mot(user_input.lower(), ["au revoir", "bye", "quit", "exit"]):
                 print_colored("À bientôt ! Continue à apprendre Python tout les jours ! 🚀", "blue", bold=True)
                 break
         except KeyboardInterrupt:

@@ -1110,5 +1110,37 @@
   {
     "role": "assistant",
     "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
+  },
+  {
+    "role": "utilisateur",
+    "message": "salut"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
+  },
+  {
+    "role": "utilisateur",
+    "message": "comment convertir en nombre"
+  },
+  {
+    "role": "assistant",
+    "message": "✓ Utilisez str().\nExemple :\ns = str(5)\n\n💡 Confiance: 71%"
+  },
+  {
+    "role": "utilisateur",
+    "message": "merci"
+  },
+  {
+    "role": "assistant",
+    "message": "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
+  },
+  {
+    "role": "utilisateur",
+    "message": "exit"
+  },
+  {
+    "role": "assistant",
+    "message": "👋 Au revoir ! Continue à apprendre Python le plus possible !"
   }
 ]
