@@ -216,7 +216,7 @@ def chatbot_response(message):
         return "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
     elif _contient_mot(message, ["ça va bien", "tu vas bien"]):
         return "🤖 Je suis une Intelligence Artificielle, donc je vais toujours bien ! Comment puis-je vous aider avec Python aujourd'hui ?"
-    elif _contient_mot(message, ["nom", "appelles", "qui es-tu"]):
+    elif _contient_mot(message, ["ton nom", "comment t'appelles-tu", "qui es-tu"]):
         return "📖 Je suis un chatbot Python qui peut répondre à des questions sur le code."
     elif _contient_mot(message, ["merci"]):
         return "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
