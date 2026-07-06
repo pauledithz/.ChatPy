@@ -2,6 +2,7 @@ import re
 import os
 import json
 import random
+import datetime
 import unicodedata
 from difflib import get_close_matches, SequenceMatcher
 
@@ -9,6 +10,7 @@ _DIR              = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE      = os.path.join(_DIR, ".chatpy_history.json")
 FAQ_FILE          = os.path.join(_DIR, "faq.json")
 AIDE_CONCEPTS_FILE = os.path.join(_DIR, "aide_concepts.json")
+QUESTIONS_SANS_REPONSE_FILE = os.path.join(_DIR, "questions_sans_reponse.json")
 
 
 def normaliser_texte(texte):
@@ -72,6 +74,29 @@ def _formater_concept(concept):
         lignes.append(f"💡 À retenir : {concept['a_retenir']}")
 
     return "\n".join(lignes)
+
+
+def _logger_question_sans_reponse(message):
+    """Enregistre une question sans réponse dans questions_sans_reponse.json pour repérer les trous de la FAQ."""
+    try:
+        with open(QUESTIONS_SANS_REPONSE_FILE, 'r', encoding='utf-8') as f:
+            donnees = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        donnees = {}
+
+    cle = normaliser_texte(message)
+    aujourdhui = datetime.date.today().isoformat()
+    if cle in donnees:
+        donnees[cle]["occurrences"] += 1
+        donnees[cle]["derniere_fois"] = aujourdhui
+    else:
+        donnees[cle] = {"texte": message, "occurrences": 1, "derniere_fois": aujourdhui}
+
+    try:
+        with open(QUESTIONS_SANS_REPONSE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(donnees, f, ensure_ascii=False, indent=2)
+    except IOError:
+        pass
 
 
 def _chercher_concept(sujet):
@@ -223,6 +248,7 @@ def chatbot_response(message):
     elif _contient_mot(message, ["au revoir", "bye", "quit", "exit"]):
         return "👋 Au revoir ! Continue à apprendre Python le plus possible !"
     else:
+        _logger_question_sans_reponse(message)
         return "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
 
 
