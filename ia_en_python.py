@@ -264,17 +264,22 @@ def print_colored(text, color, bold=False):
     print(f"{code}{text}\033[0m")
 
 
-def mode_quiz():
+def mode_quiz(nb_questions_max=10):
     """Lance une session de quiz interactif sur les questions de la FAQ."""
     questions = list(faq.items())
     score = 0
     total = 0
+    derniere_question = None
 
-    print_colored("\n🎯 Mode Quiz — répondez de mémoire, tapez 'fin' pour arrêter.\n", "yellow", bold=True)
+    print_colored(f"\n🎯 Mode Quiz — {nb_questions_max} questions, répondez de mémoire, tapez 'fin' pour arrêter avant la fin.\n", "yellow", bold=True)
 
-    while True:
+    while total < nb_questions_max:
         question, bonne_reponse = random.choice(questions)
-        print_colored(f"❓ {question} ?", "blue")
+        while question == derniere_question and len(questions) > 1:
+            question, bonne_reponse = random.choice(questions)
+        derniere_question = question
+
+        print_colored(f"❓ ({total + 1}/{nb_questions_max}) {question} ?", "blue")
 
         try:
             reponse = input("📝 Votre réponse : ").strip()
