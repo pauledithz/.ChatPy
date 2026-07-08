@@ -4,21 +4,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ChatPy is a Python FAQ chatbot (CLI) paired with a static landing page. It answers questions about Python using fuzzy string matching and a confidence score system. There is no database, no server, and no external dependencies beyond the Python standard library.
+ChatPy is a Python FAQ chatbot, usable either as a CLI or through a Flask web backend, paired with a static landing page. It answers questions about Python using fuzzy string matching and a confidence score system. There is no database and no external dependencies beyond the Python standard library, except for Flask (only required for the web backend, not the CLI).
 
 ## Running the Project
 
-**Chatbot CLI:**
+**Chatbot CLI (no dependencies beyond stdlib):**
 ```bash
 python3 "ia_en_python.py"
 ```
 
-**Landing page (static, no server required):**
+**Web backend (Flask — serves the landing page, `/chat`, and the `/api/chat` endpoint):**
+```bash
+python3 -m venv .venv && source .venv/bin/activate   # first time only
+pip install -r requirements.txt
+python3 app.py
+# Then open http://localhost:5001
+```
+A `.venv` is recommended over installing Flask system-wide, especially on macOS with Homebrew Python (PEP 668 blocks system-wide `pip install` there). `.vscode/settings.json` points `python.defaultInterpreterPath` at `.venv/bin/python` so the IDE picks it up automatically. Port 5001 (not 5000) is used because macOS's AirPlay Receiver commonly occupies 5000.
+`app.py` imports the shared `bot` instance from `ia_en_python.py`, so the CLI and the web chat use the exact same matching logic and conversation state (`.chatpy_history.json`). The `/chat` page (`chat.html` + `chat.js`) is a real, working chat UI — unlike the animated demo on the landing page (see below). It's linked from the nav (`Index.html`) and reachable without logging in — the signup/login modal on `Index.html` is decorative (no real authentication) and unrelated to chat access.
+
+**Landing page alone (static, no server required):**
 Open `Index.html` directly in a browser, or serve locally:
 ```bash
 python3 -m http.server 8080
 # Then open http://localhost:8080/Index.html
 ```
+Note: the `chat-preview` box on the landing page hero is a scripted animation cycling through canned example conversations (`script.js`) — it is not connected to the real chatbot.
 
 ## Architecture
 
@@ -43,6 +54,8 @@ Both JSON knowledge files are loaded via `_charger_json()`, which prints a warni
 **`ChatBot` class** holds session state: conversation history (persisted to `.chatpy_history.json`), previously asked questions (`questions_posees`), and a `relations` dict that maps a question to follow-up suggestions shown after a response (via `obtenir_suggestions()`).
 
 **`mode_quiz()`** is a standalone REPL loop (entered via the `quiz` command) that picks a random FAQ question, compares the user's typed answer to the stored answer with `SequenceMatcher`, and reports a running score.
+
+**`app.py`** is the Flask web backend. It serves `Index.html` at `/`, the real chat UI (`chat.html`/`chat.js`) at `/chat`, and a `POST /api/chat` endpoint (`{"message": "..."}` → `{"response": "..."}`) that calls `bot.traiter_message()`. It shares the single module-level `bot` instance from `ia_en_python.py`, so web and CLI sessions read/write the same `.chatpy_history.json` — there is no per-user session separation.
 
 ## Key Customization Points
 

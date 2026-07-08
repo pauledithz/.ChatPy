@@ -31,6 +31,25 @@ Puis : `http://localhost:8080/chatpy_landing_animated.html`
 
 ---
 
+## Interface web (Flask)
+
+En plus du CLI, le chatbot est accessible depuis un navigateur via un petit backend Flask (`app.py`).
+
+```bash
+cd /chemin/vers/ChatPy-2
+python3 -m venv .venv && source .venv/bin/activate   # première fois seulement
+pip install -r requirements.txt
+python3 app.py
+```
+
+Puis ouvrez `http://localhost:5001` (la landing page) ou directement `http://localhost:5001/chat` (interface de chat fonctionnelle, avec de vrais échanges avec le bot — à ne pas confondre avec la démo animée de la landing page).
+
+> Utilisez un environnement virtuel (`.venv`) plutôt qu'un `pip install` global : sur macOS avec Python Homebrew, l'installation globale de paquets est bloquée par défaut (PEP 668). Le port 5001 (et non 5000) est utilisé car macOS occupe souvent le port 5000 avec le service AirPlay Receiver.
+
+Le backend appelle la même logique que le CLI (`bot.traiter_message()` dans `ia_en_python.py`), donc l'historique (`.chatpy_history.json`) est partagé entre le CLI et le web. Le lien "Chat" est visible dans la nav de la landing page et accessible sans connexion (le modal d'inscription reste, pour l'instant, décoratif et indépendant de l'accès au chat).
+
+---
+
 ## Chatbot en ligne de commande
 
 ### Lancer le chatbot
