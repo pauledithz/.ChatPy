@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ChatPy — Chat</title>
+  <link rel="icon" type="image/png" href="ChatPY_logo.PNG">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page-shell chat-page-shell">
+
+  <nav class="nav">
+    <div class="nav-logo"><img class="nav-logo-img" src="ChatPY_logo.PNG" alt="" width="54" height="54"> ChatPy</div>
+    <div class="nav-links">
+      <a href="/">← Retour à l'accueil</a>
+    </div>
+  </nav>
+
+  <section class="chat-preview chat-preview--page">
+    <div class="chat-header">
+      <div class="chat-avatar"><img src="ChatPY_logo.PNG" alt="ChatPy" width="44" height="44" decoding="async"></div>
+      <div>
+        <div class="chat-name">ChatPy</div>
+        <div class="chat-status"><span class="chat-status-dot"></span> En ligne</div>
+      </div>
+    </div>
+    <div class="chat-body" id="chatBody"></div>
+    <form class="chat-input-bar" id="chatForm">
+      <input type="text" class="chat-text-input" id="chatInput" placeholder="Posez une question sur Python…" autocomplete="off">
+      <button type="submit" class="chat-send" id="sendBtn">
+        <svg viewBox="0 0 16 16"><path d="M2 2l12 6-12 6V9.5l8-1.5-8-1.5V2z"/></svg>
+      </button>
+    </form>
+  </section>
+
+</div>
+<script src="chat.js"></script>
+</body>
+</html>
