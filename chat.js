@@ -2,6 +2,14 @@ const chatBody = document.getElementById('chatBody');
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
+const chatWelcome = document.getElementById('chatWelcome');
+
+// L'écran d'accueil s'efface dès le premier message envoyé.
+function masquerAccueil() {
+  if (!chatWelcome || !chatWelcome.isConnected) return;
+  chatWelcome.classList.add('hiding');
+  setTimeout(() => chatWelcome.remove(), 300);
+}
 
 function addRow(type, text, isTyping) {
   const row = document.createElement('div');
@@ -61,6 +69,7 @@ chatForm.addEventListener('submit', async (event) => {
   chatInput.disabled = true;
   sendBtn.disabled = true;
 
+  masquerAccueil();
   addRow('user', message, false);
   const typingRow = addRow('ai', '', true);
 
@@ -78,5 +87,4 @@ chatForm.addEventListener('submit', async (event) => {
   }
 });
 
-addRow('ai', "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide.", false);
 chatInput.focus();

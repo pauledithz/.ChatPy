@@ -1,3 +1,12 @@
+:root {
+  /* Police de texte : pile système (aucune dépendance réseau) */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif;
+  /* Police d'affichage : serif élégante (Fraunces), avec repli système */
+  --font-serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :focus-visible { outline: 3px solid rgba(255,255,255,0.12); outline-offset: 2px; }
 button:focus, a:focus, input:focus, textarea:focus, [role="dialog"]:focus { outline: 3px solid rgba(255,255,255,0.12); outline-offset: 2px; }
@@ -12,6 +21,9 @@ body {
 }
 body {
   color: #f0f0f0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   min-height: 100%;
   min-height: 100dvh;
   overflow-x: clip;
@@ -81,7 +93,15 @@ body {
 .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: #1a1a1a; border: 0.5px solid #333; border-radius: 20px; padding: 5px 14px; font-size: 12px; color: #aaa; margin-bottom: 2rem; }
 .badge-pulse { width: 6px; height: 6px; background: #fff; border-radius: 50%; }
 .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 500; line-height: 1.15; color: #fff; letter-spacing: -1.5px; margin-bottom: 1.25rem; }
-.hero h1 span { color: #555; }
+/* Le mot mis en valeur : serif en italique, teinte distincte */
+.hero h1 span {
+  color: #8a8a8a;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  padding-right: 0.06em; /* évite que le jambage italique ne colle au mot suivant */
+}
 .hero p {
   font-size: clamp(15px, 2.5vw, 17px);
   color: #666;
@@ -500,4 +520,63 @@ body {
 
 .form .btn.apple svg path {
   fill: currentColor;
+}
+
+/* ============================================================
+   Écran d'accueil du chat (/chat) — thème sombre, titre serif
+   ============================================================ */
+.chat-welcome {
+  margin: auto;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.85rem;
+  animation: welcomeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.chat-welcome-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  margin-bottom: 0.25rem;
+}
+.chat-welcome-title {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  color: #f0f0f0;
+}
+.chat-welcome-subtitle {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #666;
+  max-width: 26rem;
+}
+.chat-welcome-subtitle code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: #aaa;
+  background: #1a1a1a;
+  border: 0.5px solid #2a2a2a;
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+@keyframes welcomeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.chat-welcome.hiding {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-welcome { animation: none; }
+  .chat-welcome.hiding { transition: none; }
 }

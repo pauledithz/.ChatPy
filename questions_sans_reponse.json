@@ -1,12 +1,27 @@
 {
   "quoi": {
     "texte": "quoi",
-    "occurrences": 1,
-    "derniere_fois": "2026-07-06"
+    "occurrences": 2,
+    "derniere_fois": "2026-07-09"
   },
   "comment": {
     "texte": "comment",
     "occurrences": 1,
     "derniere_fois": "2026-07-06"
+  },
+  "clear": {
+    "texte": "clear",
+    "occurrences": 1,
+    "derniere_fois": "2026-07-09"
+  },
+  "aurevoir": {
+    "texte": "aurevoir",
+    "occurrences": 1,
+    "derniere_fois": "2026-07-09"
+  },
+  "mon dict": {
+    "texte": "mon dict",
+    "occurrences": 1,
+    "derniere_fois": "2026-07-09"
   }
 }

@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>ChatPy — Chat</title>
   <link rel="icon" type="image/png" href="ChatPY_logo.PNG">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -25,7 +28,15 @@
         <div class="chat-status"><span class="chat-status-dot"></span> En ligne</div>
       </div>
     </div>
-    <div class="chat-body" id="chatBody"></div>
+    <div class="chat-body" id="chatBody">
+      <div class="chat-welcome" id="chatWelcome">
+        <img class="chat-welcome-logo" src="ChatPY_logo.PNG" alt="" width="64" height="64" decoding="async">
+        <h1 class="chat-welcome-title">Bonjour 👋</h1>
+        <p class="chat-welcome-subtitle">
+          Posez-moi une question sur Python. Tapez <code>help</code> pour découvrir ce que je sais faire.
+        </p>
+      </div>
+    </div>
     <form class="chat-input-bar" id="chatForm">
       <input type="text" class="chat-text-input" id="chatInput" placeholder="Posez une question sur Python…" autocomplete="off">
       <button type="submit" class="chat-send" id="sendBtn">
