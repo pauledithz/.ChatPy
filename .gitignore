@@ -1,3 +1,13 @@
 .venv/
 __pycache__/
 *.pyc
+
+# Données générées à l'exécution : conversations et questions des utilisateurs.
+# Ne doivent jamais être committées.
+.chatpy_history.json
+questions_sans_reponse.json
+.env
+
+# Écriture atomique et mise de côté des fichiers illisibles.
+.tmp_chatpy_*.json
+*.corrompu
