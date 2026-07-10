@@ -20,7 +20,7 @@ pip install -r requirements.txt
 python3 app.py
 # Then open http://localhost:5001
 ```
-The Werkzeug debugger allows arbitrary code execution, so it is off by default; set `CHATPY_DEBUG=1` to enable it for local development only.
+The Werkzeug debugger allows arbitrary code execution, so it is off by default; set `CHATPY_DEBUG=1` to enable it for local development only. `CHATPY_SECRET_KEY` signs the session cookie that carries quiz state; without it a random key is generated per process, so restarting the server drops any quiz in progress.
 A `.venv` is recommended over installing Flask system-wide, especially on macOS with Homebrew Python (PEP 668 blocks system-wide `pip install` there). `.vscode/settings.json` points `python.defaultInterpreterPath` at `.venv/bin/python` so the IDE picks it up automatically. Port 5001 (not 5000) is used because macOS's AirPlay Receiver commonly occupies 5000.
 `app.py` imports the shared `bot` instance from `ia_en_python.py`, so the CLI and the web chat use the exact same matching logic and conversation state (`.chatpy_history.json`). The `/chat` page (`chat.html` + `chat.js`) is a real, working chat UI — unlike the animated demo on the landing page (see below). It's linked from the nav (`Index.html`) and reachable without logging in — the signup/login modal on `Index.html` is decorative (no real authentication) and unrelated to chat access.
 
@@ -47,7 +47,7 @@ Both runtime files go through `_ecrire_json_atomique()` (temp file + `os.replace
 Both JSON knowledge files are loaded via `_charger_json()`, which prints a warning and falls back to `{}` on a missing file or invalid JSON rather than crashing.
 
 **Matching pipeline in `chatbot_response()`:**
-1. Special commands checked first: `aide <sujet>`, `help`/`aide`/`?`, `liste`, `liste <catégorie>`, `cherche <mot>`. `COMMANDES_TERMINAL` (`clear`, `historique`, `quiz`) are intercepted by the CLI loop before `chatbot_response()` ever sees them; the branch here exists so the *web* chat answers them with an explanation instead of "I don't understand".
+1. Special commands checked first: `aide <sujet>`, `help`/`aide`/`?`, `liste`, `liste <catégorie>`, `cherche <mot>`. `COMMANDES_TERMINAL` (`clear`, `historique`) are intercepted by the CLI loop before `chatbot_response()` ever sees them; the branch here exists so the *web* chat answers them with an explanation instead of "I don't understand". `quiz` is handled by both front-ends and so never reaches `chatbot_response()`.
 2. Exact match after normalization (`normaliser_texte`).
 3. Fuzzy match via `difflib.get_close_matches` (cutoff 0.6).
 4. `SequenceMatcher` similarity scan (threshold 0.5), surfacing up to 2 alternate matches when confidence < 70%.
@@ -56,7 +56,11 @@ Both JSON knowledge files are loaded via `_charger_json()`, which prints a warni
 
 **`ChatBot` class** holds session state: conversation history (persisted to `.chatpy_history.json`), previously asked questions (`questions_posees`), and a `relations` dict that maps a question to follow-up suggestions shown after a response (via `obtenir_suggestions()`).
 
-**`mode_quiz()`** is a standalone REPL loop (entered via the `quiz` command) that picks a random FAQ question, compares the user's typed answer to the stored answer with `SequenceMatcher`, and reports a running score.
+**Quiz.** The scoring rules live in `choisir_question_quiz()` and `evaluer_reponse_quiz()` (thresholds `QUIZ_SEUIL_BONNE` / `QUIZ_SEUIL_PRESQUE`), shared by both front-ends:
+- `mode_quiz()` is the terminal REPL loop, entered via the `quiz` command in the CLI.
+- `demarrer_quiz()` / `repondre_quiz(etat, message)` are the web equivalent: a state machine over a plain serializable dict, since each web message is an isolated HTTP request. `app.py` stores that dict in the Flask session cookie, so **each browser gets its own quiz** even though `bot` is a shared singleton. Only the question text and the score travel in the cookie — the expected answer never leaves the server.
+
+While a quiz is active, `/api/chat` treats every message as an answer and bypasses `bot.traiter_message()` entirely, so quiz answers never land in `.chatpy_history.json` or `questions_sans_reponse.json`. `fin`/`exit`/`quitter` ends it early.
 
 **`app.py`** is the Flask web backend. It serves `Index.html` at `/`, the real chat UI (`chat.html`/`chat.js`) at `/chat`, and a `POST /api/chat` endpoint (`{"message": "..."}` → `{"response": "..."}`) that calls `bot.traiter_message()`. It shares the single module-level `bot` instance from `ia_en_python.py`, so web and CLI sessions read/write the same `.chatpy_history.json` — there is no per-user session separation.
 

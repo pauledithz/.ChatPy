@@ -20,7 +20,12 @@ HISTORIQUE_MAX_MESSAGES = 1000
 
 # Commandes qui n'ont de sens que dans le terminal (elles pilotent la boucle
 # interactive). Elles n'atteignent chatbot_response() que depuis le chat web.
-COMMANDES_TERMINAL = ("clear", "historique", "quiz")
+COMMANDES_TERMINAL = ("clear", "historique")
+
+QUIZ_NB_QUESTIONS = 10
+QUIZ_MOTS_ARRET   = ("fin", "exit", "quitter")
+QUIZ_SEUIL_BONNE   = 70   # similarité ≥ 70% : réponse comptée juste
+QUIZ_SEUIL_PRESQUE = 35   # entre 35% et 70% : sur la bonne piste
 
 MOTS_AU_REVOIR = ["au revoir", "aurevoir", "a bientot", "à bientôt", "bye", "quit", "exit"]
 
@@ -341,21 +346,106 @@ def print_colored(text, color, bold=False):
     print(f"{code}{text}\033[0m")
 
 
-def mode_quiz(nb_questions_max=10):
-    """Lance une session de quiz interactif sur les questions de la FAQ."""
+def choisir_question_quiz(derniere_question=None):
+    """Tire une question au hasard, sans reposer celle qui vient d'être posée.
+
+    Retourne (question, réponse), ou None si la FAQ est vide.
+    """
     questions = list(faq.items())
+    if not questions:
+        return None
+    if derniere_question is not None and len(questions) > 1:
+        questions = [qr for qr in questions if qr[0] != derniere_question]
+    return random.choice(questions)
+
+
+def evaluer_reponse_quiz(reponse, bonne_reponse):
+    """Compare la réponse de l'utilisateur à celle attendue.
+
+    Retourne (similarité en %, verdict) où verdict vaut "bonne", "presque" ou "fausse".
+    """
+    sim = int(calcul_similarite(normaliser_texte(reponse), normaliser_texte(bonne_reponse)) * 100)
+    if sim >= QUIZ_SEUIL_BONNE:
+        return sim, "bonne"
+    if sim >= QUIZ_SEUIL_PRESQUE:
+        return sim, "presque"
+    return sim, "fausse"
+
+
+def _bilan_quiz(score, total):
+    if total == 0:
+        return "Quiz terminé. Aucune question répondue."
+    return f"📊 Score final : {score}/{total} ({int(score / total * 100)}%)\n\nTapez 'quiz' pour rejouer."
+
+
+# ── Quiz côté web ────────────────────────────────────────────────────────────
+# Le chat web est sans état : chaque message est une requête HTTP isolée. Le quiz
+# est donc une machine à états dont l'état (dict sérialisable) est confié à
+# l'appelant — app.py le range dans la session Flask, propre à chaque navigateur.
+# On n'y stocke que l'énoncé : la réponse attendue ne quitte jamais le serveur.
+
+def demarrer_quiz(nb_questions=QUIZ_NB_QUESTIONS):
+    """Ouvre une session de quiz. Retourne (état, message) ; état vaut None si impossible."""
+    tirage = choisir_question_quiz()
+    if tirage is None:
+        return None, "❌ Le quiz est indisponible : aucune question n'est chargée."
+
+    question, _ = tirage
+    etat = {"question": question, "score": 0, "total": 0, "max": nb_questions}
+    entete = (f"🎯 Mode Quiz — {nb_questions} questions, répondez de mémoire.\n"
+              f"Tapez 'fin' à tout moment pour arrêter.")
+    return etat, f"{entete}\n\n❓ (1/{nb_questions}) {question} ?"
+
+
+def repondre_quiz(etat, message):
+    """Corrige une réponse et enchaîne. Retourne (état, message) ; état vaut None quand le quiz est fini."""
+    if message.strip().lower() in QUIZ_MOTS_ARRET:
+        return None, _bilan_quiz(etat["score"], etat["total"])
+
+    bonne_reponse = faq.get(etat["question"])
+    if bonne_reponse is None:          # la FAQ a changé sous les pieds du joueur
+        return None, "❌ Question introuvable, le quiz est interrompu."
+
+    sim, verdict = evaluer_reponse_quiz(message, bonne_reponse)
+    etat["total"] += 1
+    if verdict == "bonne":
+        etat["score"] += 1
+        entete = f"✅ Bonne réponse ! (similarité : {sim}%)"
+    elif verdict == "presque":
+        entete = f"⚠️ Presque ! (similarité : {sim}%)"
+    else:
+        entete = f"❌ Pas tout à fait. (similarité : {sim}%)"
+
+    blocs = [entete, f"💡 Réponse attendue :\n{bonne_reponse}"]
+
+    if etat["total"] >= etat["max"]:
+        blocs.append(_bilan_quiz(etat["score"], etat["total"]))
+        return None, "\n\n".join(blocs)
+
+    tirage = choisir_question_quiz(etat["question"])
+    if tirage is None:
+        blocs.append(_bilan_quiz(etat["score"], etat["total"]))
+        return None, "\n\n".join(blocs)
+
+    etat["question"] = tirage[0]
+    blocs.append(f"❓ ({etat['total'] + 1}/{etat['max']}) {etat['question']} ?")
+    return etat, "\n\n".join(blocs)
+
+
+def mode_quiz(nb_questions_max=QUIZ_NB_QUESTIONS):
+    """Lance une session de quiz interactif sur les questions de la FAQ (terminal)."""
+    tirage = choisir_question_quiz()
+    if tirage is None:
+        print_colored("❌ Le quiz est indisponible : aucune question n'est chargée.", "red")
+        return
+
+    question, bonne_reponse = tirage
     score = 0
     total = 0
-    derniere_question = None
 
     print_colored(f"\n🎯 Mode Quiz — {nb_questions_max} questions, répondez de mémoire, tapez 'fin' pour arrêter avant la fin.\n", "yellow", bold=True)
 
     while total < nb_questions_max:
-        question, bonne_reponse = random.choice(questions)
-        while question == derniere_question and len(questions) > 1:
-            question, bonne_reponse = random.choice(questions)
-        derniere_question = question
-
         print_colored(f"❓ ({total + 1}/{nb_questions_max}) {question} ?", "blue")
 
         try:
@@ -363,26 +453,28 @@ def mode_quiz(nb_questions_max=10):
         except (KeyboardInterrupt, EOFError):
             break
 
-        if reponse.lower() in ("fin", "exit", "quitter"):
+        if reponse.lower() in QUIZ_MOTS_ARRET:
             break
 
-        sim = int(calcul_similarite(normaliser_texte(reponse), normaliser_texte(bonne_reponse)) * 100)
+        sim, verdict = evaluer_reponse_quiz(reponse, bonne_reponse)
         total += 1
 
-        if sim >= 70:
+        if verdict == "bonne":
             score += 1
             print_colored(f"✅ Bonne réponse ! (similarité : {sim}%)", "green")
-        elif sim >= 35:
+        elif verdict == "presque":
             print_colored(f"⚠️  Presque ! (similarité : {sim}%)", "yellow")
         else:
             print_colored(f"❌ Pas tout à fait. (similarité : {sim}%)", "red")
 
         print(f"💡 Réponse attendue :\n{bonne_reponse}\n")
 
-    if total > 0:
-        print_colored(f"\n📊 Score final : {score}/{total} ({int(score/total*100)}%)\n", "blue", bold=True)
-    else:
-        print("Aucune question répondue.\n")
+        tirage = choisir_question_quiz(question)
+        if tirage is None:
+            break
+        question, bonne_reponse = tirage
+
+    print_colored(f"\n{_bilan_quiz(score, total)}\n", "blue", bold=True)
 
 
 class ChatBot:

@@ -1,8 +1,9 @@
 import os
+import secrets
 
-from flask import Flask, abort, jsonify, request, send_from_directory
+from flask import Flask, abort, jsonify, request, send_from_directory, session
 
-from ia_en_python import bot
+from ia_en_python import bot, demarrer_quiz, repondre_quiz
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -19,6 +20,11 @@ FICHIERS_PUBLICS = frozenset({
 })
 
 app = Flask(__name__, static_folder=None)
+
+# Signe le cookie de session, qui porte l'état du quiz. Sans clé fixe, chaque
+# redémarrage du serveur invalide les quiz en cours — acceptable en local,
+# à définir en production.
+app.secret_key = os.environ.get("CHATPY_SECRET_KEY") or secrets.token_hex(32)
 
 
 @app.route("/")
@@ -52,7 +58,20 @@ def api_chat():
     if not message:
         return jsonify({"error": "Message vide."}), 400
 
-    response = bot.traiter_message(message)
+    # Un quiz en cours capte tous les messages : ils sont des réponses, pas des
+    # questions. On les tient hors de l'historique et du journal des lacunes.
+    etat_quiz = session.get("quiz")
+    if etat_quiz is not None:
+        etat_quiz, response = repondre_quiz(etat_quiz, message)
+    elif message.lower() == "quiz":
+        etat_quiz, response = demarrer_quiz()
+    else:
+        return jsonify({"response": bot.traiter_message(message)})
+
+    if etat_quiz is None:
+        session.pop("quiz", None)
+    else:
+        session["quiz"] = etat_quiz
     return jsonify({"response": response})
 
 
