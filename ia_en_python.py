@@ -3,6 +3,8 @@ import os
 import json
 import random
 import datetime
+import tempfile
+import threading
 import unicodedata
 from difflib import get_close_matches, SequenceMatcher
 
@@ -11,6 +13,53 @@ HISTORY_FILE      = os.path.join(_DIR, ".chatpy_history.json")
 FAQ_FILE          = os.path.join(_DIR, "faq.json")
 AIDE_CONCEPTS_FILE = os.path.join(_DIR, "aide_concepts.json")
 QUESTIONS_SANS_REPONSE_FILE = os.path.join(_DIR, "questions_sans_reponse.json")
+
+# Nombre de messages conservés dans .chatpy_history.json. Le fichier est réécrit
+# en entier à chaque message : sans plafond, il grossit indéfiniment.
+HISTORIQUE_MAX_MESSAGES = 1000
+
+# Commandes qui n'ont de sens que dans le terminal (elles pilotent la boucle
+# interactive). Elles n'atteignent chatbot_response() que depuis le chat web.
+COMMANDES_TERMINAL = ("clear", "historique", "quiz")
+
+MOTS_AU_REVOIR = ["au revoir", "aurevoir", "a bientot", "à bientôt", "bye", "quit", "exit"]
+
+# Le serveur Flask est multi-thread : deux requêtes peuvent écrire en même temps.
+_verrou_historique = threading.Lock()
+_verrou_questions  = threading.Lock()
+
+
+def _ecrire_json_atomique(chemin, donnees):
+    """Écrit le JSON dans un fichier temporaire voisin, puis le renomme.
+
+    os.replace() est atomique : un lecteur voit soit l'ancienne version complète,
+    soit la nouvelle, jamais un fichier à moitié écrit. Un simple open(chemin, 'w')
+    tronque le fichier avant d'écrire, et le perd si le process meurt entre-temps.
+    """
+    dossier = os.path.dirname(chemin) or "."
+    fd, tmp = tempfile.mkstemp(dir=dossier, prefix=".tmp_chatpy_", suffix=".json")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(donnees, f, ensure_ascii=False, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, chemin)
+    except BaseException:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def _mettre_de_cote(chemin, raison):
+    """Renomme un fichier illisible au lieu de l'écraser en silence."""
+    sauvegarde = chemin + ".corrompu"
+    try:
+        os.replace(chemin, sauvegarde)
+        print(f"⚠️  {raison}\n    Fichier mis de côté dans '{os.path.basename(sauvegarde)}'.")
+    except OSError:
+        print(f"⚠️  {raison}")
 
 
 def normaliser_texte(texte):
@@ -76,27 +125,48 @@ def _formater_concept(concept):
     return "\n".join(lignes)
 
 
+def _vaut_la_peine_d_etre_logguee(message):
+    """Le journal ne sert à repérer les trous de la FAQ que s'il ne contient que de vraies questions.
+
+    Un mot isolé ('quoi', 'comment') ou un pavé de plusieurs milliers de caractères
+    ne désigne aucun sujet à ajouter : c'est du bruit qui noie les vraies lacunes.
+    """
+    norm = normaliser_texte(message)
+    return len(norm.split()) >= 2 and 5 <= len(norm) <= 200
+
+
 def _logger_question_sans_reponse(message):
     """Enregistre une question sans réponse dans questions_sans_reponse.json pour repérer les trous de la FAQ."""
-    try:
-        with open(QUESTIONS_SANS_REPONSE_FILE, 'r', encoding='utf-8') as f:
-            donnees = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        donnees = {}
+    if not _vaut_la_peine_d_etre_logguee(message):
+        return
 
     cle = normaliser_texte(message)
     aujourdhui = datetime.date.today().isoformat()
-    if cle in donnees:
-        donnees[cle]["occurrences"] += 1
-        donnees[cle]["derniere_fois"] = aujourdhui
-    else:
-        donnees[cle] = {"texte": message, "occurrences": 1, "derniere_fois": aujourdhui}
 
-    try:
-        with open(QUESTIONS_SANS_REPONSE_FILE, 'w', encoding='utf-8') as f:
-            json.dump(donnees, f, ensure_ascii=False, indent=2)
-    except IOError:
-        pass
+    # Lecture + modification + écriture doivent être indivisibles, sinon deux
+    # requêtes simultanées se marchent dessus et un compteur est perdu.
+    with _verrou_questions:
+        try:
+            with open(QUESTIONS_SANS_REPONSE_FILE, 'r', encoding='utf-8') as f:
+                donnees = json.load(f)
+            if not isinstance(donnees, dict):
+                raise ValueError("le journal doit être un objet JSON")
+        except FileNotFoundError:
+            donnees = {}
+        except (json.JSONDecodeError, ValueError):
+            _mettre_de_cote(QUESTIONS_SANS_REPONSE_FILE, "Journal des questions sans réponse illisible.")
+            donnees = {}
+
+        if cle in donnees:
+            donnees[cle]["occurrences"] += 1
+            donnees[cle]["derniere_fois"] = aujourdhui
+        else:
+            donnees[cle] = {"texte": message, "occurrences": 1, "derniere_fois": aujourdhui}
+
+        try:
+            _ecrire_json_atomique(QUESTIONS_SANS_REPONSE_FILE, donnees)
+        except OSError:
+            pass
 
 
 def _chercher_concept(sujet):
@@ -148,6 +218,13 @@ def chatbot_response(message):
                 "  clear              — effacer l'écran (l'historique reste sauvegardé)\n"
                 "  au revoir          — quitter\n\n"
                 "Ou posez directement une question sur Python.")
+
+    # Commandes réservées au terminal : la boucle CLI les intercepte avant d'arriver
+    # ici, donc on n'y passe que depuis le chat web, où elles n'ont pas de sens.
+    if message in COMMANDES_TERMINAL:
+        return (f"ℹ️ La commande '{message}' n'existe que dans la version terminal de ChatPy "
+                f"(python3 ia_en_python.py).\n"
+                f"Ici, posez directement une question sur Python ou tapez 'help'.")
 
     # liste <catégorie> — afficher uniquement une catégorie
     if message.startswith("liste "):
@@ -245,7 +322,7 @@ def chatbot_response(message):
         return "📖 Je suis un chatbot Python qui peut répondre à des questions sur le code."
     elif _contient_mot(message, ["merci"]):
         return "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
-    elif _contient_mot(message, ["au revoir", "bye", "quit", "exit"]):
+    elif _contient_mot(message, MOTS_AU_REVOIR):
         return "👋 Au revoir ! Continue à apprendre Python le plus possible !"
     else:
         _logger_question_sans_reponse(message)
@@ -324,19 +401,41 @@ class ChatBot:
         }
 
     def _charger_historique(self):
-        if os.path.exists(HISTORY_FILE):
-            try:
-                with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
-                    self.historique = json.load(f)
-            except (json.JSONDecodeError, IOError):
-                self.historique = []
+        if not os.path.exists(HISTORY_FILE):
+            return
+        try:
+            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                donnees = json.load(f)
+        except json.JSONDecodeError:
+            # Ne pas repartir de zéro en silence : l'ancien fichier est conservé.
+            _mettre_de_cote(HISTORY_FILE, "Historique de conversation illisible.")
+            return
+        except OSError as e:
+            print(f"⚠️  Historique illisible ({e}) — la session démarre sans historique.")
+            return
+
+        if not isinstance(donnees, list):
+            _mettre_de_cote(HISTORY_FILE, "Historique de conversation au mauvais format (liste attendue).")
+            return
+
+        self.historique = [
+            m for m in donnees
+            if isinstance(m, dict) and isinstance(m.get("role"), str) and isinstance(m.get("message"), str)
+        ]
+        ignores = len(donnees) - len(self.historique)
+        if ignores:
+            print(f"⚠️  {ignores} entrée(s) d'historique mal formée(s) ignorée(s).")
 
     def _sauvegarder_historique(self):
-        try:
-            with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
-                json.dump(self.historique, f, ensure_ascii=False, indent=2)
-        except IOError:
-            pass
+        with _verrou_historique:
+            # Le fichier est réécrit intégralement à chaque message : on plafonne
+            # pour qu'il ne grossisse pas sans fin.
+            if len(self.historique) > HISTORIQUE_MAX_MESSAGES:
+                del self.historique[:-HISTORIQUE_MAX_MESSAGES]
+            try:
+                _ecrire_json_atomique(HISTORY_FILE, self.historique)
+            except OSError:
+                pass
 
     def ajouter_message(self, role, message):
         self.historique.append({"role": role, "message": message})
@@ -450,7 +549,7 @@ if __name__ == "__main__":
             print(response)
             print()
 
-            if _contient_mot(user_input.lower(), ["au revoir", "bye", "quit", "exit"]):
+            if _contient_mot(user_input.lower(), MOTS_AU_REVOIR):
                 print_colored("À bientôt ! Continue à apprendre Python tout les jours ! 🚀", "blue", bold=True)
                 break
         except KeyboardInterrupt:

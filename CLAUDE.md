@@ -20,6 +20,7 @@ pip install -r requirements.txt
 python3 app.py
 # Then open http://localhost:5001
 ```
+The Werkzeug debugger allows arbitrary code execution, so it is off by default; set `CHATPY_DEBUG=1` to enable it for local development only.
 A `.venv` is recommended over installing Flask system-wide, especially on macOS with Homebrew Python (PEP 668 blocks system-wide `pip install` there). `.vscode/settings.json` points `python.defaultInterpreterPath` at `.venv/bin/python` so the IDE picks it up automatically. Port 5001 (not 5000) is used because macOS's AirPlay Receiver commonly occupies 5000.
 `app.py` imports the shared `bot` instance from `ia_en_python.py`, so the CLI and the web chat use the exact same matching logic and conversation state (`.chatpy_history.json`). The `/chat` page (`chat.html` + `chat.js`) is a real, working chat UI — unlike the animated demo on the landing page (see below). It's linked from the nav (`Index.html`) and reachable without logging in — the signup/login modal on `Index.html` is decorative (no real authentication) and unrelated to chat access.
 
@@ -38,13 +39,15 @@ Everything lives in `ia_en_python.py` — no imports outside the standard librar
 **Data files (loaded once at import time, not hard-coded in the script):**
 - `faq.json` — nested `{category: {question: answer}}`, loaded into `faq_categories`; flattened into `faq` and `norm_vers_original` (normalized question → original question) for lookups.
 - `aide_concepts.json` — keyed by topic slug (e.g. `"variable"`, `"fonction"`), each entry has `titre`, `mots_cles`, `definition`, a `niveaux` list (🟢 débutant / 🟡 intermédiaire / 🔴 avancé, each with a `code` sample), plus optional `erreurs_courantes` and `a_retenir`. Powers the `aide <sujet>` command via `_chercher_concept()` / `_formater_concept()`.
-- `.chatpy_history.json` — generated at runtime, persists conversation history across sessions (`ChatBot._charger_historique` / `_sauvegarder_historique`).
-- `questions_sans_reponse.json` — generated at runtime by `_logger_question_sans_reponse()`; records any user question that fell through every matching stage (text, occurrence count, last-seen date), for spotting gaps to fill in `faq.json`.
+- `.chatpy_history.json` — generated at runtime, persists conversation history across sessions (`ChatBot._charger_historique` / `_sauvegarder_historique`). Capped at `HISTORIQUE_MAX_MESSAGES` (oldest dropped), since the whole file is rewritten on every message.
+- `questions_sans_reponse.json` — generated at runtime by `_logger_question_sans_reponse()`; records any user question that fell through every matching stage (text, occurrence count, last-seen date), for spotting gaps to fill in `faq.json`. `_vaut_la_peine_d_etre_logguee()` filters out noise (single words, 5000-character pastes) so the journal only holds genuine FAQ gaps.
+
+Both runtime files go through `_ecrire_json_atomique()` (temp file + `os.replace()`) rather than `open(path, 'w')`, which would truncate the file before rewriting it and lose it on a crash or a concurrent write. The Flask server is multi-threaded, so `_verrou_historique` / `_verrou_questions` guard the read-modify-write cycles. A file that fails to parse is moved aside to `<name>.corrompu` instead of being silently overwritten.
 
 Both JSON knowledge files are loaded via `_charger_json()`, which prints a warning and falls back to `{}` on a missing file or invalid JSON rather than crashing.
 
 **Matching pipeline in `chatbot_response()`:**
-1. Special commands checked first: `aide <sujet>`, `help`/`aide`/`?`, `liste`, `liste <catégorie>`, `cherche <mot>`.
+1. Special commands checked first: `aide <sujet>`, `help`/`aide`/`?`, `liste`, `liste <catégorie>`, `cherche <mot>`. `COMMANDES_TERMINAL` (`clear`, `historique`, `quiz`) are intercepted by the CLI loop before `chatbot_response()` ever sees them; the branch here exists so the *web* chat answers them with an explanation instead of "I don't understand".
 2. Exact match after normalization (`normaliser_texte`).
 3. Fuzzy match via `difflib.get_close_matches` (cutoff 0.6).
 4. `SequenceMatcher` similarity scan (threshold 0.5), surfacing up to 2 alternate matches when confidence < 70%.
@@ -56,6 +59,8 @@ Both JSON knowledge files are loaded via `_charger_json()`, which prints a warni
 **`mode_quiz()`** is a standalone REPL loop (entered via the `quiz` command) that picks a random FAQ question, compares the user's typed answer to the stored answer with `SequenceMatcher`, and reports a running score.
 
 **`app.py`** is the Flask web backend. It serves `Index.html` at `/`, the real chat UI (`chat.html`/`chat.js`) at `/chat`, and a `POST /api/chat` endpoint (`{"message": "..."}` → `{"response": "..."}`) that calls `bot.traiter_message()`. It shares the single module-level `bot` instance from `ia_en_python.py`, so web and CLI sessions read/write the same `.chatpy_history.json` — there is no per-user session separation.
+
+Flask's automatic static folder is disabled (`static_folder=None`). Assets are served one by one from the `FICHIERS_PUBLICS` allow-list, because the project root also holds source code and the runtime conversation logs — serving the directory wholesale would expose them. **A new CSS/JS/image file referenced by a page must be added to `FICHIERS_PUBLICS` or it will 404.**
 
 ## Key Customization Points
 
