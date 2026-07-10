@@ -18,7 +18,7 @@ function addRow(type, text, isTyping) {
   const avatar = document.createElement('div');
   avatar.className = 'msg-mini-avatar ' + (type === 'user' ? 'avatar-user' : 'avatar-ai');
   const img = document.createElement('img');
-  img.src = type === 'user' ? 'Persone professionelle.jpg' : 'ChatPY_logo.PNG';
+  img.src = type === 'user' ? 'perso.JPG' : 'ChatPY_logo.PNG';
   img.alt = type === 'user' ? 'Utilisateur' : 'ChatPy';
   img.width = 36;
   img.height = 36;
