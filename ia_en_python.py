@@ -29,6 +29,28 @@ QUIZ_SEUIL_PRESQUE = 35   # entre 35% et 70% : sur la bonne piste
 
 MOTS_AU_REVOIR = ["au revoir", "aurevoir", "a bientot", "à bientôt", "bye", "quit", "exit"]
 
+# Mots (déjà normalisés : sans accents) qui ne portent pas le sujet d'une question.
+# "comment faire une boucle" et "qu'est-ce qu'une boucle" doivent tous deux se
+# résumer à {boucle} : c'est le vocabulaire restant qui distingue les questions.
+MOTS_VIDES = frozenset({
+    "le", "la", "les", "l", "un", "une", "des", "du", "de", "d", "en", "et",
+    "ou", "a", "au", "aux", "ce", "cette", "ces", "c", "que", "qu", "qui",
+    "quoi", "est", "sont", "je", "tu", "il", "elle", "on", "nous", "vous",
+    "mon", "ma", "mes", "ton", "ta", "tes", "son", "sa", "ses", "se", "s",
+    "ne", "pas", "plus", "pour", "par", "dans", "sur", "avec", "sans",
+    "comment", "pourquoi", "quand", "quel", "quelle", "quels", "quelles",
+    "faire", "fait", "peut", "peux", "dois", "dis", "moi", "te", "y", "si",
+    "sert", "veut", "dire", "donc", "alors", "tout", "tous", "toute",
+    # génériques omniprésents dans les réponses de la FAQ (utile au quiz)
+    "exemple", "utilisez", "utiliser", "utilise", "methode", "mot", "cle", "cles",
+})
+
+# Poids du recouvrement de vocabulaire dans le score de correspondance : le
+# sujet évoqué compte plus que la ressemblance lettre à lettre, sinon
+# "supprimer une variable" matche "déclarer une variable" avec 85% de confiance.
+POIDS_MOTS = 0.55
+SEUIL_CORRESPONDANCE = 0.5
+
 # Le serveur Flask est multi-thread : deux requêtes peuvent écrire en même temps.
 _verrou_historique = threading.Lock()
 _verrou_questions  = threading.Lock()
@@ -82,6 +104,33 @@ def calcul_similarite(texte1, texte2):
 def _contient_mot(message, mots):
     """Vrai si l'un des mots/phrases apparaît comme mot(s) entier(s) dans message (pas comme sous-chaîne)."""
     return any(re.search(r'\b' + re.escape(mot) + r'\b', message) for mot in mots)
+
+
+def _mots_significatifs(texte_norm):
+    """Mots porteurs de sens d'un texte déjà passé par normaliser_texte()."""
+    return {m for m in texte_norm.split() if m not in MOTS_VIDES and len(m) > 1}
+
+
+def _recouvrement_mots(mots_a, mots_b):
+    """Part des mots de mots_a retrouvés dans mots_b (à une faute de frappe près),
+    rapportée au plus grand des deux ensembles pour pénaliser le vocabulaire manquant."""
+    if not mots_a or not mots_b:
+        return 0.0
+    retrouves = sum(1 for mot in mots_a if get_close_matches(mot, mots_b, n=1, cutoff=0.8))
+    return retrouves / max(len(mots_a), len(mots_b))
+
+
+def _score_correspondance(message_norm, question_norm):
+    """Score hybride entre 0 et 1 : ressemblance des lettres + recouvrement du vocabulaire.
+
+    La similarité de caractères seule confond des questions au sens opposé qui ne
+    diffèrent que d'un mot ("supprimer"/"déclarer" une variable) ; le vocabulaire
+    seul rate les fautes de frappe. Les deux combinés se corrigent mutuellement.
+    """
+    sim_car = calcul_similarite(message_norm, question_norm)
+    recouvrement = _recouvrement_mots(_mots_significatifs(message_norm),
+                                      _mots_significatifs(question_norm))
+    return (1 - POIDS_MOTS) * sim_car + POIDS_MOTS * recouvrement
 
 
 def _charger_json(chemin, nom):
@@ -182,10 +231,15 @@ def _chercher_concept(sujet):
     if sujet_norm in aide_concepts:
         return aide_concepts[sujet_norm]
 
-    # Recherche par mots-clés dans chaque concept
+    # Recherche par mots-clés dans chaque concept. La correspondance par
+    # sous-chaîne est réservée aux sujets d'au moins 3 lettres : "e" est une
+    # sous-chaîne de presque tous les mots-clés et renverrait le premier concept venu.
     for concept in aide_concepts.values():
         for mot in concept.get("mots_cles", []):
-            if sujet_norm in normaliser_texte(mot) or normaliser_texte(mot) in sujet_norm:
+            mot_norm = normaliser_texte(mot)
+            if sujet_norm == mot_norm:
+                return concept
+            if len(sujet_norm) >= 3 and (sujet_norm in mot_norm or mot_norm in sujet_norm):
                 return concept
 
     # Fuzzy matching sur les clés
@@ -294,19 +348,14 @@ def chatbot_response(message):
         original_q = norm_vers_original[message_normalise]
         return f"✓ {faq[original_q]}\n\n💡 Confiance: 100%"
 
-    # 2. Fuzzy matching
-    matches = get_close_matches(message_normalise, norm_vers_original.keys(), n=3, cutoff=0.6)
-    if matches:
-        original_q = norm_vers_original[matches[0]]
-        confiance = int(calcul_similarite(message_normalise, matches[0]) * 100)
-        return f"✓ {faq[original_q]}\n\n💡 Confiance: {confiance}%"
-
-    # 3. Recherche par similarité
+    # 2. Recherche par score hybride (lettres + vocabulaire) sur toute la FAQ.
+    # Un seul passage remplace l'ancien duo fuzzy matching / similarité brute :
+    # il tolère les fautes de frappe ET les reformulations ("c'est quoi une liste").
     meilleures_correspondances = []
     for norm_q, original_q in norm_vers_original.items():
-        sim = calcul_similarite(message_normalise, norm_q)
-        if sim > 0.5:
-            meilleures_correspondances.append((original_q, faq[original_q], int(sim * 100)))
+        score = _score_correspondance(message_normalise, norm_q)
+        if score >= SEUIL_CORRESPONDANCE:
+            meilleures_correspondances.append((original_q, faq[original_q], int(score * 100)))
 
     if meilleures_correspondances:
         meilleures_correspondances.sort(key=lambda x: x[2], reverse=True)
@@ -362,9 +411,29 @@ def choisir_question_quiz(derniere_question=None):
 def evaluer_reponse_quiz(reponse, bonne_reponse):
     """Compare la réponse de l'utilisateur à celle attendue.
 
+    La réponse de la FAQ contient du code d'exemple que personne ne restitue mot
+    pour mot : exiger une ressemblance lettre à lettre condamnait des réponses
+    justes. On retient le meilleur de deux angles — la formulation complète, ou
+    la part des mots significatifs de l'utilisateur retrouvés dans la réponse
+    attendue (répondre "append" à "comment ajouter un élément à une liste" suffit).
+
     Retourne (similarité en %, verdict) où verdict vaut "bonne", "presque" ou "fausse".
     """
-    sim = int(calcul_similarite(normaliser_texte(reponse), normaliser_texte(bonne_reponse)) * 100)
+    reponse_norm = normaliser_texte(reponse)
+    attendue_norm = normaliser_texte(bonne_reponse)
+
+    sim_texte = calcul_similarite(reponse_norm, attendue_norm)
+
+    mots_reponse = _mots_significatifs(reponse_norm)
+    mots_attendus = _mots_significatifs(attendue_norm)
+    if mots_reponse and mots_attendus:
+        retrouves = sum(1 for mot in mots_reponse
+                        if get_close_matches(mot, mots_attendus, n=1, cutoff=0.8))
+        precision = retrouves / len(mots_reponse)
+    else:
+        precision = 0.0
+
+    sim = int(max(sim_texte, precision) * 100)
     if sim >= QUIZ_SEUIL_BONNE:
         return sim, "bonne"
     if sim >= QUIZ_SEUIL_PRESQUE:
@@ -481,7 +550,6 @@ class ChatBot:
     """Classe pour gérer le chatbot avec mémoire de conversation"""
     def __init__(self):
         self.historique = []
-        self.dernieres_categories = []
         self.questions_posees = set()
         self._charger_historique()
         self.relations = {
@@ -519,23 +587,18 @@ class ChatBot:
             print(f"⚠️  {ignores} entrée(s) d'historique mal formée(s) ignorée(s).")
 
     def _sauvegarder_historique(self):
-        with _verrou_historique:
-            # Le fichier est réécrit intégralement à chaque message : on plafonne
-            # pour qu'il ne grossisse pas sans fin.
-            if len(self.historique) > HISTORIQUE_MAX_MESSAGES:
-                del self.historique[:-HISTORIQUE_MAX_MESSAGES]
-            try:
-                _ecrire_json_atomique(HISTORY_FILE, self.historique)
-            except OSError:
-                pass
+        """Plafonne puis écrit l'historique. À appeler sous _verrou_historique."""
+        # Le fichier est réécrit intégralement à chaque message : on plafonne
+        # pour qu'il ne grossisse pas sans fin.
+        if len(self.historique) > HISTORIQUE_MAX_MESSAGES:
+            del self.historique[:-HISTORIQUE_MAX_MESSAGES]
+        try:
+            _ecrire_json_atomique(HISTORY_FILE, self.historique)
+        except OSError:
+            pass
 
     def ajouter_message(self, role, message):
         self.historique.append({"role": role, "message": message})
-
-    def obtenir_contexte(self):
-        if len(self.historique) >= 2:
-            return self.historique[-2:]
-        return []
 
     def obtenir_suggestions(self, question):
         question_norm = normaliser_texte(question)
@@ -548,16 +611,20 @@ class ChatBot:
         return suggestions[:2]
 
     def traiter_message(self, message):
-        self.ajouter_message("utilisateur", message)
         response = chatbot_response(message)
         suggestions = self.obtenir_suggestions(message)
         if suggestions and "Confiance:" in response:
             response += "\n\n📌 Questions liées:\n"
             for i, sug in enumerate(suggestions, 1):
                 response += f"  {i}. {sug}\n"
-        self.ajouter_message("assistant", response)
+        # Ajout ET écriture sous le même verrou : deux requêtes web simultanées
+        # ne peuvent ainsi ni entrelacer leurs paires question/réponse, ni
+        # écraser l'ajout de l'autre pendant la sauvegarde.
+        with _verrou_historique:
+            self.ajouter_message("utilisateur", message)
+            self.ajouter_message("assistant", response)
+            self._sauvegarder_historique()
         self.questions_posees.add(normaliser_texte(message))
-        self._sauvegarder_historique()
         return response
 
     def afficher_historique(self):

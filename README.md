@@ -144,7 +144,7 @@ Les stats (nombre de questions, catégories, concepts) se mettent à jour automa
   - 50–69 % : réponse possible + alternatives proposées
   - moins de 50 % : pas de réponse fiable
 - **Mémoire persistante** : l'historique est sauvegardé dans `.chatpy_history.json` et rechargé à chaque démarrage
-- **Mode quiz** : questions aléatoires tirées de la FAQ avec score de similarité
+- **Mode quiz** : questions aléatoires tirées de la FAQ ; citer les bons mots-clés suffit (répondre « append » à « comment ajouter un élément à une liste » compte juste)
 - **Aide détaillée** : 8 concepts Python expliqués sur 3 niveaux (débutant → avancé), chargés depuis `aide_concepts.json`
 
 ---
@@ -199,10 +199,24 @@ Dans la classe **`ChatBot`**, attribut **`self.relations`** : associez une quest
 |----------|-------------|
 | Ajouter / modifier des questions FAQ | `faq.json` |
 | Ajouter un concept détaillé | `aide_concepts.json` |
-| Seuil minimum de similarité | Dans `chatbot_response()`, condition `if sim > 0.5:` |
+| Seuil minimum de correspondance | Constante `SEUIL_CORRESPONDANCE` en haut de `ia_en_python.py` |
+| Poids vocabulaire / orthographe dans le score | Constante `POIDS_MOTS` en haut de `ia_en_python.py` |
+| Mots ignorés par le matching | Ensemble `MOTS_VIDES` en haut de `ia_en_python.py` |
 | Nombre de suggestions affichées | Dans `obtenir_suggestions()`, tranche `[:2]` |
 | Couleurs / emojis dans le terminal | Appels à `print_colored()` dans `ia_en_python.py` |
 | Chemins des fichiers JSON | Constantes `FAQ_FILE`, `AIDE_CONCEPTS_FILE`, `HISTORY_FILE` en haut de `ia_en_python.py` |
+
+---
+
+## Tests
+
+La suite de tests n'utilise que la bibliothèque standard (`unittest`) et ne touche jamais aux vrais fichiers du projet :
+
+```bash
+python3 -m unittest test_chatpy -v
+```
+
+Lancez-la après toute modification de `ia_en_python.py`.
 
 ---
 
@@ -227,6 +241,7 @@ ia_en_python.py :
 ├── _DIR / HISTORY_FILE / FAQ_FILE / AIDE_CONCEPTS_FILE  # chemins
 ├── normaliser_texte()         # nettoyage de l'entrée
 ├── calcul_similarite()        # SequenceMatcher (0 à 1)
+├── _score_correspondance()    # score hybride lettres + vocabulaire (0 à 1)
 ├── _charger_json()            # lecture robuste des fichiers JSON
 ├── faq_categories / faq / norm_vers_original  # données chargées au démarrage
 ├── _formater_concept()        # mise en forme d'un concept pour le terminal
@@ -237,9 +252,11 @@ ia_en_python.py :
 ├── mode_quiz()                # session quiz interactif
 └── class ChatBot
     ├── _charger_historique() / _sauvegarder_historique()
-    ├── ajouter_message / obtenir_contexte
-    ├── obtenir_suggestions / traiter_message
+    ├── ajouter_message / obtenir_suggestions
+    ├── traiter_message
     └── afficher_historique
+
+test_chatpy.py  → tests unitaires (python3 -m unittest test_chatpy)
 ```
 
 Bon apprentissage Python.

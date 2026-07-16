@@ -1,60 +1,33 @@
 # Copilot instructions for ChatPy
 
-Purpose: help future Copilot sessions understand how to run, explore, and modify this project.
+Purpose: help future AI assistant sessions understand how to run, test, and modify this project. `CLAUDE.md` at the repo root is the detailed reference — read it first; this file is a short summary.
 
-1) Build / test / lint
+## 1) Run / test
 
-- This repository is a single-file Python CLI app. No build, test or lint config detected.
-- Run the chatbot:
-  - python3 "ia en python.py"
-  - or: python "ia en python.py"
-  - Note: the filename contains spaces — quote or escape the path.
-- If you add tests, single-test examples to document here:
-  - pytest: pytest path/to/test_file.py::test_function
-  - unittest (single test): python -m unittest tests.test_module.TestClass.test_method
-  - flake8/ruff/black: add commands here when those tools are added.
+- Chatbot CLI (stdlib only): `python3 "ia_en_python.py"`
+- Web backend (Flask): `pip install -r requirements.txt` in a `.venv`, then `python3 app.py` → http://localhost:5001
+- Tests (stdlib `unittest`, no extra dependency): `python3 -m unittest test_chatpy -v`
+  - Single test: `python3 -m unittest test_chatpy.TestMatchingFAQ.test_correspondance_exacte`
+  - Run the suite after any change to `ia_en_python.py`.
 
-2) High-level architecture (brief)
+## 2) High-level architecture
 
-- Entrypoint: ia en python.py
-  - normaliser_texte(texte): unicode NFKD -> ASCII, strip punctuation, lowercasing.
-  - calcul_similarite(a, b): SequenceMatcher ratio (0..1).
-  - chatbot_response(message): core lookup and matching logic. It holds the faq_categories dict and implements three matching strategies:
-    1. exact normalized match
-    2. fuzzy matching with difflib.get_close_matches (cutoff 0.6, n=3)
-    3. similarity-based ranking (threshold sim > 0.5)
-  - print_colored(text, color, bold=False): ANSI colored output (used by main loop)
-  - ChatBot class: manages historique, suggestions (self.relations), questions_posees, and provides methods:
-    - ajouter_message / obtenir_contexte / obtenir_suggestions / traiter_message / afficher_historique
-  - Main loop: interactive prompt, handles 'historique', special commands (help, liste, au revoir), and prints responses.
+- `ia_en_python.py` — all chatbot logic, stdlib only.
+  - Knowledge lives in JSON data files, **not** in the code: `faq.json` (nested `{category: {question: answer}}`) and `aide_concepts.json`.
+  - `chatbot_response(message)`: special commands → exact normalized match → hybrid scored scan (`_score_correspondance`: SequenceMatcher character similarity + significant-word overlap, stop-words in `MOTS_VIDES`) → conversational replies → fallback that logs to `questions_sans_reponse.json`.
+  - Quiz: `evaluer_reponse_quiz()` scores `max(full-text similarity, share of user's significant words found in the expected answer)`; thresholds `QUIZ_SEUIL_BONNE`/`QUIZ_SEUIL_PRESQUE`. Terminal loop `mode_quiz()`; web state machine `demarrer_quiz()`/`repondre_quiz()` (state stored in the Flask session by `app.py`).
+  - `ChatBot` class: history persisted to `.chatpy_history.json` (atomic writes via `_ecrire_json_atomique`, capped at `HISTORIQUE_MAX_MESSAGES`, mutations under `_verrou_historique`), follow-up suggestions via `self.relations`.
+- `app.py` — Flask backend: `/` (landing), `/chat` (real chat UI), `POST /api/chat`. Static files served only from the `FICHIERS_PUBLICS` allow-list — a new asset must be added there or it 404s.
+- `Index.html`/`script.js` — landing page; its chat preview is a scripted animation, not the real bot. `chat.html`/`chat.js` — the real web chat.
 
-3) Key conventions and repo-specific patterns
+## 3) Key conventions and tuning knobs
 
-- Filename with spaces: always quote paths when running ("ia en python.py") or use escaped spaces.
-- FAQ store: faq_categories (nested dict). To add Q/A, edit faq_categories in chatbot_response or factor it to a separate data file if the dataset grows.
-- Relations (follow-up suggestions): defined in ChatBot.relations. Suggestions are filtered against questions_posees and limited to 2.
-- Thresholds and tuning:
-  - get_close_matches cutoff is 0.6; similarity fallback uses sim > 0.5. Confidence displayed as int(similarity*100).
-  - To change behavior, update those numeric constants in chatbot_response and obtenir_suggestions.
-- Normalization: accents removed via NFKD + ASCII ignore; punctuation replaced with spaces. This is relied on across matching code.
-- Output formatting: ANSI escape codes are used; some terminals may not render bold/color. print_colored uses a simple mapping — adjust if adding a third-party library (rich, colorama).
-- History and deduplication: bot.questions_posees stores normalized questions to avoid suggesting repeated questions.
+- Matching sensitivity: `SEUIL_CORRESPONDANCE` (answer threshold) and `POIDS_MOTS` (vocabulary vs. spelling weight); words ignored by matching: `MOTS_VIDES`. All at the top of `ia_en_python.py`.
+- Normalization (`normaliser_texte`): NFKD → ASCII, punctuation stripped, lowercased. All matching relies on it.
+- Runtime JSON files are written atomically (`_ecrire_json_atomique`) and corrupted files are moved to `<name>.corrompu`, never silently overwritten. Keep these guarantees when touching persistence.
+- Add FAQ entries in `faq.json`, concepts in `aide_concepts.json`, follow-up suggestions in `ChatBot.relations`.
+- Review `questions_sans_reponse.json` (generated at runtime) to find FAQ gaps.
 
-4) Where to look for changes
+## 4) Other AI assistant configs
 
-- To add tests or package this project, add a pyproject.toml/requirements.txt and update this file with commands to run tests and linters.
-- If you refactor to multiple modules, move faq_categories into a dedicated data/module and update README and GUIDE_UTILISATION.md accordingly.
-
-5) Other AI assistant configs
-
-- No CLAUDE.md, AGENTS.md or other assistant rule files found in the project root. If added, include any non-obvious rules here.
-
----
-
-Short checklist for Copilot sessions
-
-- Start by opening ia en python.py and README.md to understand current Q/A and relations.
-- Run the script with quoted filename to reproduce behavior quickly.
-- Grep for faq_categories and relations when adding or altering questions/suggestions.
-- When adding tests, update this file with exact commands to run single tests.
-
+- `CLAUDE.md` at the repo root holds the authoritative, detailed project guidance (architecture, pipeline, customization table). Keep both files in sync when the architecture changes.
