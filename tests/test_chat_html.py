@@ -1,28 +1,35 @@
-"""Tests for the chat.html welcome message update announcing the quiz command."""
+"""Tests pour le changement apporté à chat.html : le message d'accueil du
+chat mentionne désormais la commande 'quiz' en plus de 'help'.
+"""
 import os
+import unittest
 
-CHAT_HTML_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "chat.html")
-
-
-def _read_chat_html():
-    with open(CHAT_HTML_PATH, encoding="utf-8") as f:
-        return f.read()
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_CHAT_HTML = os.path.join(_ROOT, "chat.html")
 
 
-def test_chat_html_welcome_message_mentions_quiz_command():
-    content = _read_chat_html()
-    assert "<code>quiz</code>" in content
-    assert "tester vos connaissances" in content
+class TestMessageDeBienvenueDuChat(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        with open(_CHAT_HTML, "r", encoding="utf-8") as f:
+            cls.contenu = f.read()
+
+    def test_mentionne_la_commande_quiz(self):
+        self.assertIn("<code>quiz</code>", self.contenu)
+        self.assertIn("tester vos connaissances", self.contenu)
+
+    def test_mentionne_toujours_la_commande_help(self):
+        self.assertIn("<code>help</code>", self.contenu)
+        self.assertIn("découvrir ce que je sais faire", self.contenu)
+
+    def test_quiz_est_mentionne_avant_help_dans_le_message(self):
+        index_quiz = self.contenu.index("<code>quiz</code>")
+        index_help = self.contenu.index("<code>help</code>")
+        self.assertLess(index_quiz, index_help)
+
+    def test_le_script_chat_js_reste_reference(self):
+        self.assertIn('<script src="chat.js">', self.contenu)
 
 
-def test_chat_html_welcome_message_still_mentions_help_command():
-    content = _read_chat_html()
-    assert "<code>help</code>" in content
-
-
-def test_chat_html_quiz_is_introduced_before_help_in_the_subtitle():
-    content = _read_chat_html()
-    subtitle_start = content.index("chat-welcome-subtitle")
-    quiz_index = content.index("<code>quiz</code>", subtitle_start)
-    help_index = content.index("<code>help</code>", subtitle_start)
-    assert quiz_index < help_index
+if __name__ == "__main__":
+    unittest.main()

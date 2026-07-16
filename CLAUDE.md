@@ -32,6 +32,12 @@ python3 -m http.server 8080
 ```
 Note: the `chat-preview` box on the landing page hero is a scripted animation cycling through canned example conversations (`script.js`) — it is not connected to the real chatbot.
 
+**Tests (stdlib `unittest`, no dependencies):**
+```bash
+python3 -m unittest test_chatpy -v
+```
+Covers normalization, the matching pipeline (typos, rephrasings, the opposite-meaning trap), quiz scoring, the web quiz state machine, and persistence (atomic writes, history cap, corrupted-file handling). Tests that write redirect the runtime files to a temp dir via `unittest.mock.patch` — they never touch the real `.chatpy_history.json`. Run them after any change to `ia_en_python.py`.
+
 ## Architecture
 
 Everything lives in `ia_en_python.py` — no imports outside the standard library (`re`, `os`, `json`, `random`, `datetime`, `unicodedata`, `difflib`).
@@ -49,14 +55,13 @@ Both JSON knowledge files are loaded via `_charger_json()`, which prints a warni
 **Matching pipeline in `chatbot_response()`:**
 1. Special commands checked first: `aide <sujet>`, `help`/`aide`/`?`, `liste`, `liste <catégorie>`, `cherche <mot>`. `COMMANDES_TERMINAL` (`clear`, `historique`) are intercepted by the CLI loop before `chatbot_response()` ever sees them; the branch here exists so the *web* chat answers them with an explanation instead of "I don't understand". `quiz` is handled by both front-ends and so never reaches `chatbot_response()`.
 2. Exact match after normalization (`normaliser_texte`).
-3. Fuzzy match via `difflib.get_close_matches` (cutoff 0.6).
-4. `SequenceMatcher` similarity scan (threshold 0.5), surfacing up to 2 alternate matches when confidence < 70%.
-5. Hard-coded conversational replies (greetings, thanks, goodbye, etc.) via `_contient_mot()` — matched against the raw lowercased message, not the accent-stripped normalized form.
-6. Fallback "I don't understand" reply, which logs the question to `questions_sans_reponse.json`.
+3. Hybrid scored scan of the whole FAQ via `_score_correspondance()`: a weighted mix of `SequenceMatcher` character similarity and significant-word overlap (stop-words in `MOTS_VIDES` stripped, per-word fuzzy matching so typos still count). Answers when the score ≥ `SEUIL_CORRESPONDANCE` (0.5); shows up to 2 alternates when confidence < 70%. The word-overlap half (`POIDS_MOTS`) exists because character similarity alone confuses near-identical questions with opposite meanings ("supprimer"/"déclarer" une variable) and misses rephrasings ("c'est quoi une liste").
+4. Hard-coded conversational replies (greetings, thanks, goodbye, etc.) via `_contient_mot()` — matched against the raw lowercased message, not the accent-stripped normalized form.
+5. Fallback "I don't understand" reply, which logs the question to `questions_sans_reponse.json`.
 
 **`ChatBot` class** holds session state: conversation history (persisted to `.chatpy_history.json`), previously asked questions (`questions_posees`), and a `relations` dict that maps a question to follow-up suggestions shown after a response (via `obtenir_suggestions()`).
 
-**Quiz.** The scoring rules live in `choisir_question_quiz()` and `evaluer_reponse_quiz()` (thresholds `QUIZ_SEUIL_BONNE` / `QUIZ_SEUIL_PRESQUE`), shared by both front-ends:
+**Quiz.** The scoring rules live in `choisir_question_quiz()` and `evaluer_reponse_quiz()` (thresholds `QUIZ_SEUIL_BONNE` / `QUIZ_SEUIL_PRESQUE`), shared by both front-ends. `evaluer_reponse_quiz()` takes the best of two angles — full-text similarity, or the share of the user's significant words found in the expected answer — because FAQ answers embed code samples nobody reproduces verbatim; answering "append" to "comment ajouter un élément à une liste" counts as correct.
 - `mode_quiz()` is the terminal REPL loop, entered via the `quiz` command in the CLI.
 - `demarrer_quiz()` / `repondre_quiz(etat, message)` are the web equivalent: a state machine over a plain serializable dict, since each web message is an isolated HTTP request. `app.py` stores that dict in the Flask session cookie, so **each browser gets its own quiz** even though `bot` is a shared singleton. Only the question text and the score travel in the cookie — the expected answer never leaves the server.
 
@@ -73,6 +78,7 @@ Flask's automatic static folder is disabled (`static_folder=None`). Assets are s
 | Add/edit FAQ entries | `faq.json` |
 | Add/edit "aide <sujet>" concept explanations | `aide_concepts.json` |
 | Add follow-up suggestions | `self.relations` dict in `ChatBot.__init__()` |
-| Adjust match sensitivity | `cutoff=0.6` (fuzzy) and `if sim > 0.5` (similarity) in `chatbot_response()` |
+| Adjust match sensitivity | `SEUIL_CORRESPONDANCE` (answer threshold) and `POIDS_MOTS` (vocabulary vs. spelling weight) constants at the top of `ia_en_python.py` |
+| Words ignored during matching | `MOTS_VIDES` frozenset at the top of `ia_en_python.py` |
 | Limit suggestions shown | `[:2]` slice in `obtenir_suggestions()` |
 | Review unanswered questions to grow the FAQ | `questions_sans_reponse.json` (generated at runtime) |

@@ -176,6 +176,9 @@ ma_liste = [1, 2, 3, 'hello']
 | 35–69 % | ⚠️ Presque — la bonne réponse s'affiche pour apprendre |
 | < 35 % | ❌ Pas tout à fait — la bonne réponse s'affiche pour apprendre |
 
+💡 Pas besoin de réciter la réponse mot pour mot : citer les bons mots-clés suffit.
+Répondre « append » à « comment ajouter un élément à une liste ? » compte juste.
+
 Tape `fin` à n'importe quel moment pour arrêter le quiz et voir ton score total.
 
 ---
