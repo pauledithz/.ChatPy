@@ -94,7 +94,10 @@ def test_evaluer_reponse_quiz_totalement_hors_sujet_est_fausse():
 )
 def test_evaluer_reponse_quiz_seuils_exacts(monkeypatch, ratio, verdict_attendu):
     monkeypatch.setattr(iep, "calcul_similarite", lambda a, b: ratio)
-    sim, verdict = iep.evaluer_reponse_quiz("peu importe", "peu importe")
+    # Le score retient max(similarité du texte, précision des mots-clés) :
+    # des mots sans rapport gardent la précision à 0 pour que seul
+    # le ratio simulé décide du verdict.
+    sim, verdict = iep.evaluer_reponse_quiz("granite", "papillon")
     assert sim == int(ratio * 100)
     assert verdict == verdict_attendu
 

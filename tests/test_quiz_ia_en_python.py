@@ -67,8 +67,11 @@ class TestChoisirQuestionQuiz(unittest.TestCase):
 
 class TestEvaluerReponseQuiz(unittest.TestCase):
     def _evaluer(self, similarite):
+        # Le score retient max(similarité du texte, précision des mots-clés) :
+        # des mots sans rapport gardent la précision à 0 pour que seule
+        # la similarité simulée décide du verdict.
         with mock.patch.object(iap, "calcul_similarite", return_value=similarite):
-            return iap.evaluer_reponse_quiz("peu importe", "peu importe")
+            return iap.evaluer_reponse_quiz("granite", "papillon")
 
     def test_seuil_bonne_inclusif(self):
         self.assertEqual(self._evaluer(0.70), (70, "bonne"))
