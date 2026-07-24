@@ -66,13 +66,15 @@ def api_chat():
     elif message.lower() == "quiz":
         etat_quiz, response = demarrer_quiz()
     else:
-        return jsonify({"response": bot.traiter_message(message)})
+        return jsonify({"response": bot.traiter_message(message), "quiz_actif": False})
 
     if etat_quiz is None:
         session.pop("quiz", None)
     else:
         session["quiz"] = etat_quiz
-    return jsonify({"response": response})
+    # Le front a besoin de savoir si un quiz est en cours pour afficher son
+    # badge et adapter le placeholder de saisie.
+    return jsonify({"response": response, "quiz_actif": etat_quiz is not None})
 
 
 if __name__ == "__main__":

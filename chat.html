@@ -23,19 +23,30 @@
   <section class="chat-preview chat-preview--page">
     <div class="chat-header">
       <div class="chat-avatar"><img src="ChatPY_logo.PNG" alt="ChatPy" width="44" height="44" decoding="async"></div>
-      <div>
+      <div class="chat-header-info">
         <div class="chat-name">ChatPy</div>
         <div class="chat-status"><span class="chat-status-dot"></span> En ligne</div>
       </div>
+      <span class="chat-quiz-badge" id="quizBadge" hidden>🎯 Quiz en cours</span>
+      <button type="button" class="chat-reset" id="resetBtn" title="Nouvelle conversation" hidden>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5V5H11"/></svg>
+        <span>Nouvelle conversation</span>
+      </button>
     </div>
     <div class="chat-body" id="chatBody">
       <div class="chat-welcome" id="chatWelcome">
         <img class="chat-welcome-logo" src="ChatPY_logo.PNG" alt="" width="64" height="64" decoding="async">
         <h1 class="chat-welcome-title">Bonjour 👋</h1>
         <p class="chat-welcome-subtitle">
-          Posez-moi une question sur Python. Tapez <code>quiz</code> pour tester vos connaissances,
-          ou <code>help</code> pour découvrir ce que je sais faire.
+          Posez-moi une question sur Python, ou choisissez une suggestion ci-dessous.
         </p>
+        <div class="chat-suggestions" id="chatSuggestions">
+          <button type="button" class="chat-chip" data-send="C'est quoi une liste en Python ?">C'est quoi une liste ?</button>
+          <button type="button" class="chat-chip" data-send="Comment créer une fonction ?">Comment créer une fonction ?</button>
+          <button type="button" class="chat-chip" data-send="aide variable">Explique-moi les variables</button>
+          <button type="button" class="chat-chip chat-chip--accent" data-send="quiz">🎯 Lancer un quiz</button>
+          <button type="button" class="chat-chip" data-send="help">Que sais-tu faire ?</button>
+        </div>
       </div>
     </div>
     <form class="chat-input-bar" id="chatForm">
