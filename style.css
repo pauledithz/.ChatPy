@@ -298,6 +298,79 @@ body {
 .chat-text-input::placeholder { color: #666; }
 .chat-text-input:focus { border-color: #555; }
 
+/* En-tête : badge quiz + bouton nouvelle conversation */
+.chat-header-info { display: flex; flex-direction: column; }
+.chat-quiz-badge {
+  margin-left: auto;
+  font-size: 11px;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  border: 0.5px solid rgba(74, 222, 128, 0.3);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.chat-reset {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 0.5px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 5px 10px;
+  color: #888;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.chat-reset:hover { color: #f0f0f0; border-color: #555; }
+.chat-reset svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.chat-quiz-badge + .chat-reset { margin-left: 10px; }
+
+/* Puces de suggestion sur l'écran d'accueil */
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 0.5rem;
+  max-width: 30rem;
+}
+.chat-chip {
+  background: #161616;
+  border: 0.5px solid #2a2a2a;
+  border-radius: 999px;
+  padding: 8px 14px;
+  color: #ccc;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.chat-chip:hover { background: #1f1f1f; border-color: #555; color: #fff; }
+.chat-chip:active { transform: scale(0.97); }
+.chat-chip--accent { background: #fff; color: #111; border-color: #fff; }
+.chat-chip--accent:hover { background: #e6e6e6; color: #111; }
+
+/* Rendu du code dans les réponses du bot */
+.msg-ai pre {
+  margin: 8px 0;
+  padding: 10px 12px;
+  background: #f4f4f4;
+  border: 0.5px solid #e2e2e2;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #1a1a1a;
+  white-space: pre;
+}
+.msg-ai pre:first-child { margin-top: 0; }
+.msg-ai pre:last-child { margin-bottom: 0; }
+
 .features {
   padding: clamp(3rem, 8vw, 4rem) 0;
   width: 100%;
