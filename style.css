@@ -354,7 +354,12 @@ body {
 .chat-chip--accent { background: #fff; color: #111; border-color: #fff; }
 .chat-chip--accent:hover { background: #e6e6e6; color: #111; }
 
-/* Rendu du code dans les réponses du bot */
+/* Rendu structuré des réponses du bot */
+.msg-ai > :first-child { margin-top: 0; }
+.msg-ai > :last-child { margin-bottom: 0; }
+
+.msg-ai p { margin: 0 0 8px; white-space: pre-wrap; }
+
 .msg-ai pre {
   margin: 8px 0;
   padding: 10px 12px;
@@ -368,8 +373,48 @@ body {
   color: #1a1a1a;
   white-space: pre;
 }
-.msg-ai pre:first-child { margin-top: 0; }
-.msg-ai pre:last-child { margin-bottom: 0; }
+
+.msg-title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 500;
+  margin: 0 0 8px;
+  color: #111;
+}
+
+.msg-level {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  margin: 12px 0 4px;
+  letter-spacing: 0.2px;
+}
+
+.msg-list { margin: 4px 0 8px; padding-left: 20px; }
+.msg-list li { margin: 3px 0; }
+
+.msg-note {
+  margin: 8px 0 0;
+  padding: 8px 11px;
+  background: #f6f6f6;
+  border-left: 2.5px solid #d0d0d0;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #333;
+  white-space: pre-wrap;
+}
+
+.msg-badge {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.2px;
+}
+.msg-badge--haut { color: #166534; background: #dcfce7; }
+.msg-badge--bas { color: #92400e; background: #fef3c7; }
 
 .features {
   padding: clamp(3rem, 8vw, 4rem) 0;

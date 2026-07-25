@@ -14,42 +14,148 @@ let quizActif = false;
 
 // ---------------------------------------------------------------------------
 // Rendu des réponses
+//
+// Le bot renvoie du texte brut structuré par des marqueurs stables, générés
+// par le backend (voir chatbot_response / _formater_concept) :
+//   ✓ …            réponse FAQ (préfixe décoratif, retiré)
+//   Exemple :      introduit un bloc de code
+//   ━━ 🟢 …        en-tête de niveau, suivi d'un bloc de code
+//   • …            puce de liste
+//   ⚠️ / ℹ️ / 💡    notes ; 📖 titre ; 📚 sous-titre
+//   💡 Confiance: N%   score de confiance
+// On construit du DOM (jamais d'innerHTML à partir du texte) : aucune
+// injection possible, et tout contenu non reconnu retombe en paragraphe.
 // ---------------------------------------------------------------------------
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+const RE_CONFIANCE = /^\s*💡\s*Confiance\s*:\s*(\d+)\s*%/;
+
+function el(tag, className, texte) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (texte != null) node.textContent = texte;
+  return node;
 }
 
-// Le bot renvoie du texte brut. Les échantillons de code arrivent sur les
-// lignes qui suivent un en-tête « ━━ » (niveau d'aide), jusqu'à la ligne vide
-// suivante : on les regroupe dans un <pre> à chasse fixe. Le reste garde ses
-// retours à la ligne grâce au white-space: pre-wrap de la bulle.
+function estPuce(l) { return /^\s*•\s+/.test(l); }
+function estNiveau(l) { return l.startsWith('━━'); }
+function estExemple(l) { return /(^|\s)Exemple\s*:/.test(l); }
+function estNote(l) { return /^\s*(⚠️|ℹ️|📖|📚|💡)/.test(l); }
+// Frontière : une ligne qui clôt un bloc de code ou de prose en cours.
+function estFrontiere(l) {
+  return l.trim() === '' || estPuce(l) || estNiveau(l) || estNote(l);
+}
+
 function renderAI(text) {
+  const frag = document.createDocumentFragment();
   const lignes = text.split('\n');
-  let html = '';
   let i = 0;
-  while (i < lignes.length) {
-    const ligne = lignes[i];
-    if (ligne.startsWith('━━')) {
-      html += escapeHtml(ligne) + '\n';
-      i++;
-      const code = [];
-      while (i < lignes.length && lignes[i].trim() !== '' && !lignes[i].startsWith('━━')) {
-        code.push(lignes[i]);
-        i++;
+
+  // Le « ✓ » décoratif fait doublon avec l'avatar du bot : on le retire.
+  if (lignes.length && lignes[0].startsWith('✓ ')) {
+    lignes[0] = lignes[0].slice(2);
+  }
+
+  // Collecte un bloc de code et l'ajoute au fragment.
+  //   mode 'niveau' : échantillon riche d'une section « ━━ », qui peut contenir
+  //     des lignes vides internes ; on ne s'arrête qu'au niveau/note suivant.
+  //   mode 'exemple' : court extrait après « Exemple : », borné par la 1re ligne vide.
+  function collecterCode(mode) {
+    const code = [];
+    while (i < lignes.length) {
+      const l = lignes[i];
+      if (mode === 'niveau') {
+        if (estNiveau(l) || estNote(l)) break;
+      } else if (l.trim() === '' || estFrontiere(l) || estExemple(l)) {
+        break;
       }
-      if (code.length) {
-        html += '<pre>' + escapeHtml(code.join('\n')) + '</pre>';
-      }
-    } else {
-      html += escapeHtml(ligne);
-      if (i < lignes.length - 1) html += '\n';
+      code.push(l);
       i++;
     }
+    // Retire les lignes vides en tête et en fin (séparateurs de sections).
+    while (code.length && code[0].trim() === '') code.shift();
+    while (code.length && code[code.length - 1].trim() === '') code.pop();
+    if (code.length) frag.appendChild(el('pre', null, code.join('\n')));
   }
-  return html;
+
+  while (i < lignes.length) {
+    const ligne = lignes[i];
+
+    if (ligne.trim() === '') {
+      i++;
+      continue;
+    }
+
+    const conf = ligne.match(RE_CONFIANCE);
+    if (conf) {
+      const score = parseInt(conf[1], 10);
+      const niveau = score >= 70 ? 'msg-badge--haut' : 'msg-badge--bas';
+      frag.appendChild(el('span', 'msg-badge ' + niveau, 'Confiance ' + score + '%'));
+      i++;
+      continue;
+    }
+
+    if (estNiveau(ligne)) {
+      frag.appendChild(el('div', 'msg-level', ligne.replace(/^━━\s*/, '')));
+      i++;
+      collecterCode('niveau');
+      continue;
+    }
+
+    if (estExemple(ligne)) {
+      // « Exemple : » peut porter du code sur la même ligne ou être seul.
+      const suffixe = ligne.replace(/^.*?Exemple\s*:\s*/, '');
+      i++;
+      if (suffixe.trim() !== '') {
+        frag.appendChild(el('pre', null, suffixe));
+      }
+      collecterCode('exemple');
+      continue;
+    }
+
+    if (estPuce(ligne)) {
+      const liste = el('ul', 'msg-list');
+      while (i < lignes.length && estPuce(lignes[i])) {
+        liste.appendChild(el('li', null, lignes[i].replace(/^\s*•\s+/, '')));
+        i++;
+      }
+      frag.appendChild(liste);
+      continue;
+    }
+
+    if (/^\s*📖/.test(ligne)) {
+      frag.appendChild(el('div', 'msg-title', ligne.replace(/^\s*📖\s*/, '')));
+      i++;
+      continue;
+    }
+
+    if (estNote(ligne)) {
+      frag.appendChild(el('div', 'msg-note', ligne.trim()));
+      i++;
+      continue;
+    }
+
+    // Paragraphe de prose : lignes consécutives jusqu'à une frontière.
+    const prose = [];
+    while (i < lignes.length && lignes[i].trim() !== '' && !estFrontiere(lignes[i]) && !estExemple(lignes[i])) {
+      prose.push(lignes[i]);
+      i++;
+    }
+    if (prose.length) {
+      const p = el('p');
+      const texte = prose.join('\n');
+      // Met en valeur le libellé « Définition : » des fiches concept.
+      const label = texte.match(/^(Définition\s*:)\s*/);
+      if (label) {
+        p.appendChild(el('strong', null, label[1]));
+        p.appendChild(document.createTextNode(' ' + texte.slice(label[0].length)));
+      } else {
+        p.textContent = texte;
+      }
+      frag.appendChild(p);
+    }
+  }
+
+  return frag;
 }
 
 // ---------------------------------------------------------------------------
@@ -85,7 +191,7 @@ function addRow(type, text, isTyping, animate = true) {
     if (type === 'user') {
       bubble.textContent = text;
     } else {
-      bubble.innerHTML = renderAI(text);
+      bubble.appendChild(renderAI(text));
     }
   }
 
