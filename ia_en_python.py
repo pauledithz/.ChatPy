@@ -16,7 +16,7 @@ QUESTIONS_SANS_REPONSE_FILE = os.path.join(_DIR, "questions_sans_reponse.json")
 
 # Nombre de messages conservés dans .chatpy_history.json. Le fichier est réécrit
 # en entier à chaque message : sans plafond, il grossit indéfiniment.
-HISTORIQUE_MAX_MESSAGES = 1000
+HISTORIQUE_MAX_MESSAGES = 1000000
 
 # Commandes qui n'ont de sens que dans le terminal (elles pilotent la boucle
 # interactive). Elles n'atteignent chatbot_response() que depuis le chat web.
@@ -380,7 +380,7 @@ def chatbot_response(message):
         return "👋 Au revoir ! Continue à apprendre Python le plus possible !"
     else:
         _logger_question_sans_reponse(message)
-        return "❌ Désolé, je ne comprends pas votre question. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+        return "❌ Désolé, je ne comprends pas votre question ou elle ne se situe pas dans le catalogue de questions. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
 
 
 def print_colored(text, color, bold=False):
