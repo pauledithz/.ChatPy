@@ -7,6 +7,8 @@ Les tests qui écrivent sur disque redirigent les fichiers runtime
 la suite ne touche jamais aux vrais fichiers du projet.
 """
 
+import contextlib
+import io
 import json
 import os
 import re
@@ -112,7 +114,11 @@ class TestCommandes(unittest.TestCase):
         self.assertIn("introuvable", reponse)
 
     def test_commande_terminal_expliquee_au_web(self):
-        self.assertIn("version terminal", chatpy.chatbot_response("clear"))
+        # Les deux moitiés du message comptent : ne marche pas ici (web),
+        # marche dans le terminal. Une formulation inversée doit échouer.
+        reponse = chatpy.chatbot_response("clear")
+        self.assertIn("chat web", reponse)
+        self.assertIn("version terminal", reponse)
 
 
 class TestQuiz(unittest.TestCase):
@@ -201,10 +207,15 @@ class TestPersistance(unittest.TestCase):
             historique = os.path.join(tmp, "historique.json")
             with open(historique, "w", encoding="utf-8") as f:
                 f.write("{pas du json")
+            # L'avertissement est destiné à l'utilisateur du CLI : on le capture
+            # pour ne pas polluer la sortie de la suite, et on vérifie son contenu.
+            sortie = io.StringIO()
             with patch.object(chatpy, "HISTORY_FILE", historique):
-                bot = chatpy.ChatBot()
+                with contextlib.redirect_stdout(sortie):
+                    bot = chatpy.ChatBot()
             self.assertEqual(bot.historique, [])
             self.assertTrue(os.path.exists(historique + ".corrompu"))
+            self.assertIn("historique.json.corrompu", sortie.getvalue())
 
 
 if __name__ == "__main__":
