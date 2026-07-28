@@ -119,6 +119,10 @@ class TestCommandes(unittest.TestCase):
         reponse = chatpy.chatbot_response("clear")
         self.assertIn("chat web", reponse)
         self.assertIn("version terminal", reponse)
+        self.assertLess(
+            reponse.index("chat web"),
+            reponse.index("version terminal"),
+        )
 
 
 class TestQuiz(unittest.TestCase):
