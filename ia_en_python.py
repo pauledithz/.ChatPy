@@ -281,8 +281,9 @@ def chatbot_response(message):
     # Commandes réservées au terminal : la boucle CLI les intercepte avant d'arriver
     # ici, donc on n'y passe que depuis le chat web, où elles n'ont pas de sens.
     if message in COMMANDES_TERMINAL:
-        return (f"ℹ️ La commande '{message}' n'existe que dans la version terminal de ChatPy "
-                f"(python3 ia_en_python.py).\n"
+        return (f"ℹ️ Désolé, la commande '{message}' ne marche pas ici, dans le chat web.\n"
+                f"Elle a été faite pour la version terminal de ChatPy, où elle fonctionne "
+                f"(lancez : python3 ia_en_python.py).\n"
                 f"Ici, posez directement une question sur Python ou tapez 'help'.")
 
     # liste <catégorie> — afficher uniquement une catégorie
