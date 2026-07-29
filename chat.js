@@ -36,6 +36,19 @@ function el(tag, className, texte) {
   return node;
 }
 
+// Un bloc de code, doublé d'un bouton « Copier » : sur un site qui enseigne
+// Python, récupérer l'extrait est le geste le plus fréquent après l'avoir lu.
+// Le clic est traité par délégation (voir plus bas), pour que les blocs restaurés
+// depuis localStorage soient actifs eux aussi.
+function blocCode(texte) {
+  const wrap = el('div', 'code-block');
+  wrap.appendChild(el('pre', null, texte));
+  const btn = el('button', 'code-copy', 'Copier');
+  btn.type = 'button';
+  wrap.appendChild(btn);
+  return wrap;
+}
+
 function estPuce(l) { return /^\s*•\s+/.test(l); }
 function estNiveau(l) { return l.startsWith('━━'); }
 function estExemple(l) { return /(^|\s)Exemple\s*:/.test(l); }
@@ -74,7 +87,7 @@ function renderAI(text) {
     // Retire les lignes vides en tête et en fin (séparateurs de sections).
     while (code.length && code[0].trim() === '') code.shift();
     while (code.length && code[code.length - 1].trim() === '') code.pop();
-    if (code.length) frag.appendChild(el('pre', null, code.join('\n')));
+    if (code.length) frag.appendChild(blocCode(code.join('\n')));
   }
 
   while (i < lignes.length) {
@@ -106,7 +119,7 @@ function renderAI(text) {
       const suffixe = ligne.replace(/^.*?Exemple\s*:\s*/, '');
       i++;
       if (suffixe.trim() !== '') {
-        frag.appendChild(el('pre', null, suffixe));
+        frag.appendChild(blocCode(suffixe));
       }
       collecterCode('exemple');
       continue;
@@ -162,6 +175,40 @@ function renderAI(text) {
 // Affichage
 // ---------------------------------------------------------------------------
 
+// Suggestions de suivi en boutons : le backend les renvoie à part du texte
+// (champ `suggestions`) précisément pour éviter la liste numérotée que
+// l'utilisateur devrait recopier à la main.
+function blocSuggestions(suggestions, titre) {
+  const bloc = el('div', 'msg-suggest');
+  if (titre) bloc.appendChild(el('div', 'msg-suggest-title', titre));
+  const chips = el('div', 'msg-suggest-chips');
+  for (const s of suggestions) {
+    const chip = el('button', 'chat-chip chat-chip--sm', s);
+    chip.type = 'button';
+    chip.dataset.send = s;
+    chips.appendChild(chip);
+  }
+  bloc.appendChild(chips);
+  return bloc;
+}
+
+// Un pouce vers le bas est la seule façon de repérer une réponse trouvée mais
+// mauvaise : le journal des lacunes, lui, ne voit que les échecs complets.
+function blocFeedback(question) {
+  const bloc = el('div', 'msg-feedback');
+  bloc.dataset.question = question;
+  bloc.appendChild(el('span', 'msg-feedback-label', 'Cette réponse vous a-t-elle aidé ?'));
+  for (const [utile, emoji, libelle] of [['1', '👍', 'Réponse utile'],
+                                         ['0', '👎', 'Réponse inutile']]) {
+    const btn = el('button', 'msg-feedback-btn', emoji);
+    btn.type = 'button';
+    btn.dataset.utile = utile;
+    btn.setAttribute('aria-label', libelle);
+    bloc.appendChild(btn);
+  }
+  return bloc;
+}
+
 function masquerAccueil() {
   const chatWelcome = document.getElementById('chatWelcome');
   if (!chatWelcome || !chatWelcome.isConnected) return;
@@ -169,7 +216,10 @@ function masquerAccueil() {
   setTimeout(() => chatWelcome.remove(), 300);
 }
 
-function addRow(type, text, isTyping, animate = true) {
+// `extras` (réponses du bot uniquement) : { suggestions, titre, question }.
+// `question` est le message qui a produit la réponse — c'est lui qu'un pouce
+// vers le bas signale au serveur, pas la réponse.
+function addRow(type, text, isTyping, animate = true, extras = null) {
   const row = document.createElement('div');
   row.className = 'msg-row ' + (type === 'user' ? 'user-row' : '');
 
@@ -192,6 +242,12 @@ function addRow(type, text, isTyping, animate = true) {
       bubble.textContent = text;
     } else {
       bubble.appendChild(renderAI(text));
+      if (extras && extras.suggestions && extras.suggestions.length) {
+        bubble.appendChild(blocSuggestions(extras.suggestions, extras.titre));
+      }
+      if (extras && extras.question) {
+        bubble.appendChild(blocFeedback(extras.question));
+      }
     }
   }
 
@@ -235,14 +291,14 @@ function chargerConversation() {
 
   masquerAccueil();
   for (const m of data.messages) {
-    addRow(m.type, m.text, false, false);
+    addRow(m.type, m.text, false, false, m.extras || null);
   }
   quizActif = Boolean(data.quizActif);
   majQuizUI();
   resetBtn.hidden = false;
 }
 
-function sauvegarderMessage(type, text) {
+function sauvegarderMessage(type, text, extras = null) {
   let data;
   try {
     data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
@@ -250,7 +306,7 @@ function sauvegarderMessage(type, text) {
     data = {};
   }
   if (!Array.isArray(data.messages)) data.messages = [];
-  data.messages.push({ type, text });
+  data.messages.push(extras ? { type, text, extras } : { type, text });
   data.quizActif = quizActif;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -291,8 +347,15 @@ async function envoyer(message) {
     typingRow.remove();
     quizActif = Boolean(data.quiz_actif);
     majQuizUI();
-    addRow('ai', data.response, false);
-    sauvegarderMessage('ai', data.response);
+    // Le serveur seul sait si la réponse vient de la FAQ ou du quiz : le message
+    // qui clôt un quiz repasse quizActif à faux sans être une réponse de la FAQ.
+    const extras = !data.feedback_possible ? null : {
+      suggestions: data.suggestions || [],
+      titre: data.titre_suggestions || '',
+      question: message
+    };
+    addRow('ai', data.response, false, true, extras);
+    sauvegarderMessage('ai', data.response, extras);
   } catch (err) {
     typingRow.remove();
     addRow('ai', '❌ Impossible de contacter le serveur ChatPy. Réessayez dans un instant.', false);
@@ -313,10 +376,62 @@ chatForm.addEventListener('submit', (event) => {
   if (message) envoyer(message);
 });
 
-// Délégation : fonctionne aussi sur l'écran d'accueil recréé après un reset.
+async function copierCode(btn) {
+  const pre = btn.parentElement.querySelector('pre');
+  if (!pre) return;
+  const libelle = btn.textContent;
+  try {
+    await navigator.clipboard.writeText(pre.textContent);
+    btn.textContent = 'Copié';
+  } catch (e) {
+    // Presse-papiers refusé (contexte non sécurisé, permission) : on le dit
+    // plutôt que de laisser croire à une copie réussie.
+    btn.textContent = 'Échec';
+  }
+  btn.classList.add('code-copy--fait');
+  setTimeout(() => {
+    btn.textContent = libelle;
+    btn.classList.remove('code-copy--fait');
+  }, 1500);
+}
+
+async function envoyerFeedback(btn) {
+  const bloc = btn.closest('.msg-feedback');
+  const question = bloc.dataset.question;
+  const utile = btn.dataset.utile === '1';
+  // Le bloc entier est remplacé : le vote ne se rejoue pas, et le retour est
+  // immédiat même si la requête échoue — rien de vital n'en dépend côté client.
+  bloc.replaceWith(el('div', 'msg-feedback msg-feedback--envoye',
+    utile ? '👍 Merci pour votre retour !'
+          : '👎 Merci — cette question est notée pour améliorer la FAQ.'));
+  try {
+    await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, utile })
+    });
+  } catch (e) {
+    /* signalement best-effort : inutile d'importuner l'utilisateur */
+  }
+}
+
+// Délégation : fonctionne aussi sur l'écran d'accueil recréé après un reset,
+// et sur les messages restaurés depuis localStorage.
 chatBody.addEventListener('click', (event) => {
   const chip = event.target.closest('.chat-chip');
-  if (chip && chip.dataset.send) envoyer(chip.dataset.send);
+  if (chip && chip.dataset.send) {
+    envoyer(chip.dataset.send);
+    return;
+  }
+
+  const copie = event.target.closest('.code-copy');
+  if (copie) {
+    copierCode(copie);
+    return;
+  }
+
+  const pouce = event.target.closest('.msg-feedback-btn');
+  if (pouce) envoyerFeedback(pouce);
 });
 
 resetBtn.addEventListener('click', async () => {

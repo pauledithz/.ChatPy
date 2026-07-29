@@ -53,15 +53,26 @@ def test_api_chat_rejects_empty_message(client):
     assert "vide" in resp.get_json()["error"]
 
 
-# ── Delegation to bot.traiter_message() when no quiz is active ──────────────
+# ── Delegation to bot.repondre() when no quiz is active ─────────────────────
 
 def test_api_chat_delegates_non_quiz_message_to_bot(client, monkeypatch):
-    monkeypatch.setattr(app_module.bot, "traiter_message", lambda message: f"echo:{message}")
+    # bot.repondre() plutôt que traiter_message() : le web a besoin des
+    # suggestions séparées du texte pour en faire des boutons cliquables.
+    monkeypatch.setattr(
+        app_module.bot, "repondre",
+        lambda message: {"response": f"echo:{message}",
+                         "suggestions": ["une autre question"],
+                         "titre_suggestions": "Questions liées"},
+    )
 
     resp = client.post("/api/chat", json={"message": "Bonjour"})
 
     assert resp.status_code == 200
-    assert resp.get_json()["response"] == "echo:Bonjour"
+    body = resp.get_json()
+    assert body["response"] == "echo:Bonjour"
+    assert body["suggestions"] == ["une autre question"]
+    assert body["titre_suggestions"] == "Questions liées"
+    assert body["feedback_possible"] is True
 
 
 # ── Starting a quiz ───────────────────────────────────────────────────────────
