@@ -51,6 +51,20 @@ MOTS_VIDES = frozenset({
 POIDS_MOTS = 0.55
 SEUIL_CORRESPONDANCE = 0.5
 
+# Sous SEUIL_CORRESPONDANCE on ne répond pas, mais entre ce seuil bas et lui la
+# question de la FAQ reste assez proche pour valoir un « vouliez-vous dire ? ».
+# Plus bas, les propositions deviennent du bruit qui ressemble à du hasard.
+SEUIL_PROPOSITION = 0.3
+
+# Réponse d'échec, renvoyée telle quelle : les front-ends la reconnaissent pour
+# proposer des questions proches plutôt que de laisser l'utilisateur sans issue.
+REPONSE_INCOMPRISE = ("❌ Désolé, je ne comprends pas votre question ou elle ne se situe pas dans "
+                      "le catalogue de questions. Essayez de poser une question sur Python ou "
+                      "tapez 'help' pour l'aide.")
+
+TITRE_QUESTIONS_LIEES = "Questions liées"
+TITRE_QUESTIONS_PROCHES = "Vouliez-vous dire"
+
 # Le serveur Flask est multi-thread : deux requêtes peuvent écrire en même temps.
 _verrou_historique = threading.Lock()
 _verrou_questions  = threading.Lock()
@@ -156,6 +170,43 @@ for _cat, _questions in faq_categories.items():
 norm_vers_original = {normaliser_texte(q): q for q in faq}
 
 
+def _scanner_faq(message_normalise):
+    """Toute la FAQ notée face au message, de la meilleure à la moins bonne.
+
+    Retourne des paires (question d'origine, confiance en %). Le seul passage
+    coûteux du matching : chatbot_response() en tire sa réponse, et
+    questions_proches() les quasi-correspondances qu'il a écartées.
+    """
+    scores = [(original_q, int(_score_correspondance(message_normalise, norm_q) * 100))
+              for norm_q, original_q in norm_vers_original.items()]
+    scores.sort(key=lambda paire: paire[1], reverse=True)
+    return scores
+
+
+def questions_proches(message, limite=3):
+    """Questions de la FAQ trop peu sûres pour être répondues, mais assez proches
+    pour être proposées après un « je ne comprends pas ».
+
+    Le score seul ne suffit pas : la ressemblance des lettres fait remonter des
+    questions sans aucun rapport ("dresser un lama" → "décompresser un tuple").
+    On exige donc au moins un mot de sujet en commun, à une faute près.
+    """
+    message_normalise = normaliser_texte(message)
+    mots_message = _mots_significatifs(message_normalise)
+    if not mots_message:
+        return []
+
+    proches = []
+    for q, conf in _scanner_faq(message_normalise):
+        if not SEUIL_PROPOSITION * 100 <= conf < SEUIL_CORRESPONDANCE * 100:
+            continue
+        if _recouvrement_mots(mots_message, _mots_significatifs(normaliser_texte(q))) > 0:
+            proches.append(q)
+        if len(proches) == limite:
+            break
+    return proches
+
+
 def _formater_concept(concept):
     """Formate un concept de aide_concepts.json pour l'affichage terminal."""
     lignes = [f"📖 {concept['titre']}", ""]
@@ -191,6 +242,21 @@ def _vaut_la_peine_d_etre_logguee(message):
 
 def _logger_question_sans_reponse(message):
     """Enregistre une question sans réponse dans questions_sans_reponse.json pour repérer les trous de la FAQ."""
+    _incrementer_journal(message, "occurrences")
+
+
+def signaler_reponse_inutile(message):
+    """Enregistre une question dont la réponse a été jugée inutile (pouce vers le bas).
+
+    Une réponse trouvée mais mauvaise est invisible dans le journal, qui ne
+    retient que les échecs complets : ce compteur-là repère les questions qui
+    matchent une entrée de la FAQ, mais pas la bonne.
+    """
+    _incrementer_journal(message, "pouces_bas")
+
+
+def _incrementer_journal(message, champ):
+    """Incrémente un compteur du journal des lacunes pour cette question."""
     if not _vaut_la_peine_d_etre_logguee(message):
         return
 
@@ -211,11 +277,13 @@ def _logger_question_sans_reponse(message):
             _mettre_de_cote(QUESTIONS_SANS_REPONSE_FILE, "Journal des questions sans réponse illisible.")
             donnees = {}
 
-        if cle in donnees:
-            donnees[cle]["occurrences"] += 1
-            donnees[cle]["derniere_fois"] = aujourdhui
-        else:
-            donnees[cle] = {"texte": message, "occurrences": 1, "derniere_fois": aujourdhui}
+        entree = donnees.get(cle)
+        if not isinstance(entree, dict):
+            entree = {"texte": message, "occurrences": 0, "pouces_bas": 0}
+            donnees[cle] = entree
+        # Les entrées écrites avant l'ajout des pouces n'ont pas le champ.
+        entree[champ] = entree.get(champ, 0) + 1
+        entree["derniere_fois"] = aujourdhui
 
         try:
             _ecrire_json_atomique(QUESTIONS_SANS_REPONSE_FILE, donnees)
@@ -352,14 +420,12 @@ def chatbot_response(message):
     # 2. Recherche par score hybride (lettres + vocabulaire) sur toute la FAQ.
     # Un seul passage remplace l'ancien duo fuzzy matching / similarité brute :
     # il tolère les fautes de frappe ET les reformulations ("c'est quoi une liste").
-    meilleures_correspondances = []
-    for norm_q, original_q in norm_vers_original.items():
-        score = _score_correspondance(message_normalise, norm_q)
-        if score >= SEUIL_CORRESPONDANCE:
-            meilleures_correspondances.append((original_q, faq[original_q], int(score * 100)))
+    meilleures_correspondances = [
+        (q, faq[q], conf) for q, conf in _scanner_faq(message_normalise)
+        if conf >= SEUIL_CORRESPONDANCE * 100
+    ]
 
     if meilleures_correspondances:
-        meilleures_correspondances.sort(key=lambda x: x[2], reverse=True)
         _, best_answer, confiance = meilleures_correspondances[0]
         response = f"✓ {best_answer}\n\n💡 Confiance: {confiance}%"
         if confiance < 70 and len(meilleures_correspondances) > 1:
@@ -381,7 +447,7 @@ def chatbot_response(message):
         return "👋 Au revoir ! Continue à apprendre Python le plus possible !"
     else:
         _logger_question_sans_reponse(message)
-        return "❌ Désolé, je ne comprends pas votre question ou elle ne se situe pas dans le catalogue de questions. Essayez de poser une question sur Python ou tapez 'help' pour l'aide."
+        return REPONSE_INCOMPRISE
 
 
 def print_colored(text, color, bold=False):
@@ -611,13 +677,25 @@ class ChatBot:
         suggestions = [s for s in suggestions if s not in self.questions_posees]
         return suggestions[:2]
 
-    def traiter_message(self, message):
+    def repondre(self, message):
+        """Réponse complète : le texte, plus les questions à proposer ensuite.
+
+        Les suggestions sortent à part du texte pour que le chat web les affiche
+        en boutons cliquables ; traiter_message() les remet en texte pour le CLI.
+        Deux cas les alimentent, et un seul des deux s'applique à la fois :
+        après une réponse trouvée, les questions liées prolongent le sujet ;
+        après un échec, les quasi-correspondances offrent un rattrapage.
+        """
         response = chatbot_response(message)
-        suggestions = self.obtenir_suggestions(message)
-        if suggestions and "Confiance:" in response:
-            response += "\n\n📌 Questions liées:\n"
-            for i, sug in enumerate(suggestions, 1):
-                response += f"  {i}. {sug}\n"
+
+        suggestions, titre = [], ""
+        if "Confiance:" in response:
+            suggestions = self.obtenir_suggestions(message)
+            titre = TITRE_QUESTIONS_LIEES
+        elif response == REPONSE_INCOMPRISE:
+            suggestions = questions_proches(message)
+            titre = TITRE_QUESTIONS_PROCHES
+
         # Ajout ET écriture sous le même verrou : deux requêtes web simultanées
         # ne peuvent ainsi ni entrelacer leurs paires question/réponse, ni
         # écraser l'ajout de l'autre pendant la sauvegarde.
@@ -626,6 +704,18 @@ class ChatBot:
             self.ajouter_message("assistant", response)
             self._sauvegarder_historique()
         self.questions_posees.add(normaliser_texte(message))
+        return {"response": response,
+                "suggestions": suggestions,
+                "titre_suggestions": titre if suggestions else ""}
+
+    def traiter_message(self, message):
+        """Réponse en un seul bloc de texte, suggestions comprises (CLI)."""
+        resultat = self.repondre(message)
+        response = resultat["response"]
+        if resultat["suggestions"]:
+            response += f"\n\n📌 {resultat['titre_suggestions']}:\n"
+            for i, sug in enumerate(resultat["suggestions"], 1):
+                response += f"  {i}. {sug}\n"
         return response
 
     def afficher_historique(self):

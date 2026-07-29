@@ -83,6 +83,17 @@ class TestMatchingFAQ(unittest.TestCase):
             self.assertIn("comment dresser un lama sauvage", donnees)
             self.assertEqual(donnees["comment dresser un lama sauvage"]["occurrences"], 1)
 
+    def test_questions_proches_rattrapent_un_echec(self):
+        # Sous le seuil de réponse mais sur le même sujet : à proposer.
+        proches = chatpy.questions_proches("comment supprimer une variable")
+        self.assertTrue(proches)
+        self.assertTrue(all(p in chatpy.faq for p in proches))
+
+    def test_questions_proches_ignorent_le_hors_sujet(self):
+        # La ressemblance des seules lettres ferait remonter "décompresser un
+        # tuple" : sans mot de sujet commun, on ne propose rien.
+        self.assertEqual(chatpy.questions_proches("comment dresser un lama sauvage"), [])
+
     def test_filtre_du_journal(self):
         self.assertFalse(chatpy._vaut_la_peine_d_etre_logguee("quoi"))
         self.assertFalse(chatpy._vaut_la_peine_d_etre_logguee("x " * 3000))
@@ -169,6 +180,82 @@ class TestQuiz(unittest.TestCase):
         for _ in range(20):
             suivante, _ = chatpy.choisir_question_quiz(question)
             self.assertNotEqual(suivante, question)
+
+
+class TestSuggestions(unittest.TestCase):
+    """repondre() sort les suggestions du texte pour que le web en fasse des boutons."""
+
+    def _repondre(self, message):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(chatpy, "HISTORY_FILE", os.path.join(tmp, "h.json")), \
+                 patch.object(chatpy, "QUESTIONS_SANS_REPONSE_FILE", os.path.join(tmp, "j.json")):
+                return chatpy.ChatBot().repondre(message)
+
+    def test_reponse_trouvee_propose_les_questions_liees(self):
+        resultat = self._repondre("qu'est-ce qu'une fonction")
+        self.assertIn("Confiance:", resultat["response"])
+        self.assertTrue(resultat["suggestions"])
+        self.assertEqual(resultat["titre_suggestions"], chatpy.TITRE_QUESTIONS_LIEES)
+        # Le texte reste propre : les suggestions ne doivent pas y être recopiées.
+        for sug in resultat["suggestions"]:
+            self.assertNotIn(sug, resultat["response"])
+
+    def test_echec_propose_les_questions_proches(self):
+        resultat = self._repondre("comment supprimer une variable en python")
+        if resultat["response"] == chatpy.REPONSE_INCOMPRISE:
+            self.assertEqual(resultat["titre_suggestions"], chatpy.TITRE_QUESTIONS_PROCHES)
+            self.assertTrue(resultat["suggestions"])
+
+    def test_sans_suggestion_le_titre_reste_vide(self):
+        resultat = self._repondre("comment dresser un lama sauvage")
+        self.assertEqual(resultat["response"], chatpy.REPONSE_INCOMPRISE)
+        self.assertEqual(resultat["suggestions"], [])
+        self.assertEqual(resultat["titre_suggestions"], "")
+
+    def test_traiter_message_remet_les_suggestions_en_texte(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(chatpy, "HISTORY_FILE", os.path.join(tmp, "h.json")):
+                texte = chatpy.ChatBot().traiter_message("qu'est-ce qu'une fonction")
+        self.assertIn(f"📌 {chatpy.TITRE_QUESTIONS_LIEES}:", texte)
+        self.assertIn("1. ", texte)
+
+
+class TestJournalDesLacunes(unittest.TestCase):
+    def test_pouce_bas_compte_a_part_des_questions_sans_reponse(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            journal = os.path.join(tmp, "questions.json")
+            with patch.object(chatpy, "QUESTIONS_SANS_REPONSE_FILE", journal):
+                # Une question qui a bien reçu une réponse, mais jugée inutile.
+                chatpy.signaler_reponse_inutile("comment trier une liste")
+                chatpy.signaler_reponse_inutile("comment trier une liste")
+            with open(journal, encoding="utf-8") as f:
+                entree = json.load(f)["comment trier une liste"]
+        self.assertEqual(entree["pouces_bas"], 2)
+        # Elle n'a jamais été « sans réponse » : ce compteur-là reste à zéro.
+        self.assertEqual(entree["occurrences"], 0)
+
+    def test_pouce_bas_sur_une_entree_ancienne_sans_le_champ(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            journal = os.path.join(tmp, "questions.json")
+            # Format d'avant l'ajout des pouces : pas de clé "pouces_bas".
+            with open(journal, "w", encoding="utf-8") as f:
+                json.dump({"comment installer numpy": {
+                    "texte": "comment installer numpy",
+                    "occurrences": 3,
+                    "derniere_fois": "2026-01-01"}}, f)
+            with patch.object(chatpy, "QUESTIONS_SANS_REPONSE_FILE", journal):
+                chatpy.signaler_reponse_inutile("comment installer numpy")
+            with open(journal, encoding="utf-8") as f:
+                entree = json.load(f)["comment installer numpy"]
+        self.assertEqual(entree["pouces_bas"], 1)
+        self.assertEqual(entree["occurrences"], 3)
+
+    def test_pouce_bas_filtre_le_bruit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            journal = os.path.join(tmp, "questions.json")
+            with patch.object(chatpy, "QUESTIONS_SANS_REPONSE_FILE", journal):
+                chatpy.signaler_reponse_inutile("help")
+            self.assertFalse(os.path.exists(journal))
 
 
 class TestPersistance(unittest.TestCase):
