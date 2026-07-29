@@ -379,7 +379,9 @@ chatForm.addEventListener('submit', (event) => {
 async function copierCode(btn) {
   const pre = btn.parentElement.querySelector('pre');
   if (!pre) return;
-  const libelle = btn.textContent;
+  if (btn._resetTimer) clearTimeout(btn._resetTimer);
+  if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+  const libelle = btn.dataset.label;
   try {
     await navigator.clipboard.writeText(pre.textContent);
     btn.textContent = 'Copié';
@@ -389,9 +391,10 @@ async function copierCode(btn) {
     btn.textContent = 'Échec';
   }
   btn.classList.add('code-copy--fait');
-  setTimeout(() => {
+  btn._resetTimer = setTimeout(() => {
     btn.textContent = libelle;
     btn.classList.remove('code-copy--fait');
+    btn._resetTimer = null;
   }, 1500);
 }
 
