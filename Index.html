@@ -21,7 +21,11 @@
       <a href="#tarifs">Tarifs</a>
       <a href="/chat">Chat</a>
     </div>
-    <button type="button" class="nav-cta" data-action="start">Commencer →</button>
+    <!-- Rempli par script.js selon /api/moi : bouton d'inscription si personne
+         n'est connecté, nom + déconnexion sinon. -->
+    <div class="nav-compte" id="navCompte">
+      <button type="button" class="nav-cta" data-action="start">Commencer →</button>
+    </div>
   </nav>
 
   <div class="hero-wrapper">
@@ -189,7 +193,7 @@
       <p class="p line">Ou avec</p>
 
       <div class="flex-row">
-        <button type="button" class="btn google">
+        <a href="/auth/google" class="btn google" data-provider="google">
           <svg
             version="1.1"
             width="20"
@@ -229,7 +233,7 @@
           </svg>
 
           Google
-        </button>
+        </a>
         <button type="button" class="btn apple">
           <svg
             version="1.1"

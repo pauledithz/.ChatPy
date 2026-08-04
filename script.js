@@ -270,3 +270,60 @@ document.querySelectorAll('[data-action="demo"]').forEach((button) => {
 });
 
 setTimeout(runConversation, 800);
+
+/* ── Compte Google ────────────────────────────────────────────────────────
+   Le serveur est seul à savoir qui est connecté : l'identité vit dans un
+   cookie signé et HttpOnly, donc illisible depuis ici. On la demande. */
+
+const navCompte = document.getElementById('navCompte');
+
+function echapper(texte) {
+  const noeud = document.createElement('span');
+  noeud.textContent = texte;
+  return noeud.innerHTML;
+}
+
+async function seDeconnecter() {
+  // POST et non GET : voir le commentaire de /auth/logout dans app.py.
+  await fetch('/auth/logout', { method: 'POST' });
+  window.location.reload();
+}
+
+function afficherCompte(moi) {
+  if (!navCompte || !moi.connecte) return;
+
+  const photo = moi.photo
+    ? `<img class="nav-photo" src="${echapper(moi.photo)}" alt="" width="28" height="28">`
+    : '';
+  navCompte.innerHTML =
+    `${photo}<span class="nav-nom">${echapper(moi.nom)}</span>` +
+    '<button type="button" class="nav-deconnexion">Se déconnecter</button>';
+  navCompte.querySelector('.nav-deconnexion').addEventListener('click', seDeconnecter);
+}
+
+function signalerRetourOAuth() {
+  // app.py redirige vers /?connexion=... après le passage chez Google.
+  const etat = new URLSearchParams(window.location.search).get('connexion');
+  if (!etat) return;
+
+  if (etat === 'echec') {
+    alert("La connexion Google a échoué ou a été annulée.");
+  } else if (etat === 'email_non_verifie') {
+    alert("Cette adresse Google n'est pas vérifiée : connexion refusée.");
+  }
+  // Nettoie l'URL, sinon le message revient à chaque rechargement.
+  window.history.replaceState({}, '', window.location.pathname);
+}
+
+fetch('/api/moi')
+  .then((reponse) => (reponse.ok ? reponse.json() : null))
+  .then((moi) => {
+    if (!moi) return;
+    afficherCompte(moi);
+    if (moi.connecte) closeSignupModal();
+  })
+  // Page ouverte en file://, sans serveur Flask : le reste du site marche
+  // quand même, seul le compte est indisponible.
+  .catch(() => {});
+
+signalerRetourOAuth();
