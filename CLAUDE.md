@@ -20,9 +20,10 @@ pip install -r requirements.txt
 python3 app.py
 # Then open http://localhost:5001
 ```
-The Werkzeug debugger allows arbitrary code execution, so it is off by default; set `CHATPY_DEBUG=1` to enable it for local development only. `CHATPY_SECRET_KEY` signs the session cookie that carries quiz state; without it a random key is generated per process, so restarting the server drops any quiz in progress.
+Configuration lives in `.env` (git-ignored), loaded by `load_dotenv()` at the top of `app.py`; `.env.example` is the committed template listing every variable with empty values — **any new variable the code reads must be added there**, or a fresh clone has no way to know it exists. Shell variables win over `.env`, so a deployment can impose its own values.
+The Werkzeug debugger allows arbitrary code execution, so it is off by default; set `CHATPY_DEBUG=1` to enable it for local development only. `CHATPY_SECRET_KEY` signs the session cookie that carries quiz state *and the logged-in user*; without it a random key is generated per process, so restarting the server drops any quiz in progress and logs everyone out. `CHATPY_COOKIE_SECURE=1` restricts that cookie to https — correct in production, but it must stay `0` locally or the browser rejects the cookie over http and no session ever holds.
 A `.venv` is recommended over installing Flask system-wide, especially on macOS with Homebrew Python (PEP 668 blocks system-wide `pip install` there). `.vscode/settings.json` points `python.defaultInterpreterPath` at `.venv/bin/python` so the IDE picks it up automatically. Port 5001 (not 5000) is used because macOS's AirPlay Receiver commonly occupies 5000.
-`app.py` imports the shared `bot` instance from `ia_en_python.py`, so the CLI and the web chat use the exact same matching logic and conversation state (`.chatpy_history.json`). The `/chat` page (`chat.html` + `chat.js`) is a real, working chat UI — unlike the animated demo on the landing page (see below). It's linked from the nav (`Index.html`) and reachable without logging in — the signup/login modal on `Index.html` is decorative (no real authentication) and unrelated to chat access.
+`app.py` imports the shared `bot` instance from `ia_en_python.py`, so the CLI and the web chat use the exact same matching logic and conversation state (`.chatpy_history.json`). The `/chat` page (`chat.html` + `chat.js`) is a real, working chat UI — unlike the animated demo on the landing page (see below). It's linked from the nav (`Index.html`) and reachable without logging in — the signup/login modal on `Index.html` now has a working Google sign-in (see below); its email/password form and the Apple/GitHub/Yahoo buttons remain decorative. Chat access requires no login.
 
 **Landing page alone (static, no server required):**
 Open `Index.html` directly in a browser, or serve locally:
@@ -77,6 +78,20 @@ While a quiz is active, `/api/chat` treats every message as an answer and bypass
 - `POST /api/feedback` — `{"question": "...", "utile": false}` → records a thumbs-down via `signaler_reponse_inutile()`. A thumbs-up is accepted and ignored, so the front has a single code path.
 
 Request-body validation for both lives in `_lire_message()`.
+
+**Google sign-in (OAuth 2.0 / OpenID Connect).** Server-side authorization-code flow via Authlib, so `GOOGLE_CLIENT_SECRET` never reaches the browser. Authlib is configured from Google's discovery document, which supplies the authorization/token URLs and signing keys — none of it is hard-coded — and it generates the `state` (CSRF) and `nonce` (replay) parameters itself.
+- `GET /auth/google` — redirects to Google. Scope is exactly `openid email profile`; anything more triggers Google's app-verification review.
+- `GET /auth/google/callback` — exchanges the code, **rejects an account whose `email_verified` is false** (an unverified Google account proves nothing about owning the address), stores `{id, nom, email, photo}` in `session["utilisateur"]`, and redirects to `/?connexion=ok`. Failures redirect to `/?connexion=echec` or `/?connexion=email_non_verifie` — never with the technical error in the URL, which would land in logs and browser history.
+- `POST /auth/logout` — POST only: in GET, a third-party `<img src="/auth/logout">` would sign visitors out unnoticed.
+- `GET /api/moi` — `{"connecte": bool, "oauth_disponible": bool, ...}`. The front cannot read the identity itself (the cookie is HttpOnly), so it asks.
+
+The identity is **session-only** — there is no user table, and `.chatpy_history.json` stays shared across all visitors. Logging in does not give anyone a private history; that would require breaking the module-level `bot` singleton.
+
+`SESSION_COOKIE_SAMESITE` must stay `"Lax"`: `"Strict"` drops the cookie on the redirect back from Google and the flow dies on a `mismatching_state`.
+
+When the two `GOOGLE_*` variables are empty (the state of any fresh clone), `OAUTH_CONFIGURE` is false and the `/auth` routes answer 503 instead of crashing at import — the rest of the site stays fully usable without a Google Cloud account. The redirect URI sent to Google is `http://localhost:5001/auth/google/callback`; it must match the console entry character for character, or the flow fails with `redirect_uri_mismatch`.
+
+The `<a class="btn google">` in `Index.html` points at `/auth/google` — a navigation, not a form submit, hence an `<a>` and not a `<button>`. `script.js` fills `#navCompte` from `/api/moi`. The rest of the signup modal (email/password, Apple, GitHub, Yahoo) is still decorative.
 
 Flask's automatic static folder is disabled (`static_folder=None`). Assets are served one by one from the `FICHIERS_PUBLICS` allow-list, because the project root also holds source code and the runtime conversation logs — serving the directory wholesale would expose them. **A new CSS/JS/image file referenced by a page must be added to `FICHIERS_PUBLICS` or it will 404.**
 

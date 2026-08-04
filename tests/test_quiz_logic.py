@@ -93,8 +93,20 @@ def test_evaluer_reponse_quiz_unrelated_answer_is_fausse():
     ],
 )
 def test_evaluer_reponse_quiz_threshold_boundaries(monkeypatch, ratio, expected_verdict):
+    """Isole la grille de verdicts de la mesure de ressemblance.
+
+    evaluer_reponse_quiz() retient le meilleur de deux angles : la ressemblance
+    du texte entier, et la part des mots significatifs de l'utilisateur
+    retrouvés dans la réponse attendue. Piloter le seul calcul_similarite ne
+    suffit donc pas — avec deux textes identiques, l'angle « mots » renvoie 100 %
+    et écrase la valeur simulée. On neutralise cet angle pour que le ratio
+    injecté soit bien celui qui décide.
+    """
     monkeypatch.setattr(ia_en_python, "calcul_similarite", lambda a, b: ratio)
+    monkeypatch.setattr(ia_en_python, "_mots_significatifs", lambda texte: [])
+
     sim, verdict = ia_en_python.evaluer_reponse_quiz("peu importe", "peu importe")
+
     assert sim == int(ratio * 100)
     assert verdict == expected_verdict
 

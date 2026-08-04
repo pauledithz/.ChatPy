@@ -46,6 +46,9 @@ def test_secret_key_utilise_la_variable_environnement(monkeypatch):
 
 def test_secret_key_aleatoire_si_variable_absente(monkeypatch):
     monkeypatch.delenv("CHATPY_SECRET_KEY", raising=False)
+    # app.py charge aussi .env : sans ça, la clé du fichier local reviendrait
+    # aussitôt et le test ne mesurerait plus l'absence de configuration.
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: False)
     import app as app_module
 
     importlib.reload(app_module)
@@ -59,16 +62,27 @@ def test_secret_key_aleatoire_si_variable_absente(monkeypatch):
 
 # ── /api/chat : bascule quiz / chat normal ──────────────────────────────────
 
-def test_message_normal_hors_quiz_appelle_bot_traiter_message(app_module, client, monkeypatch):
+def test_message_normal_hors_quiz_appelle_bot_repondre(app_module, client, monkeypatch):
+    """bot.repondre() est l'entrée unique des deux front-ends : elle renvoie les
+    suggestions à part du texte, pour que le web en fasse des boutons."""
     appels = []
-    monkeypatch.setattr(
-        app_module.bot, "traiter_message", lambda msg: appels.append(msg) or "réponse du bot"
-    )
+
+    def faux_repondre(message):
+        appels.append(message)
+        return {"response": "réponse du bot", "suggestions": [], "titre_suggestions": ""}
+
+    monkeypatch.setattr(app_module.bot, "repondre", faux_repondre)
 
     resp = client.post("/api/chat", json={"message": "bonjour"})
 
     assert resp.status_code == 200
-    assert resp.get_json() == {"response": "réponse du bot"}
+    assert resp.get_json() == {
+        "response": "réponse du bot",
+        "suggestions": [],
+        "titre_suggestions": "",
+        "feedback_possible": True,
+        "quiz_actif": False,
+    }
     assert appels == ["bonjour"]
 
 
@@ -155,13 +169,22 @@ def test_quiz_de_dix_questions_se_termine_et_vide_la_session(app_module, client,
 
 def test_message_apres_quiz_termine_repart_sur_bot_normal(app_module, client, monkeypatch):
     monkeypatch.setattr(iep, "faq", {"Q1": "R1"})
-    monkeypatch.setattr(app_module.bot, "traiter_message", lambda msg: "réponse normale")
+    monkeypatch.setattr(
+        app_module.bot, "repondre",
+        lambda msg: {"response": "réponse normale", "suggestions": [], "titre_suggestions": ""},
+    )
 
     client.post("/api/chat", json={"message": "quiz"})
     client.post("/api/chat", json={"message": "fin"})
     apres = client.post("/api/chat", json={"message": "bonjour"}).get_json()
 
-    assert apres == {"response": "réponse normale"}
+    assert apres == {
+        "response": "réponse normale",
+        "suggestions": [],
+        "titre_suggestions": "",
+        "feedback_possible": True,
+        "quiz_actif": False,
+    }
 
 
 def test_quiz_indisponible_si_faq_vide(app_module, client, monkeypatch):

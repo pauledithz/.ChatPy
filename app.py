@@ -1,11 +1,20 @@
 import os
 import secrets
 
-from flask import Flask, abort, jsonify, request, send_from_directory, session
+from authlib.integrations.flask_client import OAuth
+from authlib.integrations.base_client import OAuthError
+from dotenv import load_dotenv
+from flask import (Flask, abort, jsonify, redirect, request, send_from_directory,
+                   session, url_for)
 
 from ia_en_python import bot, demarrer_quiz, repondre_quiz, signaler_reponse_inutile
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Charge .env dans l'environnement. Les variables déjà définies dans le shell
+# gagnent, pour qu'un déploiement puisse imposer ses propres valeurs sans
+# qu'un .env oublié sur le serveur ne les écrase.
+load_dotenv(os.path.join(_DIR, ".env"))
 
 # Liste blanche des fichiers servis au public. Tout le reste du dossier
 # (code source, .chatpy_history.json, questions_sans_reponse.json, .env)
@@ -21,15 +30,111 @@ FICHIERS_PUBLICS = frozenset({
 
 app = Flask(__name__, static_folder=None)
 
-# Signe le cookie de session, qui porte l'état du quiz. Sans clé fixe, chaque
-# redémarrage du serveur invalide les quiz en cours — acceptable en local,
-# à définir en production.
+# Signe le cookie de session, qui porte l'état du quiz et l'utilisateur connecté.
+# Sans clé fixe, chaque redémarrage du serveur invalide les quiz en cours et
+# déconnecte tout le monde — acceptable en local, à définir en production.
 app.secret_key = os.environ.get("CHATPY_SECRET_KEY") or secrets.token_hex(32)
+
+app.config.update(
+    # Le cookie porte une identité : le JavaScript n'a aucune raison d'y toucher.
+    SESSION_COOKIE_HTTPONLY=True,
+    # "Lax" est le seul réglage qui marche ici : "Strict" ferait perdre le cookie
+    # au retour de redirection depuis Google, et le flow échouerait sur un
+    # mismatching_state.
+    SESSION_COOKIE_SAMESITE="Lax",
+    # En https uniquement : à 1 en local (http), le navigateur refuserait le
+    # cookie et la connexion ne tiendrait jamais.
+    SESSION_COOKIE_SECURE=os.environ.get("CHATPY_COOKIE_SECURE") == "1",
+)
+
+# ── OAuth Google ─────────────────────────────────────────────────────────────
+# Flow "authorization code" côté serveur : le client_secret ne quitte jamais le
+# serveur, contrairement aux flows qui se déroulent dans le navigateur.
+# Les identifiants viennent de .env ; tant qu'ils sont vides, les routes /auth
+# répondent 503 au lieu de planter au démarrage — on peut donc développer le
+# reste du site sans compte Google Cloud.
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
+OAUTH_CONFIGURE = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+
+oauth = OAuth(app)
+if OAUTH_CONFIGURE:
+    oauth.register(
+        name="google",
+        client_id=GOOGLE_CLIENT_ID,
+        client_secret=GOOGLE_CLIENT_SECRET,
+        # Le document de découverte fournit les URLs d'autorisation, de token et
+        # les clés de signature : rien à coder en dur, et rien à corriger le jour
+        # où Google les change.
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        # Strictement le minimum. Tout scope supplémentaire déclenche une
+        # procédure de vérification Google longue et pénible.
+        client_kwargs={"scope": "openid email profile"},
+    )
 
 
 @app.route("/")
 def index():
     return send_from_directory(_DIR, "Index.html")
+
+
+@app.route("/auth/google")
+def auth_google():
+    """Envoie l'utilisateur s'authentifier chez Google."""
+    if not OAUTH_CONFIGURE:
+        return jsonify({"error": "OAuth Google non configuré : renseigner "
+                                 "GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET dans .env."}), 503
+    # _external=True : Google exige une URL absolue, et elle doit correspondre au
+    # caractère près à l'URI de redirection déclarée dans la console Cloud.
+    return oauth.google.authorize_redirect(url_for("auth_google_callback", _external=True))
+
+
+@app.route("/auth/google/callback")
+def auth_google_callback():
+    """Retour de Google : échange le code contre un token et ouvre la session."""
+    if not OAUTH_CONFIGURE:
+        return jsonify({"error": "OAuth Google non configuré."}), 503
+
+    try:
+        token = oauth.google.authorize_access_token()
+    except OAuthError:
+        # L'utilisateur a refusé, ou le state ne correspond pas. Pas de détail
+        # technique dans l'URL : ça finirait dans les logs et l'historique.
+        return redirect("/?connexion=echec")
+
+    # Authlib valide et décode l'id_token dès que le scope openid est demandé.
+    infos = token.get("userinfo") or oauth.google.userinfo(token=token)
+
+    # Un compte Google dont l'email n'est pas vérifié ne prouve rien : sans ce
+    # test, n'importe qui pourrait se déclarer titulaire de l'adresse.
+    if not infos.get("email_verified"):
+        return redirect("/?connexion=email_non_verifie")
+
+    session["utilisateur"] = {
+        # "sub" est l'identifiant Google stable : l'email, lui, peut changer.
+        "id": infos["sub"],
+        "nom": infos.get("name") or infos.get("email", ""),
+        "email": infos.get("email", ""),
+        "photo": infos.get("picture", ""),
+    }
+    return redirect("/?connexion=ok")
+
+
+@app.route("/auth/logout", methods=["POST"])
+def auth_logout():
+    """Ferme la session. POST seulement : en GET, un <img> suffirait à
+    déconnecter un visiteur à son insu."""
+    session.pop("utilisateur", None)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/moi")
+def api_moi():
+    """Qui est connecté ? Le front en a besoin pour choisir quoi afficher."""
+    utilisateur = session.get("utilisateur")
+    if not utilisateur:
+        return jsonify({"connecte": False, "oauth_disponible": OAUTH_CONFIGURE})
+    return jsonify({"connecte": True, "oauth_disponible": True, **utilisateur})
 
 
 @app.route("/chat")

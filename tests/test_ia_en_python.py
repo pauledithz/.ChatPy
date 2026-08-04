@@ -51,7 +51,15 @@ class ModeQuizTests(unittest.TestCase):
         ia_en_python.faq = self._faq_backup
 
     def _run_quiz(self, nb_questions_max=None, inputs=None, choices=None):
-        """Helper running mode_quiz with mocked input/random.choice, capturing stdout."""
+        """Helper running mode_quiz with mocked input/random.choice, capturing stdout.
+
+        `choices` may be a list of successive return values, or a callable
+        receiving the sequence random.choice was given. Prefer the callable when
+        the test cares about *which* candidates were offered: mode_quiz draws
+        once before the loop and once after each answer, and the anti-repeat
+        guard works by filtering that candidate list — a fixed list of return
+        values ignores the filtering entirely and tests nothing.
+        """
         inputs = inputs or []
         buffer = io.StringIO()
         with patch("builtins.input", side_effect=inputs):
@@ -79,7 +87,10 @@ class ModeQuizTests(unittest.TestCase):
         output = self._run_quiz(
             nb_questions_max=2,
             inputs=["Reponse un", "Reponse deux"],
-            choices=[("Q1", "Reponse un"), ("Q2", "Reponse deux")],
+            # Always take the first candidate: Q1, then Q2 once Q1 is filtered
+            # out. A fixed list would run out — mode_quiz draws one extra time
+            # after the last answer, before re-checking the loop condition.
+            choices=lambda candidats: candidats[0],
         )
         self.assertIn("(1/2)", output)
         self.assertIn("(2/2)", output)
@@ -118,15 +129,18 @@ class ModeQuizTests(unittest.TestCase):
 
     def test_does_not_repeat_same_question_twice_in_a_row(self):
         """When more than one question exists, the same question must not be
-        asked on two consecutive turns (the new derniere_question guard)."""
-        q1 = ("Q1", "Reponse un")
-        q2 = ("Q2", "Reponse deux")
-        # First draw returns Q1; second draw also returns Q1 (would repeat) so
-        # the anti-repeat while loop must draw again, landing on Q2.
+        asked on two consecutive turns (the derniere_question guard).
+
+        The guard removes the previous question from the candidate list *before*
+        drawing, rather than re-drawing until it differs — so a test that pins
+        random.choice to fixed return values would sail past it unnoticed.
+        Picking the first candidate every time makes the filtering observable:
+        Q1 stays first until it is excluded.
+        """
         output = self._run_quiz(
             nb_questions_max=2,
             inputs=["Reponse un", "Reponse deux"],
-            choices=[q1, q1, q2],
+            choices=lambda candidats: candidats[0],
         )
         self.assertIn("(1/2) Q1 ?", output)
         self.assertIn("(2/2) Q2 ?", output)
@@ -146,7 +160,7 @@ class ModeQuizTests(unittest.TestCase):
         output = self._run_quiz(
             nb_questions_max=2,
             inputs=["Reponse un", "totalement incorrect xyz"],
-            choices=[("Q1", "Reponse un"), ("Q2", "Reponse deux")],
+            choices=lambda candidats: candidats[0],
         )
         self.assertIn("✅ Bonne réponse", output)
         self.assertIn("❌ Pas tout à fait", output)

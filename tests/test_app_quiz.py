@@ -34,10 +34,14 @@ class TestSecretKeyConfiguration(unittest.TestCase):
     def test_genere_une_cle_aleatoire_si_absente_de_lenvironnement(self):
         valeur_initiale = os.environ.pop("CHATPY_SECRET_KEY", None)
         try:
-            importlib.reload(app_module)
-            cle_1 = app_module.app.secret_key
-            importlib.reload(app_module)
-            cle_2 = app_module.app.secret_key
+            # app.py charge aussi .env : sans neutraliser ce chargement, la clé
+            # du fichier local reviendrait et le test ne mesurerait plus
+            # l'absence de configuration.
+            with mock.patch("dotenv.load_dotenv", return_value=False):
+                importlib.reload(app_module)
+                cle_1 = app_module.app.secret_key
+                importlib.reload(app_module)
+                cle_2 = app_module.app.secret_key
         finally:
             if valeur_initiale is not None:
                 os.environ["CHATPY_SECRET_KEY"] = valeur_initiale
@@ -63,11 +67,19 @@ class TestApiChatQuizRouting(unittest.TestCase):
         etat_initial = {"question": "Q1", "score": 0, "total": 0, "max": 10}
         with mock.patch.object(app_module, "demarrer_quiz", return_value=(etat_initial, "🎯 Mode Quiz")) as demarrer_mock, \
              mock.patch.object(app_module, "repondre_quiz") as repondre_mock, \
-             mock.patch.object(app_module.bot, "traiter_message") as bot_mock:
+             mock.patch.object(app_module.bot, "repondre") as bot_mock:
             with self.client as client:
                 resp = client.post("/api/chat", json={"message": "quiz"})
                 self.assertEqual(resp.status_code, 200)
-                self.assertEqual(resp.get_json(), {"response": "🎯 Mode Quiz"})
+                # Une correction de quiz n'est pas un extrait de la FAQ : ni
+                # suggestion de suivi, ni pouce possible.
+                self.assertEqual(resp.get_json(), {
+                    "response": "🎯 Mode Quiz",
+                    "suggestions": [],
+                    "titre_suggestions": "",
+                    "feedback_possible": False,
+                    "quiz_actif": True,
+                })
                 with client.session_transaction() as sess:
                     self.assertEqual(sess["quiz"], etat_initial)
 
@@ -92,10 +104,16 @@ class TestApiChatQuizRouting(unittest.TestCase):
 
             with mock.patch.object(app_module, "repondre_quiz", return_value=(etat_suivant, "suite du quiz")) as repondre_mock, \
                  mock.patch.object(app_module, "demarrer_quiz") as demarrer_mock, \
-                 mock.patch.object(app_module.bot, "traiter_message") as bot_mock:
+                 mock.patch.object(app_module.bot, "repondre") as bot_mock:
                 resp = client.post("/api/chat", json={"message": "une liste"})
 
-            self.assertEqual(resp.get_json(), {"response": "suite du quiz"})
+            self.assertEqual(resp.get_json(), {
+                "response": "suite du quiz",
+                "suggestions": [],
+                "titre_suggestions": "",
+                "feedback_possible": False,
+                "quiz_actif": True,
+            })
             repondre_mock.assert_called_once_with(etat_courant, "une liste")
             demarrer_mock.assert_not_called()
             bot_mock.assert_not_called()
@@ -112,17 +130,38 @@ class TestApiChatQuizRouting(unittest.TestCase):
             with mock.patch.object(app_module, "repondre_quiz", return_value=(None, "bilan final")):
                 resp = client.post("/api/chat", json={"message": "fin"})
 
-            self.assertEqual(resp.get_json(), {"response": "bilan final"})
+            # Le message qui clôt le quiz annonce déjà quiz_actif=False, d'où
+            # feedback_possible : sans lui le front ne saurait pas que ce
+            # message-là n'est pas une réponse de la FAQ.
+            self.assertEqual(resp.get_json(), {
+                "response": "bilan final",
+                "suggestions": [],
+                "titre_suggestions": "",
+                "feedback_possible": False,
+                "quiz_actif": False,
+            })
             with client.session_transaction() as sess:
                 self.assertNotIn("quiz", sess)
 
     def test_message_normal_sans_quiz_actif_utilise_le_bot(self):
-        with mock.patch.object(app_module.bot, "traiter_message", return_value="réponse du bot") as bot_mock, \
+        # bot.repondre() — et non traiter_message() — est l'entrée partagée par
+        # les deux front-ends : elle garde les suggestions à part du texte pour
+        # que le web en fasse des boutons cliquables.
+        reponse_bot = {"response": "réponse du bot",
+                       "suggestions": ["une autre question"],
+                       "titre_suggestions": "Questions liées"}
+        with mock.patch.object(app_module.bot, "repondre", return_value=reponse_bot) as bot_mock, \
              mock.patch.object(app_module, "demarrer_quiz") as demarrer_mock, \
              mock.patch.object(app_module, "repondre_quiz") as repondre_mock:
             with self.client as client:
                 resp = client.post("/api/chat", json={"message": "qu'est-ce qu'une fonction"})
-                self.assertEqual(resp.get_json(), {"response": "réponse du bot"})
+                self.assertEqual(resp.get_json(), {
+                    "response": "réponse du bot",
+                    "suggestions": ["une autre question"],
+                    "titre_suggestions": "Questions liées",
+                    "feedback_possible": True,
+                    "quiz_actif": False,
+                })
                 with client.session_transaction() as sess:
                     self.assertNotIn("quiz", sess)
 

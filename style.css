@@ -707,6 +707,22 @@ body {
   background-color: #1d1d1d;
 }
 
+/* Le bouton Google est un <a> vers /auth/google, pas un <button> : la
+   redirection OAuth est une navigation, pas une soumission de formulaire. */
+a.btn {
+  text-decoration: none;
+}
+
+/* Zone de compte dans la barre de navigation. */
+.nav-compte { display: flex; align-items: center; gap: 10px; }
+.nav-photo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.nav-nom { color: #ddd; font-size: 14px; }
+.nav-deconnexion {
+  background: transparent; color: #888; border: 0.5px solid #333;
+  padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+}
+.nav-deconnexion:hover { border-color: #666; color: #fff; }
+
 .form .btn.apple svg path {
   fill: currentColor;
 }
