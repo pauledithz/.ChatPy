@@ -277,28 +277,57 @@ setTimeout(runConversation, 800);
 
 const navCompte = document.getElementById('navCompte');
 
-function echapper(texte) {
-  const noeud = document.createElement('span');
-  noeud.textContent = texte;
-  return noeud.innerHTML;
-}
-
 async function seDeconnecter() {
   // POST et non GET : voir le commentaire de /auth/logout dans app.py.
   await fetch('/auth/logout', { method: 'POST' });
   window.location.reload();
 }
 
+function initialeAvatar(nom) {
+  // Repli quand la photo Google est absente ou refuse de se charger : mieux
+  // vaut une pastille avec l'initiale qu'une icône d'image cassée.
+  const pastille = document.createElement('span');
+  pastille.className = 'nav-photo nav-initiale';
+  pastille.setAttribute('aria-hidden', 'true');
+  pastille.textContent = (nom || '?').trim().charAt(0).toUpperCase() || '?';
+  return pastille;
+}
+
+function photoAvatar(url, nom) {
+  const image = document.createElement('img');
+  image.className = 'nav-photo';
+  image.alt = '';
+  image.width = 28;
+  image.height = 28;
+  image.decoding = 'async';
+  // Sans ça, le CDN de Google reçoit notre origine en Referer et répond une
+  // erreur au lieu de l'image : l'avatar s'affiche cassé.
+  image.referrerPolicy = 'no-referrer';
+  image.addEventListener('error', () => {
+    image.replaceWith(initialeAvatar(nom));
+  });
+  image.src = url;
+  return image;
+}
+
 function afficherCompte(moi) {
   if (!navCompte || !moi.connecte) return;
 
-  const photo = moi.photo
-    ? `<img class="nav-photo" src="${echapper(moi.photo)}" alt="" width="28" height="28">`
-    : '';
-  navCompte.innerHTML =
-    `${photo}<span class="nav-nom">${echapper(moi.nom)}</span>` +
-    '<button type="button" class="nav-deconnexion">Se déconnecter</button>';
-  navCompte.querySelector('.nav-deconnexion').addEventListener('click', seDeconnecter);
+  const deconnexion = document.createElement('button');
+  deconnexion.type = 'button';
+  deconnexion.className = 'nav-deconnexion';
+  deconnexion.textContent = 'Se déconnecter';
+  deconnexion.addEventListener('click', seDeconnecter);
+
+  const nom = document.createElement('span');
+  nom.className = 'nav-nom';
+  nom.textContent = moi.nom;
+
+  navCompte.replaceChildren(
+    moi.photo ? photoAvatar(moi.photo, moi.nom) : initialeAvatar(moi.nom),
+    nom,
+    deconnexion,
+  );
 }
 
 function signalerRetourOAuth() {
