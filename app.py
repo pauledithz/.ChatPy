@@ -33,7 +33,8 @@ app = Flask(__name__, static_folder=None)
 # Signe le cookie de session, qui porte l'état du quiz et l'utilisateur connecté.
 # Sans clé fixe, chaque redémarrage du serveur invalide les quiz en cours et
 # déconnecte tout le monde — acceptable en local, à définir en production.
-app.secret_key = os.environ.get("CHATPY_SECRET_KEY") or secrets.token_hex(32)
+CHATPY_SECRET_KEY = os.environ.get("CHATPY_SECRET_KEY", "").strip()
+app.secret_key = CHATPY_SECRET_KEY or secrets.token_hex(32)
 
 app.config.update(
     # Le cookie porte une identité : le JavaScript n'a aucune raison d'y toucher.
@@ -56,7 +57,10 @@ app.config.update(
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
 OAUTH_CONFIGURE = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
-
+if OAUTH_CONFIGURE and not CHATPY_SECRET_KEY:
+    raise RuntimeError(
+        "CHATPY_SECRET_KEY est obligatoire lorsque Google OAuth est configuré."
+    )
 oauth = OAuth(app)
 if OAUTH_CONFIGURE:
     oauth.register(
@@ -133,8 +137,18 @@ def api_moi():
     """Qui est connecté ? Le front en a besoin pour choisir quoi afficher."""
     utilisateur = session.get("utilisateur")
     if not utilisateur:
-        return jsonify({"connecte": False, "oauth_disponible": OAUTH_CONFIGURE})
-    return jsonify({"connecte": True, "oauth_disponible": True, **utilisateur})
+        response = jsonify({
+            "connecte": False,
+            "oauth_disponible": OAUTH_CONFIGURE,
+        })
+    else:
+        response = jsonify({
+            "connecte": True,
+            "oauth_disponible": True,
+            **utilisateur,
+        })
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.route("/chat")
