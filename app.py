@@ -1,6 +1,7 @@
 import os
 import secrets
 
+import requests
 from authlib.integrations.flask_client import OAuth
 from authlib.integrations.base_client import OAuthError
 from dotenv import load_dotenv
@@ -48,21 +49,26 @@ app.config.update(
     SESSION_COOKIE_SECURE=os.environ.get("CHATPY_COOKIE_SECURE") == "1",
 )
 
-# ── OAuth Google ─────────────────────────────────────────────────────────────
+# ── OAuth Google et GitHub ───────────────────────────────────────────────────
 # Flow "authorization code" côté serveur : le client_secret ne quitte jamais le
 # serveur, contrairement aux flows qui se déroulent dans le navigateur.
 # Les identifiants viennent de .env ; tant qu'ils sont vides, les routes /auth
-# répondent 503 au lieu de planter au démarrage — on peut donc développer le
-# reste du site sans compte Google Cloud.
+# du fournisseur concerné répondent 503 au lieu de planter au démarrage — on
+# peut donc développer le reste du site sans compte Google Cloud ni OAuth App
+# GitHub, et n'en configurer qu'un des deux.
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
-OAUTH_CONFIGURE = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "").strip()
+GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "").strip()
+GOOGLE_CONFIGURE = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+GITHUB_CONFIGURE = bool(GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET)
+OAUTH_CONFIGURE = GOOGLE_CONFIGURE or GITHUB_CONFIGURE
 if OAUTH_CONFIGURE and not CHATPY_SECRET_KEY:
     raise RuntimeError(
-        "CHATPY_SECRET_KEY est obligatoire lorsque Google OAuth est configuré."
+        "CHATPY_SECRET_KEY est obligatoire lorsque OAuth est configuré."
     )
 oauth = OAuth(app)
-if OAUTH_CONFIGURE:
+if GOOGLE_CONFIGURE:
     oauth.register(
         name="google",
         client_id=GOOGLE_CLIENT_ID,
@@ -75,6 +81,28 @@ if OAUTH_CONFIGURE:
         # procédure de vérification Google longue et pénible.
         client_kwargs={"scope": "openid email profile"},
     )
+if GITHUB_CONFIGURE:
+    oauth.register(
+        name="github",
+        client_id=GITHUB_CLIENT_ID,
+        client_secret=GITHUB_CLIENT_SECRET,
+        # GitHub ne fait pas d'OpenID Connect et ne publie donc aucun document
+        # de découverte : les trois URLs sont écrites en dur, contrairement à
+        # Google. Il n'y a pas non plus d'id_token — l'identité se lit ensuite
+        # sur l'API REST, d'où api_base_url.
+        authorize_url="https://github.com/login/oauth/authorize",
+        access_token_url="https://github.com/login/oauth/access_token",
+        api_base_url="https://api.github.com/",
+        # read:user pour le nom et l'avatar ; user:email parce que l'adresse est
+        # privée par défaut et n'apparaît pas sur /user sans ce scope.
+        client_kwargs={"scope": "read:user user:email"},
+    )
+
+
+def _oauth_non_configure(fournisseur, variables):
+    """503 plutôt qu'une 500 : le fournisseur n'est pas cassé, il est absent."""
+    return jsonify({"error": f"OAuth {fournisseur} non configuré : renseigner "
+                             f"{variables} dans .env."}), 503
 
 
 @app.route("/")
@@ -85,9 +113,8 @@ def index():
 @app.route("/auth/google")
 def auth_google():
     """Envoie l'utilisateur s'authentifier chez Google."""
-    if not OAUTH_CONFIGURE:
-        return jsonify({"error": "OAuth Google non configuré : renseigner "
-                                 "GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET dans .env."}), 503
+    if not GOOGLE_CONFIGURE:
+        return _oauth_non_configure("Google", "GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET")
     # _external=True : Google exige une URL absolue, et elle doit correspondre au
     # caractère près à l'URI de redirection déclarée dans la console Cloud.
     return oauth.google.authorize_redirect(url_for("auth_google_callback", _external=True))
@@ -96,8 +123,8 @@ def auth_google():
 @app.route("/auth/google/callback")
 def auth_google_callback():
     """Retour de Google : échange le code contre un token et ouvre la session."""
-    if not OAUTH_CONFIGURE:
-        return jsonify({"error": "OAuth Google non configuré."}), 503
+    if not GOOGLE_CONFIGURE:
+        return _oauth_non_configure("Google", "GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET")
 
     try:
         token = oauth.google.authorize_access_token()
@@ -120,6 +147,90 @@ def auth_google_callback():
         "nom": infos.get("name") or infos.get("email", ""),
         "email": infos.get("email", ""),
         "photo": infos.get("picture", ""),
+        # Deux fournisseurs numérotent leurs comptes chacun de leur côté : sans
+        # ce champ, rien ne distinguerait l'utilisateur Google 42 du GitHub 42.
+        "fournisseur": "google",
+    }
+    return redirect("/?connexion=ok")
+
+
+def _api_github(token, chemin):
+    """Lit une ressource de l'API GitHub. Renvoie None si l'appel échoue.
+
+    Contrairement à Google, aucune information d'identité n'accompagne le
+    token : il faut deux requêtes de plus, et donc deux occasions de plus de
+    tomber sur un réseau coupé ou un token révoqué entre-temps.
+    """
+    try:
+        reponse = oauth.github.get(chemin, token=token)
+    except requests.RequestException:
+        return None
+    if not reponse.ok:
+        return None
+    try:
+        return reponse.json()
+    except ValueError:
+        return None
+
+
+def _email_verifie_github(emails):
+    """Adresse vérifiée du compte, "" s'il n'y en a aucune.
+
+    GitHub n'a pas d'équivalent du `email_verified` de Google sur /user : c'est
+    /user/emails qui porte les drapeaux, une adresse par ligne. On prend la
+    principale si elle est vérifiée, sinon n'importe quelle autre qui l'est —
+    une adresse non vérifiée ne prouve pas qu'on la possède.
+    """
+    if not isinstance(emails, list):
+        return ""
+    verifiees = [e for e in emails
+                 if isinstance(e, dict) and e.get("verified") and e.get("email")]
+    for adresse in verifiees:
+        if adresse.get("primary"):
+            return adresse["email"]
+    return verifiees[0]["email"] if verifiees else ""
+
+
+@app.route("/auth/github")
+def auth_github():
+    """Envoie l'utilisateur s'authentifier chez GitHub."""
+    if not GITHUB_CONFIGURE:
+        return _oauth_non_configure("GitHub", "GITHUB_CLIENT_ID et GITHUB_CLIENT_SECRET")
+    # Même contrainte que chez Google : l'URL doit correspondre au caractère près
+    # à celle déclarée dans les réglages de l'OAuth App GitHub.
+    return oauth.github.authorize_redirect(url_for("auth_github_callback", _external=True))
+
+
+@app.route("/auth/github/callback")
+def auth_github_callback():
+    """Retour de GitHub : échange le code, puis lit le profil sur l'API REST."""
+    if not GITHUB_CONFIGURE:
+        return _oauth_non_configure("GitHub", "GITHUB_CLIENT_ID et GITHUB_CLIENT_SECRET")
+
+    try:
+        token = oauth.github.authorize_access_token()
+    except OAuthError:
+        # L'utilisateur a refusé, ou le state ne correspond pas. Pas de détail
+        # technique dans l'URL : ça finirait dans les logs et l'historique.
+        return redirect("/?connexion=echec")
+    except requests.RequestException:
+        return redirect("/?connexion=echec")
+
+    profil = _api_github(token, "user")
+    if not profil or not profil.get("id"):
+        return redirect("/?connexion=echec")
+
+    email = _email_verifie_github(_api_github(token, "user/emails"))
+    if not email:
+        return redirect("/?connexion=email_non_verifie")
+
+    session["utilisateur"] = {
+        # L'identifiant numérique ne bouge jamais ; le login, lui, se renomme.
+        "id": str(profil["id"]),
+        "nom": profil.get("name") or profil.get("login") or email,
+        "email": email,
+        "photo": profil.get("avatar_url", ""),
+        "fournisseur": "github",
     }
     return redirect("/?connexion=ok")
 

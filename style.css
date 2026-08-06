@@ -707,8 +707,9 @@ body {
   background-color: #1d1d1d;
 }
 
-/* Le bouton Google est un <a> vers /auth/google, pas un <button> : la
-   redirection OAuth est une navigation, pas une soumission de formulaire. */
+/* Les boutons Google et GitHub sont des <a> vers /auth/<fournisseur>, pas des
+   <button> : la redirection OAuth est une navigation, pas une soumission de
+   formulaire. */
 a.btn {
   text-decoration: none;
 }

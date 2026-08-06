@@ -271,7 +271,7 @@ document.querySelectorAll('[data-action="demo"]').forEach((button) => {
 
 setTimeout(runConversation, 800);
 
-/* ── Compte Google ────────────────────────────────────────────────────────
+/* ── Compte connecté (Google ou GitHub) ───────────────────────────────────
    Le serveur est seul à savoir qui est connecté : l'identité vit dans un
    cookie signé et HttpOnly, donc illisible depuis ici. On la demande. */
 
@@ -284,7 +284,7 @@ async function seDeconnecter() {
 }
 
 function initialeAvatar(nom) {
-  // Repli quand la photo Google est absente ou refuse de se charger : mieux
+  // Repli quand la photo du compte est absente ou refuse de se charger : mieux
   // vaut une pastille avec l'initiale qu'une icône d'image cassée.
   const pastille = document.createElement('span');
   pastille.className = 'nav-photo nav-initiale';
@@ -300,8 +300,8 @@ function photoAvatar(url, nom) {
   image.width = 28;
   image.height = 28;
   image.decoding = 'async';
-  // Sans ça, le CDN de Google reçoit notre origine en Referer et répond une
-  // erreur au lieu de l'image : l'avatar s'affiche cassé.
+  // Sans ça, le CDN de Google (et celui de GitHub) reçoit notre origine en
+  // Referer et répond une erreur au lieu de l'image : l'avatar s'affiche cassé.
   image.referrerPolicy = 'no-referrer';
   image.addEventListener('error', () => {
     image.replaceWith(initialeAvatar(nom));
@@ -331,14 +331,15 @@ function afficherCompte(moi) {
 }
 
 function signalerRetourOAuth() {
-  // app.py redirige vers /?connexion=... après le passage chez Google.
+  // app.py redirige vers /?connexion=... après le passage chez le fournisseur.
+  // Le message ne le nomme pas : les deux flows partagent ces mêmes codes.
   const etat = new URLSearchParams(window.location.search).get('connexion');
   if (!etat) return;
 
   if (etat === 'echec') {
-    alert("La connexion Google a échoué ou a été annulée.");
+    alert("La connexion a échoué ou a été annulée.");
   } else if (etat === 'email_non_verifie') {
-    alert("Cette adresse Google n'est pas vérifiée : connexion refusée.");
+    alert("Aucune adresse email vérifiée sur ce compte : connexion refusée.");
   }
   // Nettoie l'URL, sinon le message revient à chaque rechargement.
   window.history.replaceState({}, '', window.location.pathname);

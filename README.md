@@ -46,7 +46,25 @@ Puis ouvrez `http://localhost:5001` (la landing page) ou directement `http://loc
 
 > Utilisez un environnement virtuel (`.venv`) plutôt qu'un `pip install` global : sur macOS avec Python Homebrew, l'installation globale de paquets est bloquée par défaut (PEP 668). Le port 5001 (et non 5000) est utilisé car macOS occupe souvent le port 5000 avec le service AirPlay Receiver.
 
-Le backend appelle la même logique que le CLI (`bot.traiter_message()` dans `ia_en_python.py`), donc l'historique (`.chatpy_history.json`) est partagé entre le CLI et le web. Le lien "Chat" est visible dans la nav de la landing page et accessible sans connexion (le modal d'inscription reste, pour l'instant, décoratif et indépendant de l'accès au chat).
+Le backend appelle la même logique que le CLI (`bot.traiter_message()` dans `ia_en_python.py`), donc l'historique (`.chatpy_history.json`) est partagé entre le CLI et le web. Le lien "Chat" est visible dans la nav de la landing page et accessible sans connexion : se connecter n'est jamais obligatoire pour discuter avec le bot.
+
+### Connexion Google et GitHub (optionnelle)
+
+Les deux boutons du modal d'inscription fonctionnent (les autres — email/mot de passe, Apple, Yahoo — restent décoratifs). Chacun demande une paire d'identifiants dans `.env` ; copiez le modèle et remplissez ce dont vous avez besoin :
+
+```bash
+cp .env.example .env
+python3 -c "import secrets; print(secrets.token_hex(32))"   # CHATPY_SECRET_KEY
+```
+
+| Fournisseur | Où créer les identifiants | URL de redirection à déclarer |
+|-------------|---------------------------|-------------------------------|
+| Google | [console.cloud.google.com](https://console.cloud.google.com) → Google Auth Platform → Clients → Web application | `http://localhost:5001/auth/google/callback` |
+| GitHub | [github.com/settings/developers](https://github.com/settings/developers) → OAuth Apps → New OAuth App | `http://localhost:5001/auth/github/callback` |
+
+L'URL de redirection doit être identique au caractère près, sinon le fournisseur refuse avec `redirect_uri_mismatch`. Tant qu'une paire reste vide, la route `/auth/<fournisseur>` correspondante répond 503 et le reste du site fonctionne normalement : on peut n'en configurer qu'un, ou aucun.
+
+La connexion ne vit que dans le cookie de session : il n'y a pas de base d'utilisateurs, et l'historique reste commun à tous les visiteurs.
 
 ---
 
