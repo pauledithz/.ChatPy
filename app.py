@@ -1,6 +1,5 @@
 import os
 import secrets
-
 import requests
 from authlib.integrations.flask_client import OAuth
 from authlib.integrations.base_client import OAuthError

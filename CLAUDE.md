@@ -33,9 +33,18 @@ python3 -m http.server 8080
 ```
 Note: the `chat-preview` box on the landing page hero is a scripted animation cycling through canned example conversations (`script.js`) — it is not connected to the real chatbot.
 
+**Gap report (stdlib only — reads `questions_sans_reponse.json`, tells you what to add to `faq.json`):**
+```bash
+python3 lacunes.py             # report
+python3 lacunes.py --tout      # no 10-per-section cap
+python3 lacunes.py --nettoyer  # drop entries the FAQ now answers
+```
+See `lacunes.py` under Architecture below.
+
 **Tests (stdlib `unittest`, no dependencies):**
 ```bash
 python3 -m unittest test_chatpy -v
+python3 -m unittest tests.test_lacunes -v
 ```
 Covers normalization, the matching pipeline (typos, rephrasings, the opposite-meaning trap), the two suggestion sources, the gap journal's two counters, quiz scoring, the web quiz state machine, and persistence (atomic writes, history cap, corrupted-file handling). Tests that write redirect the runtime files to a temp dir via `unittest.mock.patch` — they never touch the real `.chatpy_history.json`. Run them after any change to `ia_en_python.py`.
 
@@ -52,6 +61,21 @@ Everything lives in `ia_en_python.py` — no imports outside the standard librar
 Both runtime files go through `_ecrire_json_atomique()` (temp file + `os.replace()`) rather than `open(path, 'w')`, which would truncate the file before rewriting it and lose it on a crash or a concurrent write. The Flask server is multi-threaded, so `_verrou_historique` / `_verrou_questions` guard the read-modify-write cycles. A file that fails to parse is moved aside to `<name>.corrompu` instead of being silently overwritten.
 
 Both JSON knowledge files are loaded via `_charger_json()`, which prints a warning and falls back to `{}` on a missing file or invalid JSON rather than crashing.
+
+**`lacunes.py`** turns `questions_sans_reponse.json` into a work list. The raw journal is a flat list of failures, and two very different failures look identical in it: a question the FAQ *already* answers under another wording needs a rewording, while a genuinely absent subject needs an answer written — confusing the two grows the FAQ with duplicates that fix nothing. So each entry is re-scored against the **current** FAQ via `_scanner_faq()` and sorted into four families, printed most-urgent first:
+
+| Diagnosis | Condition | What to do |
+|---|---|---|
+| `mauvaise_reponse` | score ≥ `SEUIL_CORRESPONDANCE` **and** `pouces_bas` > 0 | the FAQ answered and the user rejected it — a false positive, invisible anywhere else |
+| `manquante` | below `SEUIL_PROPOSITION`, or no significant word shared | write a new `faq.json` entry |
+| `a_rapprocher` | between the two thresholds **and** a shared significant word | reword the existing entry; don't add one |
+| `couverte` | score ≥ `SEUIL_CORRESPONDANCE`, no thumbs-down | the FAQ grew since — stale journal line |
+
+The shared-significant-word requirement mirrors `questions_proches()`: character similarity alone drags unrelated questions into `a_rapprocher` ("dresser un lama" → "décompresser un tuple"), which would send you rewording an entry that has nothing to do with the question.
+
+Entries are diagnosed **before** being clustered (`regrouper()`, greedy, `SEUIL_REGROUPEMENT` = 0.6 — deliberately stricter than `SEUIL_CORRESPONDANCE`, since an over-eager merge hides one whole gap behind another). That order guarantees a cluster never mixes two different fixes, and lets `--nettoyer` decide entry by entry instead of trusting a group's representative. Ranking is `occurrences + 2 × pouces_bas`: a thumbs-down marks a failure the user never saw announced, so it outranks an admitted "je ne comprends pas".
+
+`--nettoyer` is the only writing path, and it removes `couverte` entries only. It re-reads the journal under `_verrou_questions` immediately before writing and deletes just the targeted keys, so a counter bumped by the running Flask server between analysis and write survives. Without `--nettoyer` the tool never touches the file — it does not even move a corrupted journal aside, unlike `_incrementer_journal()`.
 
 **Matching pipeline in `chatbot_response()`:**
 1. Special commands checked first: `aide <sujet>`, `help`/`aide`/`?`, `liste`, `liste <catégorie>`, `cherche <mot>`. `COMMANDES_TERMINAL` (`clear`, `historique`) are intercepted by the CLI loop before `chatbot_response()` ever sees them; the branch here exists so the *web* chat answers them with an explanation instead of "I don't understand". `quiz` is handled by both front-ends and so never reaches `chatbot_response()`.
@@ -115,4 +139,6 @@ Flask's automatic static folder is disabled (`static_folder=None`). Assets are s
 | Words ignored during matching | `MOTS_VIDES` frozenset at the top of `ia_en_python.py` |
 | Limit suggestions shown | `[:2]` slice in `obtenir_suggestions()` ; `limite` arg of `questions_proches()` |
 | Tune "vouliez-vous dire ?" strictness | `SEUIL_PROPOSITION` constant at the top of `ia_en_python.py` |
-| Review unanswered questions to grow the FAQ | `questions_sans_reponse.json` (generated at runtime) |
+| Review unanswered questions to grow the FAQ | `python3 lacunes.py` (reads `questions_sans_reponse.json`, generated at runtime) |
+| Weight of a thumbs-down vs. a plain failure in the gap report | `POIDS_POUCE_BAS` in `lacunes.py` |
+| How aggressively the gap report merges rephrasings | `SEUIL_REGROUPEMENT` in `lacunes.py` |
