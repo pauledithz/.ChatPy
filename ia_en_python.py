@@ -14,9 +14,19 @@ FAQ_FILE          = os.path.join(_DIR, "faq.json")
 AIDE_CONCEPTS_FILE = os.path.join(_DIR, "aide_concepts.json")
 QUESTIONS_SANS_REPONSE_FILE = os.path.join(_DIR, "questions_sans_reponse.json")
 
-# Nombre de messages conservés dans .chatpy_history.json. Le fichier est réécrit
-# en entier à chaque message : sans plafond, il grossit indéfiniment.
-HISTORIQUE_MAX_MESSAGES = 1000000
+# Nombre de messages conservés dans .chatpy_history.json.
+#
+# Ce plafond n'est pas une limite de confort mais de coût : le fichier est
+# relu et réécrit *intégralement à chaque message*. À environ 220 octets par
+# entrée, un plafond d'un million faisait 210 Mo d'écriture par message une
+# fois atteint — de quoi mettre à genoux un site public bien avant d'y arriver.
+# À 2 000, le fichier plafonne vers 450 Ko, ce qui reste instantané.
+#
+# Ce journal sert le contexte du bot, pas l'historique de qui que ce soit :
+# les conversations que les utilisateurs consultent vivent dans
+# conversations.json (par compte) ou dans leur navigateur. Le tronquer ne fait
+# donc perdre à personne ses conversations.
+HISTORIQUE_MAX_MESSAGES = 2000
 
 # Commandes qui n'ont de sens que dans le terminal (elles pilotent la boucle
 # interactive). Elles n'atteignent chatbot_response() que depuis le chat web.

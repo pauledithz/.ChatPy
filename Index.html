@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>ChatPy</title>
   <link rel="icon" type="image/png" href="ChatPY_logo.PNG">
+  <!-- Chargé sans defer, avant tout contenu : le thème doit être posé sur <html>
+       avant la première peinture, sinon la page clignote au chargement. -->
+  <script src="preferences.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&display=swap">
@@ -14,15 +17,15 @@
 <div class="page-shell" id="mainContent">
 
   <nav class="nav">
-    <div class="nav-logo"><img class="nav-logo-img" src="ChatPY_logo.PNG" alt="" width="54" height="54"> ChatPy</div>
+    <a class="nav-logo" href="/"><img class="nav-logo-img" src="ChatPY_logo.PNG" alt="" width="54" height="54"> ChatPy</a>
     <div class="nav-links">
       <a href="#features">Fonctionnalités</a>
       <a href="#docs">Docs</a>
       <a href="#tarifs">Tarifs</a>
       <a href="/chat">Chat</a>
     </div>
-    <!-- Rempli par script.js selon /api/moi : bouton d'inscription si personne
-         n'est connecté, nom + déconnexion sinon. -->
+    <!-- nav-compte.js insère la bascule de thème, puis remplace ce bouton par
+         le menu du compte si /api/moi signale quelqu'un de connecté. -->
     <div class="nav-compte" id="navCompte">
       <button type="button" class="nav-cta" data-action="start">Commencer →</button>
     </div>
@@ -39,14 +42,18 @@
             <rect width="160" height="160" fill="url(#smallGrid)"/>
             <path d="M 160 0 L 0 0 0 160" fill="none" stroke="#ffffff" stroke-width="0.8" stroke-opacity="0.12"/>
           </pattern>
+          <!-- Les couleurs ci-dessous sont écrasées par style.css (.grid-bg) :
+               une règle CSS l'emporte sur un attribut de présentation, ce qui
+               permet de reteindre la grille selon le thème. Les valeurs
+               restent ici comme repli si la feuille ne charge pas. -->
           <radialGradient id="fadeCenter" cx="50%" cy="40%" r="55%">
-            <stop offset="0%" stop-color="#0a0a0a" stop-opacity="0.0"/>
-            <stop offset="55%" stop-color="#0a0a0a" stop-opacity="0.5"/>
-            <stop offset="100%" stop-color="#0a0a0a" stop-opacity="1"/>
+            <stop class="stop-fond" offset="0%" stop-color="#0a0a0a" stop-opacity="0.0"/>
+            <stop class="stop-fond" offset="55%" stop-color="#0a0a0a" stop-opacity="0.5"/>
+            <stop class="stop-fond" offset="100%" stop-color="#0a0a0a" stop-opacity="1"/>
           </radialGradient>
           <radialGradient id="glowTop" cx="50%" cy="0%" r="60%">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.04"/>
-            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+            <stop class="stop-lueur" offset="0%" stop-color="#ffffff" stop-opacity="0.04"/>
+            <stop class="stop-lueur" offset="100%" stop-color="#ffffff" stop-opacity="0"/>
           </radialGradient>
         </defs>
         <rect width="100%" height="100%" fill="url(#largeGrid)"/>
@@ -68,8 +75,11 @@
       <div class="hero-badge"><span class="badge-pulse"></span> Disponible maintenant</div>
       <h1>L'IA qui <span>comprend</span><br>vraiment vos besoins</h1>
       <p>ChatPy est un assistant intelligent conçu pour vous aider à penser, écrire, coder et créer — plus vite et mieux qu'avant.</p>
+      <!-- data-label-connecte : libellé pris par script.js quand quelqu'un est
+           déjà connecté. Le texte reste dans le HTML, avec le reste de la copie,
+           plutôt que codé en dur dans le script. -->
       <div class="hero-btns">
-        <button type="button" class="btn-primary" data-action="start">Essayer gratuitement</button>
+        <button type="button" class="btn-primary" data-action="start" data-label-connecte="Ouvrir le chat →">Essayer gratuitement</button>
         <button type="button" class="btn-secondary" data-action="demo">Voir la démo</button>
       </div>
 
@@ -92,10 +102,13 @@
     </section>
   </div>
 
+  <!-- Le texte de chaque chiffre est la valeur finale : c'est lui qui s'affiche
+       sans JavaScript ou en mouvement réduit. animations.js ne fait que le
+       remplacer le temps du comptage, à partir des attributs data-*. -->
   <div class="stats">
-    <div class="stat"><div class="stat-num">98%</div><div class="stat-label">Satisfaction</div></div>
-    <div class="stat"><div class="stat-num">2M+</div><div class="stat-label">Conversations</div></div>
-    <div class="stat"><div class="stat-num">0.3s</div><div class="stat-label">Temps de réponse</div></div>
+    <div class="stat"><div class="stat-num" data-compteur="98" data-suffixe="%">98%</div><div class="stat-label">Satisfaction</div></div>
+    <div class="stat"><div class="stat-num" data-compteur="2" data-suffixe="M+">2M+</div><div class="stat-label">Conversations</div></div>
+    <div class="stat"><div class="stat-num" data-compteur="0.3" data-decimales="1" data-suffixe="s">0.3s</div><div class="stat-label">Temps de réponse</div></div>
   </div>
 
   <section class="features" id="features">
@@ -122,7 +135,7 @@
   <section class="cta-section" id="tarifs">
     <h2>Prêt à essayer ChatPy ?</h2>
     <p>Rejoignez des milliers d'utilisateurs qui pensent déjà plus vite.</p>
-    <button type="button" class="btn-primary" data-action="start">Créer un compte gratuit →</button>
+    <button type="button" class="btn-primary" data-action="start" data-label-connecte="Ouvrir le chat →">Créer un compte gratuit →</button>
   </section>
 
   <footer class="footer">
@@ -134,16 +147,35 @@
 <div class="signup-modal" id="signupModal" aria-hidden="true">
   <div class="signup-backdrop" data-action="close-signup"></div>
   <section class="signup-panel" id="signupPanel" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="signupTitle">
-    <!-- From Uiverse.io by mahiatlinux — styles adaptés au thème ChatPy -->
-    <form class="form">
+    <!-- From Uiverse.io by mahiatlinux — styles adaptés au thème ChatPy.
+         Le formulaire sert à la fois à la connexion et à l'inscription :
+         script.js bascule entre les deux modes via la classe form--connexion,
+         qui masque les champs propres à l'inscription. -->
+    <form class="form form--connexion" id="formCompte" novalidate>
       <button type="button" class="signup-close" data-action="close-signup" aria-label="Fermer">×</button>
       <div class="form-header">
-        <h2 id="signupTitle">Créer votre compte ChatPy</h2>
-        <p class="signup-subtitle">Choisissez votre moyen de connexion pour continuer en un clic.</p>
+        <h2 id="signupTitle">Se connecter à ChatPy</h2>
+        <p class="signup-subtitle" id="signupSubtitle">Retrouvez vos conversations et votre progression.</p>
+      </div>
+
+      <div class="champ-inscription">
+        <div class="flex-column">
+          <label for="champNom">Nom</label>
+        </div>
+        <div class="inputForm">
+          <svg class="icone-trait" height="20" width="20" viewBox="0 0 24 24"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+               xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <input type="text" id="champNom" class="input" placeholder="Comment doit-on vous appeler ?"
+                 autocomplete="name" maxlength="60" />
+        </div>
       </div>
 
       <div class="flex-column">
-        <label>Email </label>
+        <label for="champEmail">Email </label>
       </div>
       <div class="inputForm">
         <svg
@@ -158,11 +190,12 @@
             ></path>
           </g>
         </svg>
-        <input type="text" class="input" placeholder="Entrer votre Email" />
+        <input type="email" id="champEmail" class="input" placeholder="Entrer votre Email"
+               autocomplete="email" maxlength="254" required />
       </div>
 
       <div class="flex-column">
-        <label> Mot de passe </label>
+        <label for="champMotDePasse"> Mot de passe </label>
       </div>
       <div class="inputForm">
         <svg
@@ -178,18 +211,47 @@
             d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0"
           ></path>
         </svg>
-        <input type="password" class="input" placeholder="Entrer votre Mot de passe" />
+        <input type="password" id="champMotDePasse" class="input"
+               placeholder="Entrer votre Mot de passe" autocomplete="current-password" required />
+      </div>
+
+      <!-- Confirmation, à l'inscription seulement. Ce serveur n'envoie aucun
+           email, donc il n'existe pas de « mot de passe oublié » : une faute de
+           frappe ici enfermerait dehors définitivement. -->
+      <div class="champ-inscription">
+        <div class="flex-column">
+          <label for="champConfirmation">Confirmer le mot de passe</label>
+        </div>
+        <div class="inputForm">
+          <svg class="icone-trait" height="20" width="20" viewBox="0 0 24 24"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+               xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            <path d="m9.5 16 1.7 1.7 3.3-3.4"></path>
+          </svg>
+          <input type="password" id="champConfirmation" class="input"
+                 placeholder="Retapez votre mot de passe" autocomplete="new-password" />
+        </div>
       </div>
 
       <div class="flex-row">
-        <div>
-          <input type="radio" />
-          <label>Remember me </label>
+        <div class="case-a-cocher">
+          <!-- Une case et non un bouton radio : un radio seul ne peut plus être
+               décoché une fois coché. -->
+          <input type="checkbox" id="champRester" />
+          <label for="champRester">Rester connecté</label>
         </div>
-        <span class="span">Mot de passe oublié ?</span>
+        <span class="span" id="lienOubli" role="button" tabindex="0">Mot de passe oublié ?</span>
       </div>
-      <button class="button-submit">Se connecter</button>
-      <p class="p">Vous n'avez pas de compte ? <span class="span">S'inscrire</span></p>
+
+      <p class="form-erreur" id="formErreur" role="alert" hidden></p>
+
+      <button type="submit" class="button-submit" id="boutonSoumettre">Se connecter</button>
+      <p class="p">
+        <span id="texteBascule">Vous n'avez pas de compte ?</span>
+        <span class="span" id="lienBascule" role="button" tabindex="0">S'inscrire</span>
+      </p>
       <p class="p line">Ou avec</p>
 
       <div class="flex-row">
@@ -299,6 +361,8 @@
     </form>
   </section>
 </div>
+<script src="nav-compte.js"></script>
+<script src="animations.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
