@@ -1,3 +1,19 @@
+/* ============================================================================
+   ChatPy — feuille de style
+   ----------------------------------------------------------------------------
+   Toutes les couleurs passent par des jetons (« custom properties ») définis
+   ici. Aucune couleur ne doit être écrite en dur ailleurs dans le fichier :
+   c'est ce qui permet au thème clair d'exister sans dupliquer la feuille.
+
+   Trois états possibles, dans cet ordre de priorité :
+     1. :root                      → thème sombre, l'identité par défaut
+     2. prefers-color-scheme:light → thème clair, sauf choix explicite « sombre »
+     3. [data-theme="clair|sombre"]→ choix explicite de l'utilisateur, gagne sur tout
+
+   L'attribut data-theme est posé sur <html> par preferences.js, chargé en tête
+   de page *avant* la peinture pour qu'aucun flash de thème ne soit visible.
+   ========================================================================== */
+
 :root {
   /* Police de texte : pile système (aucune dépendance réseau) */
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
@@ -5,11 +21,206 @@
   /* Police d'affichage : serif élégante (Fraunces), avec repli système */
   --font-serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Taille du texte des conversations — réglable dans /compte. */
+  --taille-chat: 14px;
+
+  /* Courbe d'assouplissement commune : départ franc, arrivée posée. */
+  --ressort: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Thème sombre (défaut) ──────────────────────────────────────────────
+     Surfaces, de la plus enfoncée à la plus surélevée. */
+  color-scheme: dark;
+  --fond: #0a0a0a;
+  --fond-eleve: #0d0d0d;
+  --fond-panneau: #111;
+  --fond-doux: #161616;
+  --fond-champ: #1a1a1a;
+  --fond-appuye: #1e1e1e;
+  --fond-survol: #1f1f1f;
+
+  /* Bordures, du filet à peine visible au trait de survol. */
+  --bord-faible: #1a1a1a;
+  --bord-tenu: #222;
+  --bord: #2a2a2a;
+  --bord-fort: #333;
+  --bord-survol: #555;
+
+  /* Rampe de texte : 0 = le plus contrasté, 7 = le plus effacé. */
+  --texte-0: #fff;
+  --texte-1: #f0f0f0;
+  --texte-2: #ccc;
+  --texte-3: #aaa;
+  --texte-4: #888;
+  --texte-5: #666;
+  --texte-6: #555;
+  --texte-7: #333;
+
+  /* Accent : le bouton plein. En sombre c'est du blanc sur fond noir ;
+     en clair l'inverse exact, pour garder le même poids visuel. */
+  --accent: #fff;
+  --accent-texte: #000;
+  --accent-survol: #ddd;
+
+  /* Bulles de conversation. */
+  --msg-user-fond: #1e1e1e;
+  --msg-user-texte: #ddd;
+
+  /* Voiles translucides (survols posés sur une surface quelconque). */
+  --survol-doux: rgba(255, 255, 255, 0.06);
+  --survol-appuye: rgba(255, 255, 255, 0.1);
+
+  /* Divers */
+  --focus: rgba(255, 255, 255, 0.12);
+  --voile: rgba(0, 0, 0, 0.65);
+  --ombre: rgba(0, 0, 0, 0.55);
+  --ombre-douce: rgba(0, 0, 0, 0.35);
+  /* Halo qui suit le curseur sur les cartes. */
+  --lueur: rgba(255, 255, 255, 0.07);
+  --succes: #4ade80;
+  --succes-fond: rgba(74, 222, 128, 0.1);
+  --succes-bord: rgba(74, 222, 128, 0.3);
+  /* Rouge de la déconnexion : un rouge clair est lisible sur fond noir, mais
+     délavé sur blanc — d'où deux valeurs et non une seule. */
+  --danger: #f87171;
+  --danger-fond: rgba(248, 113, 113, 0.1);
+  --danger-bord: rgba(248, 113, 113, 0.3);
+
+  /* Décor du hero : la grille SVG est peinte depuis le CSS (voir .grid-bg),
+     sinon elle resterait blanche sur fond clair. */
+  --grille: #ffffff;
+  --lueur-hero: #ffffff;
+
+  /* La bulle du bot reste un îlot clair dans les deux thèmes : elle contient
+     du code, des notes et des badges dont l'échelle est calibrée sur du blanc.
+     Seul son contour change, pour la détacher d'un panneau blanc en clair. */
+  --bulle-fond: #fff;
+  --bulle-contour: transparent;
 }
 
+/* Thème clair — appliqué si le système le demande, sauf choix « sombre ». */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="sombre"]) {
+    color-scheme: light;
+    --fond: #f6f6f4;
+    --fond-eleve: #ffffff;
+    --fond-panneau: #ffffff;
+    --fond-doux: #f1f1ed;
+    --fond-champ: #f1f1ed;
+    --fond-appuye: #e8e8e2;
+    --fond-survol: #eaeae4;
+
+    --bord-faible: #e8e8e2;
+    --bord-tenu: #e2e2db;
+    --bord: #dcdcd4;
+    --bord-fort: #cfcfc6;
+    --bord-survol: #9a9a90;
+
+    --texte-0: #000;
+    --texte-1: #17171a;
+    --texte-2: #3a3a40;
+    --texte-3: #55555d;
+    --texte-4: #6e6e78;
+    --texte-5: #86868f;
+    --texte-6: #9a9aa2;
+    --texte-7: #c2c2c8;
+
+    --accent: #17171a;
+    --accent-texte: #fff;
+    --accent-survol: #3a3a40;
+
+    --msg-user-fond: #e8e8e2;
+    --msg-user-texte: #2a2a30;
+
+    --survol-doux: rgba(0, 0, 0, 0.05);
+    --survol-appuye: rgba(0, 0, 0, 0.09);
+
+    --focus: rgba(0, 0, 0, 0.18);
+    --voile: rgba(28, 28, 26, 0.45);
+    --ombre: rgba(28, 28, 26, 0.14);
+    --ombre-douce: rgba(28, 28, 26, 0.08);
+    --lueur: rgba(23, 23, 26, 0.05);
+    --succes: #16a34a;
+    --succes-fond: rgba(22, 163, 74, 0.08);
+    --succes-bord: rgba(22, 163, 74, 0.28);
+    --danger: #dc2626;
+    --danger-fond: rgba(220, 38, 38, 0.07);
+    --danger-bord: rgba(220, 38, 38, 0.28);
+
+    --grille: #17171a;
+    --lueur-hero: #17171a;
+
+    --bulle-fond: #fff;
+    --bulle-contour: #e4e4dc;
+  }
+}
+
+/* Choix explicite « clair » : gagne même si le système est en sombre. */
+:root[data-theme="clair"] {
+  color-scheme: light;
+  --fond: #f6f6f4;
+  --fond-eleve: #ffffff;
+  --fond-panneau: #ffffff;
+  --fond-doux: #f1f1ed;
+  --fond-champ: #f1f1ed;
+  --fond-appuye: #e8e8e2;
+  --fond-survol: #eaeae4;
+
+  --bord-faible: #e8e8e2;
+  --bord-tenu: #e2e2db;
+  --bord: #dcdcd4;
+  --bord-fort: #cfcfc6;
+  --bord-survol: #9a9a90;
+
+  --texte-0: #000;
+  --texte-1: #17171a;
+  --texte-2: #3a3a40;
+  --texte-3: #55555d;
+  --texte-4: #6e6e78;
+  --texte-5: #86868f;
+  --texte-6: #9a9aa2;
+  --texte-7: #c2c2c8;
+
+  --accent: #17171a;
+  --accent-texte: #fff;
+  --accent-survol: #3a3a40;
+
+  --msg-user-fond: #e8e8e2;
+  --msg-user-texte: #2a2a30;
+
+  --survol-doux: rgba(0, 0, 0, 0.05);
+  --survol-appuye: rgba(0, 0, 0, 0.09);
+
+  --focus: rgba(0, 0, 0, 0.18);
+  --voile: rgba(28, 28, 26, 0.45);
+  --ombre: rgba(28, 28, 26, 0.14);
+  --ombre-douce: rgba(28, 28, 26, 0.08);
+  --lueur: rgba(23, 23, 26, 0.05);
+  --succes: #16a34a;
+  --succes-fond: rgba(22, 163, 74, 0.08);
+  --succes-bord: rgba(22, 163, 74, 0.28);
+  --danger: #dc2626;
+  --danger-fond: rgba(220, 38, 38, 0.07);
+  --danger-bord: rgba(220, 38, 38, 0.28);
+
+  --grille: #17171a;
+  --lueur-hero: #17171a;
+
+  --bulle-fond: #fff;
+  --bulle-contour: #e4e4dc;
+}
+
+/* Taille du texte des conversations (préférence utilisateur). */
+:root[data-taille="petite"] { --taille-chat: 13px; }
+:root[data-taille="grande"] { --taille-chat: 16.5px; }
+
+/* ============================================================
+   Base
+   ============================================================ */
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
-:focus-visible { outline: 3px solid rgba(255,255,255,0.12); outline-offset: 2px; }
-button:focus, a:focus, input:focus, textarea:focus, [role="dialog"]:focus { outline: 3px solid rgba(255,255,255,0.12); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+button:focus, a:focus, input:focus, textarea:focus, [role="dialog"]:focus { outline: 3px solid var(--focus); outline-offset: 2px; }
 html {
   scroll-behavior: smooth;
   height: 100%;
@@ -17,16 +228,18 @@ html {
 html,
 body {
   width: 100%;
-  background: #0a0a0a;
+  background: var(--fond);
 }
 body {
-  color: #f0f0f0;
+  color: var(--texte-1);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100%;
   min-height: 100dvh;
   overflow-x: clip;
+  /* Le basculement de thème ne doit pas claquer. */
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 /* Pleine largeur + hauteur minimale viewport ; marges fluides + encoches */
@@ -42,6 +255,10 @@ body {
   padding-right: max(env(safe-area-inset-right), clamp(0.75rem, 3.5vw, 3rem));
 }
 
+/* ============================================================
+   Barre de navigation
+   ============================================================ */
+
 .nav {
   display: flex;
   align-items: center;
@@ -49,18 +266,35 @@ body {
   flex-wrap: wrap;
   row-gap: 0.75rem;
   padding: 1.2rem 0;
-  border-bottom: 0.5px solid #2a2a2a;
-  background: #0d0d0d;
+  border-bottom: 0.5px solid var(--bord);
+  background: var(--fond-eleve);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 30;
   margin-left: calc(-1 * max(env(safe-area-inset-left), clamp(0.75rem, 3.5vw, 3rem)));
   margin-right: calc(-1 * max(env(safe-area-inset-right), clamp(0.75rem, 3.5vw, 3rem)));
   padding-left: max(env(safe-area-inset-left), clamp(0.75rem, 3.5vw, 3rem));
   padding-right: max(env(safe-area-inset-right), clamp(0.75rem, 3.5vw, 3rem));
   width: auto;
+  transition: padding 0.3s var(--ressort), box-shadow 0.3s ease, background-color 0.35s ease;
 }
-.nav-logo { font-size: 20px; font-weight: 500; letter-spacing: -0.5px; color: #fff; display: flex; align-items: center; gap: 8px; }
+/* Au-delà de quelques dizaines de pixels de défilement, la barre se resserre
+   pour rendre de la place au contenu (classe posée par animations.js). */
+.nav.nav--compacte {
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+  box-shadow: 0 10px 30px -12px var(--ombre);
+}
+.nav-logo {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  color: var(--texte-0);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
 .nav-logo-img {
   width: 54px;
   height: 54px;
@@ -68,20 +302,75 @@ body {
   object-fit: contain;
   flex-shrink: 0;
   display: block;
+  transition: width 0.3s var(--ressort), height 0.3s var(--ressort), transform 0.5s var(--ressort);
 }
+.nav--compacte .nav-logo-img { width: 40px; height: 40px; }
+.nav-logo:hover .nav-logo-img { transform: rotate(-8deg) scale(1.06); }
+
 .nav-links { display: flex; gap: 2rem; }
-.nav-links a { color: #888; font-size: 14px; text-decoration: none; }
-.nav-cta { background: #fff; color: #000; border: none; padding: 8px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; }
+.nav-links a {
+  position: relative;
+  color: var(--texte-4);
+  font-size: 14px;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.nav-links a:hover { color: var(--texte-1); }
+/* Soulignement qui se déploie depuis la gauche au survol. */
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  height: 1px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.28s var(--ressort);
+}
+.nav-links a:hover::after { transform: scaleX(1); }
+
+.nav-cta {
+  background: var(--accent);
+  color: var(--accent-texte);
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s var(--ressort), box-shadow 0.25s ease;
+}
+.nav-cta:hover {
+  background: var(--accent-survol);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -8px var(--ombre);
+}
+.nav-cta:active { transform: translateY(0) scale(0.97); }
+
+/* ============================================================
+   Hero
+   ============================================================ */
+
 .hero-wrapper {
   position: relative;
   overflow: hidden;
-  background: #0a0a0a;
+  background: var(--fond);
   flex: 1 1 auto;
   min-height: clamp(16rem, min(58vh, 55dvh), 44rem);
   margin-left: calc(-1 * max(env(safe-area-inset-left), clamp(0.75rem, 3.5vw, 3rem)));
   margin-right: calc(-1 * max(env(safe-area-inset-right), clamp(0.75rem, 3.5vw, 3rem)));
 }
 .grid-bg { position: absolute; inset: 0; z-index: 0; }
+/* La grille et ses dégradés sont écrits en attributs dans Index.html ; une
+   règle CSS l'emporte sur un attribut de présentation, ce qui permet de les
+   reteindre selon le thème sans toucher au balisage. */
+.grid-bg path { stroke: var(--grille); }
+.grid-bg .stop-fond { stop-color: var(--fond); }
+.grid-bg .stop-lueur { stop-color: var(--lueur-hero); }
+
 .hero {
   position: relative;
   z-index: 2;
@@ -90,12 +379,51 @@ body {
   max-width: min(56rem, 100%);
   margin: 0 auto;
 }
-.hero-badge { display: inline-flex; align-items: center; gap: 6px; background: #1a1a1a; border: 0.5px solid #333; border-radius: 20px; padding: 5px 14px; font-size: 12px; color: #aaa; margin-bottom: 2rem; }
-.badge-pulse { width: 6px; height: 6px; background: #fff; border-radius: 50%; }
-.hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 500; line-height: 1.15; color: #fff; letter-spacing: -1.5px; margin-bottom: 1.25rem; }
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--fond-champ);
+  border: 0.5px solid var(--bord-fort);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  color: var(--texte-3);
+  margin-bottom: 2rem;
+}
+/* Le point « en ligne » : un cœur plein, et un anneau qui s'en échappe. */
+.badge-pulse {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  background: var(--succes);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.badge-pulse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--succes);
+  animation: pulseAnneau 2.4s var(--ressort) infinite;
+}
+@keyframes pulseAnneau {
+  0% { transform: scale(1); opacity: 0.65; }
+  70%, 100% { transform: scale(3.4); opacity: 0; }
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 500;
+  line-height: 1.15;
+  color: var(--texte-0);
+  letter-spacing: -1.5px;
+  margin-bottom: 1.25rem;
+}
 /* Le mot mis en valeur : serif en italique, teinte distincte */
 .hero h1 span {
-  color: #8a8a8a;
+  color: var(--texte-4);
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
@@ -104,42 +432,94 @@ body {
 }
 .hero p {
   font-size: clamp(15px, 2.5vw, 17px);
-  color: #666;
+  color: var(--texte-5);
   line-height: 1.7;
   max-width: 36rem;
   margin: 0 auto 2.5rem;
 }
 .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-.btn-primary { background: #fff; color: #000; border: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; }
-.btn-primary:hover { background: #ddd; }
-.btn-secondary { background: transparent; color: #aaa; border: 0.5px solid #333; padding: 12px 28px; border-radius: 8px; font-size: 15px; cursor: pointer; }
-.btn-secondary:hover { border-color: #666; color: #fff; }
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-texte);
+  border: none;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.18s var(--ressort), box-shadow 0.28s ease;
+}
+.btn-primary:hover {
+  background: var(--accent-survol);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -14px var(--ombre);
+}
+.btn-primary:active { transform: translateY(0) scale(0.97); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--texte-3);
+  border: 0.5px solid var(--bord-fort);
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.18s var(--ressort), background 0.2s ease;
+}
+.btn-secondary:hover {
+  border-color: var(--bord-survol);
+  color: var(--texte-0);
+  background: var(--survol-doux);
+  transform: translateY(-2px);
+}
+.btn-secondary:active { transform: translateY(0) scale(0.97); }
+
+/* ============================================================
+   Modal d'inscription
+   ============================================================ */
+
+/* Le masquage passe par visibility + opacity et non display:none : une
+   transition ne peut pas s'exécuter sur un changement de display. */
 .signup-modal {
   position: fixed;
   inset: 0;
-  z-index: 40;
-  display: none;
+  z-index: 60;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.28s ease, visibility 0s linear 0.28s;
 }
 .signup-modal.open {
-  display: block;
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.28s ease;
 }
 .signup-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: var(--voile);
   backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 .signup-panel {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(0.94);
+  opacity: 0;
   z-index: 2;
   width: min(31rem, calc(100% - 2rem));
   background: transparent;
   border: none;
   border-radius: 0;
   padding: 0;
+  transition: transform 0.38s var(--ressort), opacity 0.28s ease;
+}
+.signup-modal.open .signup-panel {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 .signup-close {
   position: absolute;
@@ -153,26 +533,27 @@ body {
   justify-content: center;
   border: none;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #ccc;
+  background: var(--survol-doux);
+  color: var(--texte-2);
   font-size: 1.45rem;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.2s var(--ressort);
 }
 .signup-close:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--texte-0);
+  background: var(--survol-appuye);
+  transform: rotate(90deg);
 }
 .signup-panel h2 {
   font-size: 1.4rem;
-  color: #fff;
+  color: var(--texte-0);
   margin-bottom: 0.35rem;
   font-weight: 500;
   letter-spacing: -0.02em;
 }
 .signup-subtitle {
-  color: #888;
+  color: var(--texte-4);
   font-size: 14px;
   line-height: 1.5;
   margin-bottom: 1.25rem;
@@ -183,24 +564,35 @@ body {
   padding-right: 2.5rem;
 }
 
+/* ============================================================
+   Conversation (démo du hero et page /chat)
+   ============================================================ */
+
 .chat-preview {
   max-width: min(42.5rem, 100%);
   width: 100%;
   margin: clamp(2rem, 5vw, 3.5rem) auto 0;
-  background: #111;
-  border: 0.5px solid #222;
+  background: var(--fond-panneau);
+  border: 0.5px solid var(--bord-tenu);
   border-radius: 16px;
   overflow: hidden;
+  transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.4s ease;
 }
-.chat-header { display: flex; align-items: center; gap: 10px; padding: 1rem 1.25rem; border-bottom: 0.5px solid #1e1e1e; }
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1rem 1.25rem;
+  border-bottom: 0.5px solid var(--bord-faible);
+}
 .chat-avatar {
   width: 44px;
   height: 44px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  background: #0a0a0a;
-  border: 1px solid #2a2a2a;
+  background: var(--fond);
+  border: 1px solid var(--bord);
 }
 .chat-avatar img {
   width: 100%;
@@ -209,14 +601,21 @@ body {
   display: block;
   transform: translateZ(0);
 }
-.chat-name { font-size: 14px; font-weight: 500; color: #fff; }
-.chat-status-dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; }
-.chat-status { font-size: 11px; color: #555; display: flex; align-items: center; }
+.chat-name { font-size: 14px; font-weight: 500; color: var(--texte-0); }
+.chat-status-dot { width: 6px; height: 6px; background: var(--succes); border-radius: 50%; display: inline-block; margin-right: 5px; }
+.chat-status { font-size: 11px; color: var(--texte-6); display: flex; align-items: center; }
 .chat-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 12px; min-height: 200px; }
 
-.msg-row { display: flex; align-items: flex-end; gap: 8px; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease; }
+.msg-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  transition: opacity 0.4s ease, transform 0.45s var(--ressort);
+}
 .msg-row.user-row { flex-direction: row-reverse; }
-.msg-row.visible { opacity: 1; transform: translateY(0); }
+.msg-row.visible { opacity: 1; transform: none; }
 
 .msg-mini-avatar { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; }
 .avatar-user {
@@ -224,9 +623,12 @@ body {
   height: 36px;
   min-width: 36px;
   min-height: 36px;
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
+  background: var(--fond-champ);
+  border: 1px solid var(--bord);
   overflow: hidden;
+  color: var(--texte-2);
+  font-size: 14px;
+  font-weight: 600;
 }
 .avatar-user img {
   width: 100%;
@@ -236,13 +638,16 @@ body {
   display: block;
   transform: translateZ(0);
 }
+/* Photo d'un compte connecté : cadrage neutre, contrairement au portrait de
+   démonstration dont on recentre le visage. */
+.avatar-user img.avatar-compte { object-position: center; }
 .avatar-ai {
   width: 36px;
   height: 36px;
   min-width: 36px;
   min-height: 36px;
-  background: #0a0a0a;
-  border: 1px solid #2a2a2a;
+  background: var(--fond);
+  border: 1px solid var(--bord);
   overflow: hidden;
 }
 .avatar-ai img {
@@ -253,11 +658,16 @@ body {
   transform: translateZ(0);
 }
 
-.msg { max-width: 78%; padding: 10px 14px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
-.msg-user { background: #1e1e1e; color: #ddd; border-radius: 14px 14px 2px 14px; }
-.msg-ai { background: #fff; color: #111; border-radius: 14px 14px 14px 2px; }
+.msg { max-width: 78%; padding: 10px 14px; font-size: var(--taille-chat); line-height: 1.6; white-space: pre-wrap; }
+.msg-user { background: var(--msg-user-fond); color: var(--msg-user-texte); border-radius: 14px 14px 2px 14px; }
+.msg-ai {
+  background: var(--bulle-fond);
+  color: #111;
+  border: 0.5px solid var(--bulle-contour);
+  border-radius: 14px 14px 14px 2px;
+}
 
-.typing-indicator { display: flex; align-items: center; gap: 4px; padding: 12px 14px; background: #fff; border-radius: 14px 14px 14px 2px; width: fit-content; }
+.typing-indicator { display: flex; align-items: center; gap: 4px; padding: 12px 14px; background: var(--bulle-fond); border: 0.5px solid var(--bulle-contour); border-radius: 14px 14px 14px 2px; width: fit-content; }
 .typing-dot { width: 6px; height: 6px; background: #aaa; border-radius: 50%; animation: typingBounce 1.2s infinite ease-in-out; }
 .typing-dot:nth-child(2) { animation-delay: 0.2s; }
 .typing-dot:nth-child(3) { animation-delay: 0.4s; }
@@ -266,13 +676,26 @@ body {
 .cursor { display: inline-block; width: 2px; height: 14px; background: #333; margin-left: 1px; vertical-align: middle; animation: blink 0.8s step-end infinite; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-.chat-input-bar { display: flex; align-items: center; gap: 10px; padding: 0.9rem 1.25rem; border-top: 0.5px solid #1e1e1e; }
-.chat-input-animated { flex: 1; background: #1a1a1a; border: 0.5px solid #2a2a2a; border-radius: 8px; padding: 9px 14px; color: #aaa; font-size: 14px; min-height: 38px; display: flex; align-items: center; }
-.input-cursor { display: inline-block; width: 1.5px; height: 13px; background: #aaa; margin-left: 1px; vertical-align: middle; animation: blink 0.8s step-end infinite; }
-.chat-send { width: 32px; height: 32px; background: #fff; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s; }
-.chat-send.active { background: #e0e0e0; transform: scale(0.95); }
+.chat-input-bar { display: flex; align-items: center; gap: 10px; padding: 0.9rem 1.25rem; border-top: 0.5px solid var(--bord-faible); }
+.chat-input-animated { flex: 1; background: var(--fond-champ); border: 0.5px solid var(--bord); border-radius: 8px; padding: 9px 14px; color: var(--texte-3); font-size: 14px; min-height: 38px; display: flex; align-items: center; }
+.input-cursor { display: inline-block; width: 1.5px; height: 13px; background: var(--texte-3); margin-left: 1px; vertical-align: middle; animation: blink 0.8s step-end infinite; }
+.chat-send {
+  width: 32px;
+  height: 32px;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.15s var(--ressort);
+}
+.chat-send:hover:not(:disabled) { transform: scale(1.08); }
+.chat-send.active { background: var(--accent-survol); transform: scale(0.95); }
 .chat-send:disabled { opacity: 0.4; cursor: default; }
-.chat-send svg { width: 14px; height: 14px; fill: #000; }
+.chat-send svg { width: 14px; height: 14px; fill: var(--accent-texte); }
 
 /* Page de chat fonctionnelle (/chat) */
 .chat-page-shell { padding-top: 0; }
@@ -286,29 +709,35 @@ body {
 .chat-preview--page .chat-body { flex: 1; overflow-y: auto; }
 .chat-text-input {
   flex: 1;
-  background: #1a1a1a;
-  border: 0.5px solid #2a2a2a;
+  background: var(--fond-champ);
+  border: 0.5px solid var(--bord);
   border-radius: 8px;
   padding: 9px 14px;
-  color: #f0f0f0;
-  font-size: 14px;
+  color: var(--texte-1);
+  font-size: var(--taille-chat);
   font-family: inherit;
   outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
-.chat-text-input::placeholder { color: #666; }
-.chat-text-input:focus { border-color: #555; }
+.chat-text-input::placeholder { color: var(--texte-5); }
+.chat-text-input:focus { border-color: var(--bord-survol); background: var(--fond-doux); }
 
 /* En-tête : badge quiz + bouton nouvelle conversation */
 .chat-header-info { display: flex; flex-direction: column; }
 .chat-quiz-badge {
   margin-left: auto;
   font-size: 11px;
-  color: #4ade80;
-  background: rgba(74, 222, 128, 0.1);
-  border: 0.5px solid rgba(74, 222, 128, 0.3);
+  color: var(--succes);
+  background: var(--succes-fond);
+  border: 0.5px solid var(--succes-bord);
   border-radius: 999px;
   padding: 3px 10px;
   white-space: nowrap;
+  animation: badgeEntree 0.4s var(--ressort) both;
+}
+@keyframes badgeEntree {
+  from { opacity: 0; transform: translateY(-6px) scale(0.9); }
+  to { opacity: 1; transform: none; }
 }
 .chat-reset {
   margin-left: auto;
@@ -316,17 +745,27 @@ body {
   align-items: center;
   gap: 6px;
   background: transparent;
-  border: 0.5px solid #2a2a2a;
+  border: 0.5px solid var(--bord);
   border-radius: 8px;
   padding: 5px 10px;
-  color: #888;
+  color: var(--texte-4);
   font-size: 12px;
   font-family: inherit;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
-.chat-reset:hover { color: #f0f0f0; border-color: #555; }
-.chat-reset svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.chat-reset:hover { color: var(--texte-1); border-color: var(--bord-survol); background: var(--survol-doux); }
+.chat-reset:hover svg { transform: rotate(-180deg); }
+.chat-reset svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.5s var(--ressort);
+}
 .chat-quiz-badge + .chat-reset { margin-left: 10px; }
 
 /* Puces de suggestion sur l'écran d'accueil */
@@ -339,22 +778,30 @@ body {
   max-width: 30rem;
 }
 .chat-chip {
-  background: #161616;
-  border: 0.5px solid #2a2a2a;
+  background: var(--fond-doux);
+  border: 0.5px solid var(--bord);
   border-radius: 999px;
   padding: 8px 14px;
-  color: #ccc;
+  color: var(--texte-2);
   font-size: 13px;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s var(--ressort), box-shadow 0.2s ease;
 }
-.chat-chip:hover { background: #1f1f1f; border-color: #555; color: #fff; }
+.chat-chip:hover {
+  background: var(--fond-survol);
+  border-color: var(--bord-survol);
+  color: var(--texte-0);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px -12px var(--ombre);
+}
 .chat-chip:active { transform: scale(0.97); }
-.chat-chip--accent { background: #fff; color: #111; border-color: #fff; }
-.chat-chip--accent:hover { background: #e6e6e6; color: #111; }
+.chat-chip--accent { background: var(--accent); color: var(--accent-texte); border-color: var(--accent); }
+.chat-chip--accent:hover { background: var(--accent-survol); color: var(--accent-texte); }
 
-/* Rendu structuré des réponses du bot */
+/* ── Contenu interne de la bulle du bot ────────────────────────────────────
+   Cette bulle reste blanche dans les deux thèmes : les couleurs ci-dessous
+   sont donc volontairement fixes, calibrées sur ce fond blanc. */
 .msg-ai > :first-child { margin-top: 0; }
 .msg-ai > :last-child { margin-bottom: 0; }
 
@@ -368,7 +815,7 @@ body {
   border-radius: 8px;
   overflow-x: auto;
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: calc(var(--taille-chat) - 1.5px);
   line-height: 1.5;
   color: #1a1a1a;
   white-space: pre;
@@ -376,7 +823,7 @@ body {
 
 .msg-title {
   font-family: var(--font-serif);
-  font-size: 17px;
+  font-size: calc(var(--taille-chat) + 3px);
   font-weight: 500;
   margin: 0 0 8px;
   color: #111;
@@ -399,7 +846,7 @@ body {
   background: #f6f6f6;
   border-left: 2.5px solid #d0d0d0;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: calc(var(--taille-chat) - 1px);
   color: #333;
   white-space: pre-wrap;
 }
@@ -453,13 +900,13 @@ body {
 .msg-suggest-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chat-chip--sm {
   padding: 5px 11px;
-  font-size: 12px;
+  font-size: calc(var(--taille-chat) - 2px);
   background: #f4f4f4;
   border-color: #e0e0e0;
   color: #333;
   text-align: left;
 }
-.chat-chip--sm:hover { background: #ebebeb; border-color: #bbb; color: #000; }
+.chat-chip--sm:hover { background: #ebebeb; border-color: #bbb; color: #000; box-shadow: none; }
 
 /* Pouces : discrets tant qu'on ne survole pas la réponse */
 .msg-feedback {
@@ -482,28 +929,75 @@ body {
   line-height: 1.4;
   cursor: pointer;
   opacity: 0.55;
-  transition: opacity 0.15s, background 0.15s, border-color 0.15s;
+  transition: opacity 0.15s, background 0.15s, border-color 0.15s, transform 0.15s var(--ressort);
 }
-.msg-feedback-btn:hover { opacity: 1; background: #f2f2f2; border-color: #ddd; }
+.msg-feedback-btn:hover { opacity: 1; background: #f2f2f2; border-color: #ddd; transform: scale(1.15); }
 .msg-feedback--envoye { color: #666; font-style: italic; }
+
+/* ============================================================
+   Sections de la page d'accueil
+   ============================================================ */
 
 .features {
   padding: clamp(3rem, 8vw, 4rem) 0;
   width: 100%;
   max-width: min(75rem, 100%);
   margin: 0 auto;
-  background: #0a0a0a;
+  background: var(--fond);
   scroll-margin-top: 90px;
 }
-.section-label { font-size: 12px; color: #555; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 0.75rem; }
-.section-title { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 500; color: #fff; letter-spacing: -0.5px; margin-bottom: 2.5rem; }
-.features-grid { display: grid; gap: 1px; background: #1a1a1a; border: 0.5px solid #1a1a1a; border-radius: 12px; overflow: hidden; }
+.section-label { font-size: 12px; color: var(--texte-6); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 0.75rem; }
+.section-title { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 500; color: var(--texte-0); letter-spacing: -0.5px; margin-bottom: 2.5rem; }
+.features-grid { display: grid; gap: 1px; background: var(--bord-faible); border: 0.5px solid var(--bord-faible); border-radius: 12px; overflow: hidden; }
 .features-grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .features-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.feat-card { background: #0d0d0d; padding: 1.5rem; }
-.feat-icon { width: 36px; height: 36px; background: #1a1a1a; border: 0.5px solid #2a2a2a; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; font-size: 16px; color: #fff; }
-.feat-card h3 { font-size: 15px; font-weight: 500; color: #e0e0e0; margin-bottom: 6px; }
-.feat-card p { font-size: 13px; color: #555; line-height: 1.6; }
+
+.feat-card {
+  position: relative;
+  background: var(--fond-eleve);
+  padding: 1.5rem;
+  isolation: isolate;
+  transition: background-color 0.3s ease;
+}
+/* Halo qui suit le curseur. Les coordonnées --souris-x/y sont mises à jour
+   par animations.js ; sans JS, le pseudo-élément reste simplement invisible. */
+.feat-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(16rem circle at var(--souris-x, 50%) var(--souris-y, 50%), var(--lueur), transparent 70%);
+  transition: opacity 0.35s ease;
+}
+.feat-card:hover { background: var(--fond-doux); }
+.feat-card:hover::after { opacity: 1; }
+
+.feat-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--fond-champ);
+  border: 0.5px solid var(--bord);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  font-size: 16px;
+  color: var(--texte-0);
+  transition: transform 0.35s var(--ressort), border-color 0.3s ease, background 0.3s ease;
+}
+.feat-card:hover .feat-icon {
+  transform: translateY(-3px) scale(1.08);
+  border-color: var(--bord-survol);
+  background: var(--fond-appuye);
+}
+.feat-card h3 { font-size: 15px; font-weight: 500; color: var(--texte-2); margin-bottom: 6px; transition: color 0.25s ease; }
+.feat-card:hover h3 { color: var(--texte-0); }
+.feat-card p { font-size: 13px; color: var(--texte-6); line-height: 1.6; transition: color 0.25s ease; }
+.feat-card:hover p { color: var(--texte-4); }
+
 .stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -511,24 +1005,39 @@ body {
   width: 100%;
   max-width: min(48rem, 100%);
   margin: clamp(2rem, 5vw, 3rem) auto;
-  background: #1a1a1a;
-  border: 0.5px solid #1a1a1a;
+  background: var(--bord-faible);
+  border: 0.5px solid var(--bord-faible);
   border-radius: 12px;
   overflow: hidden;
 }
-.stat { background: #0d0d0d; padding: 1.5rem; text-align: center; }
-.stat-num { font-size: 28px; font-weight: 500; color: #fff; letter-spacing: -1px; }
-.stat-label { font-size: 12px; color: #555; margin-top: 4px; }
+.stat {
+  background: var(--fond-eleve);
+  padding: 1.5rem;
+  text-align: center;
+  transition: background-color 0.3s ease;
+}
+.stat:hover { background: var(--fond-doux); }
+.stat-num {
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--texte-0);
+  letter-spacing: -1px;
+  /* Les chiffres défilent pendant le comptage : sans chasse fixe, la largeur
+     sauterait à chaque image. */
+  font-variant-numeric: tabular-nums;
+}
+.stat-label { font-size: 12px; color: var(--texte-6); margin-top: 4px; }
+
 .cta-section {
   text-align: center;
   padding: clamp(3rem, 8vw, 4rem) 0 clamp(3.5rem, 9vw, 5rem);
-  border-top: 0.5px solid #1a1a1a;
-  background: #0a0a0a;
+  border-top: 0.5px solid var(--bord-faible);
+  background: var(--fond);
   scroll-margin-top: 90px;
   width: 100%;
 }
-.cta-section h2 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 500; color: #fff; letter-spacing: -0.5px; margin-bottom: 1rem; }
-.cta-section p { color: #555; font-size: 15px; margin-bottom: 2rem; }
+.cta-section h2 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 500; color: var(--texte-0); letter-spacing: -0.5px; margin-bottom: 1rem; }
+.cta-section p { color: var(--texte-6); font-size: 15px; margin-bottom: 2rem; }
 .footer {
   margin-top: auto;
   padding: 1.5rem 0;
@@ -536,51 +1045,40 @@ body {
   margin-right: calc(-1 * max(env(safe-area-inset-right), clamp(0.75rem, 3.5vw, 3rem)));
   padding-left: max(env(safe-area-inset-left), clamp(0.75rem, 3.5vw, 3rem));
   padding-right: max(env(safe-area-inset-right), clamp(0.75rem, 3.5vw, 3rem));
-  border-top: 0.5px solid #1a1a1a;
+  border-top: 0.5px solid var(--bord-faible);
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  background: #0a0a0a;
+  background: var(--fond);
 }
-.footer-logo { font-size: 15px; font-weight: 500; color: #555; }
-.footer p { font-size: 12px; color: #333; }
+.footer-logo { font-size: 15px; font-weight: 500; color: var(--texte-6); }
+.footer p { font-size: 12px; color: var(--texte-7); }
 
-@media (max-width: 900px) {
-  .features-grid--three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
+/* ============================================================
+   Formulaire compte (base Uiverse.io by mahiatlinux, thème ChatPy)
+   ============================================================ */
 
-@media (max-width: 700px) {
-  .features-grid--four, .features-grid--three { grid-template-columns: 1fr; }
-  .nav-links { gap: 1rem; }
-  .signup-panel {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-}
-
-/* Formulaire compte (base Uiverse.io by mahiatlinux, thème ChatPy) */
 .form {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background-color: #111;
+  background-color: var(--fond-panneau);
   padding: 1.5rem 1.5rem 1.75rem;
   width: min(450px, 100%);
   max-width: 100%;
   border-radius: 14px;
-  border: 0.5px solid #2a2a2a;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  border: 0.5px solid var(--bord);
+  box-shadow: 0 30px 60px -30px var(--ombre);
+  font-family: var(--font-sans);
   box-sizing: border-box;
 }
 
 .form ::placeholder {
   font-family: inherit;
-  color: #666;
+  color: var(--texte-5);
 }
 
 .form button {
@@ -588,30 +1086,74 @@ body {
 }
 
 .flex-column > label {
-  color: #e0e0e0;
+  color: var(--texte-2);
   font-weight: 600;
 }
 
 .inputForm {
-  border: 0.5px solid #2a2a2a;
+  border: 0.5px solid var(--bord);
   border-radius: 10px;
   height: 50px;
   display: flex;
   align-items: center;
   padding-left: 10px;
   transition: border-color 0.2s ease, background 0.2s ease;
-  background-color: #161616;
+  background-color: var(--fond-doux);
 }
 
 .inputForm svg {
   flex-shrink: 0;
-  color: #777;
+  color: var(--texte-4);
   fill: currentColor;
 }
 
 .inputForm svg path {
   fill: currentColor;
 }
+
+/* Icônes dessinées au trait et non pleines : la règle ci-dessus les remplirait
+   en aplat et on ne verrait qu'une tache. */
+.inputForm .icone-trait,
+.inputForm .icone-trait path,
+.inputForm .icone-trait circle,
+.inputForm .icone-trait rect {
+  fill: none;
+  stroke: currentColor;
+}
+
+/* Champs présents à l'inscription seulement. */
+.form--connexion .champ-inscription { display: none; }
+
+.case-a-cocher { display: flex; align-items: center; gap: 7px; }
+.case-a-cocher input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.case-a-cocher label { cursor: pointer; }
+
+.form-erreur {
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: var(--danger-fond);
+  border: 0.5px solid var(--danger-bord);
+  color: var(--danger);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.form-erreur[hidden] { display: none; }
+
+.form-erreur--succes {
+  background: var(--succes-fond);
+  border-color: var(--succes-bord);
+  color: var(--succes);
+}
+
+/* Le bouton d'envoi pendant la requête : on ne doit pas pouvoir la relancer. */
+.button-submit:disabled { opacity: 0.6; cursor: progress; }
 
 .input {
   margin-left: 10px;
@@ -620,7 +1162,8 @@ body {
   width: 100%;
   height: 100%;
   background-color: transparent;
-  color: #f0f0f0;
+  color: var(--texte-1);
+  font-family: inherit;
 }
 
 .input:focus {
@@ -628,8 +1171,8 @@ body {
 }
 
 .inputForm:focus-within {
-  border-color: #555;
-  background-color: #1a1a1a;
+  border-color: var(--bord-survol);
+  background-color: var(--fond-champ);
 }
 
 .flex-row {
@@ -642,45 +1185,48 @@ body {
 
 .flex-row > div > label {
   font-size: 14px;
-  color: #ccc;
+  color: var(--texte-2);
   font-weight: 400;
 }
 
 .form .span {
   font-size: 14px;
   margin-left: 5px;
-  color: #fff;
+  color: var(--texte-0);
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
   border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
 }
 
 .form .span:hover {
-  border-bottom-color: rgba(255, 255, 255, 0.35);
+  border-bottom-color: var(--bord-survol);
 }
 
 .button-submit {
   margin: 20px 0 10px 0;
-  background-color: #fff;
+  background-color: var(--accent);
   border: none;
-  color: #0a0a0a;
+  color: var(--accent-texte);
   font-size: 15px;
   font-weight: 500;
+  font-family: inherit;
   border-radius: 10px;
   height: 50px;
   width: 100%;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.15s var(--ressort);
 }
 
 .button-submit:hover {
-  background-color: #ddd;
+  background-color: var(--accent-survol);
 }
+.button-submit:active { transform: scale(0.985); }
 
 .p {
   text-align: center;
-  color: #aaa;
+  color: var(--texte-3);
   font-size: 14px;
   margin: 5px 0;
 }
@@ -694,18 +1240,22 @@ body {
   justify-content: center;
   align-items: center;
   font-weight: 500;
+  font-family: inherit;
+  font-size: 14px;
   gap: 10px;
-  border: 0.5px solid #2a2a2a;
-  background-color: #161616;
-  color: #f0f0f0;
+  border: 0.5px solid var(--bord);
+  background-color: var(--fond-doux);
+  color: var(--texte-1);
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.18s var(--ressort);
 }
 
 .btn:hover {
-  border-color: #555;
-  background-color: #1d1d1d;
+  border-color: var(--bord-survol);
+  background-color: var(--fond-appuye);
+  transform: translateY(-2px);
 }
+.btn:active { transform: translateY(0) scale(0.98); }
 
 /* Les boutons Google et GitHub sont des <a> vers /auth/<fournisseur>, pas des
    <button> : la redirection OAuth est une navigation, pas une soumission de
@@ -714,28 +1264,155 @@ a.btn {
   text-decoration: none;
 }
 
-/* Zone de compte dans la barre de navigation. */
-.nav-compte { display: flex; align-items: center; gap: 10px; }
-.nav-photo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex: none; }
-.nav-initiale {
-  display: flex; align-items: center; justify-content: center;
-  background: #2a2a2a; color: #ddd; font-size: 13px; font-weight: 600;
-  user-select: none;
-}
-.nav-nom { color: #ddd; font-size: 14px; }
-.nav-deconnexion {
-  background: transparent; color: #888; border: 0.5px solid #333;
-  padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
-}
-.nav-deconnexion:hover { border-color: #666; color: #fff; }
-
 .form .btn.apple svg path {
+  fill: currentColor;
+}
+.form .btn.github svg path {
   fill: currentColor;
 }
 
 /* ============================================================
-   Écran d'accueil du chat (/chat) — thème sombre, titre serif
+   Zone de compte dans la barre de navigation
    ============================================================ */
+
+.nav-compte { display: flex; align-items: center; gap: 10px; position: relative; }
+.nav-photo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex: none; }
+.nav-initiale {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--fond-appuye); color: var(--texte-2); font-size: 13px; font-weight: 600;
+  user-select: none;
+}
+.nav-nom { color: var(--texte-2); font-size: 14px; }
+.nav-deconnexion {
+  background: transparent; color: var(--texte-4); border: 0.5px solid var(--bord-fort);
+  padding: 6px 14px; border-radius: 6px; font-size: 13px; font-family: inherit; cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+.nav-deconnexion:hover { border-color: var(--bord-survol); color: var(--texte-0); background: var(--survol-doux); }
+
+/* Bascule de thème — accessible à tout le monde, connecté ou non. */
+.bascule-theme {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 0.5px solid var(--bord-fort);
+  background: transparent;
+  color: var(--texte-3);
+  cursor: pointer;
+  flex: none;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.4s var(--ressort);
+}
+.bascule-theme:hover { color: var(--texte-0); border-color: var(--bord-survol); background: var(--survol-doux); }
+.bascule-theme:active { transform: rotate(45deg) scale(0.92); }
+.bascule-theme svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+/* Une seule des deux icônes est visible, selon le thème effectivement rendu. */
+.bascule-theme .icone-lune { display: block; }
+.bascule-theme .icone-soleil { display: none; }
+:root[data-theme="clair"] .bascule-theme .icone-lune { display: none; }
+:root[data-theme="clair"] .bascule-theme .icone-soleil { display: block; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="sombre"]) .bascule-theme .icone-lune { display: none; }
+  :root:not([data-theme="sombre"]) .bascule-theme .icone-soleil { display: block; }
+}
+
+/* Bouton d'ouverture du menu : avatar + prénom + chevron. */
+.compte-bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  border: 0.5px solid var(--bord-fort);
+  background: transparent;
+  color: var(--texte-2);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.compte-bouton:hover { border-color: var(--bord-survol); background: var(--survol-doux); }
+.compte-chevron {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.28s var(--ressort);
+}
+.compte-bouton[aria-expanded="true"] .compte-chevron { transform: rotate(180deg); }
+
+/* Menu déroulant du compte : ancré sur son bouton, pas sur la barre entière. */
+.nav-compte-menu-wrap { position: relative; }
+.compte-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 50;
+  min-width: 15rem;
+  padding: 6px;
+  background: var(--fond-panneau);
+  border: 0.5px solid var(--bord);
+  border-radius: 12px;
+  box-shadow: 0 24px 48px -24px var(--ombre), 0 2px 8px -4px var(--ombre-douce);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.97);
+  transform-origin: top right;
+  transition: opacity 0.2s ease, transform 0.26s var(--ressort), visibility 0s linear 0.26s;
+}
+.compte-menu.ouvert {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 0.2s ease, transform 0.26s var(--ressort);
+}
+.compte-menu-entete {
+  padding: 10px 12px 12px;
+  border-bottom: 0.5px solid var(--bord-faible);
+  margin-bottom: 6px;
+}
+.compte-menu-nom { font-size: 14px; font-weight: 500; color: var(--texte-0); }
+.compte-menu-email {
+  font-size: 12px;
+  color: var(--texte-5);
+  margin-top: 2px;
+  /* Une adresse longue ne doit pas étirer le menu. */
+  max-width: 13rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.compte-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--texte-2);
+  font-family: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.compte-menu-item:hover { background: var(--survol-doux); color: var(--texte-0); }
+.compte-menu-item svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.compte-menu-separateur { height: 0.5px; background: var(--bord-faible); margin: 6px 4px; }
+.compte-menu-item--sortie:hover { color: var(--danger); }
+
+/* ============================================================
+   Écran d'accueil du chat (/chat)
+   ============================================================ */
+
 .chat-welcome {
   margin: auto;
   padding: 2rem 1rem;
@@ -744,16 +1421,21 @@ a.btn {
   align-items: center;
   text-align: center;
   gap: 0.85rem;
-  animation: welcomeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: welcomeIn 0.6s var(--ressort) both;
 }
 .chat-welcome-logo {
   width: 64px;
   height: 64px;
   border-radius: 50%;
   object-fit: contain;
-  background: #0a0a0a;
-  border: 1px solid #2a2a2a;
+  background: var(--fond);
+  border: 1px solid var(--bord);
   margin-bottom: 0.25rem;
+  animation: logoFlotte 5s ease-in-out 0.6s infinite;
+}
+@keyframes logoFlotte {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 .chat-welcome-title {
   font-family: var(--font-serif);
@@ -761,20 +1443,20 @@ a.btn {
   font-weight: 400;
   letter-spacing: -0.5px;
   line-height: 1.15;
-  color: #f0f0f0;
+  color: var(--texte-1);
 }
 .chat-welcome-subtitle {
   font-size: 15px;
   line-height: 1.7;
-  color: #666;
+  color: var(--texte-5);
   max-width: 26rem;
 }
 .chat-welcome-subtitle code {
   font-family: var(--font-mono);
   font-size: 13px;
-  color: #aaa;
-  background: #1a1a1a;
-  border: 0.5px solid #2a2a2a;
+  color: var(--texte-3);
+  background: var(--fond-champ);
+  border: 0.5px solid var(--bord);
   border-radius: 5px;
   padding: 1px 6px;
 }
@@ -787,7 +1469,522 @@ a.btn {
   transform: translateY(-8px);
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
+/* Les puces d'accueil entrent en cascade derrière le titre. Le rang vient de
+   nth-child et non du JavaScript : chat.js recrée cet écran de zéro à chaque
+   « Nouvelle conversation », et la cascade doit rejouer sans qu'il s'en occupe. */
+.chat-suggestions .chat-chip {
+  animation: puceEntree 0.45s var(--ressort) both;
+  animation-delay: calc(0.25s + var(--rang, 0) * 0.06s);
+}
+.chat-suggestions .chat-chip:nth-child(1) { --rang: 0; }
+.chat-suggestions .chat-chip:nth-child(2) { --rang: 1; }
+.chat-suggestions .chat-chip:nth-child(3) { --rang: 2; }
+.chat-suggestions .chat-chip:nth-child(4) { --rang: 3; }
+.chat-suggestions .chat-chip:nth-child(5) { --rang: 4; }
+.chat-suggestions .chat-chip:nth-child(6) { --rang: 5; }
+@keyframes puceEntree {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   Historique des conversations (/chat)
+   ============================================================ */
+
+.chat-layout {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: clamp(0.75rem, 1.8vw, 1.25rem);
+  width: 100%;
+  max-width: min(72rem, 100%);
+  margin: clamp(1.5rem, 4vw, 2.5rem) auto;
+  min-height: 0;
+  position: relative;
+}
+/* Dans la mise en page à deux colonnes, le chat prend la place restante au
+   lieu de rester centré sur sa largeur de lecture. */
+.chat-layout .chat-preview--page {
+  margin: 0;
+  max-width: none;
+  flex: 1;
+  min-width: 0;
+}
+
+.historique {
+  flex: none;
+  width: 17rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--fond-panneau);
+  border: 0.5px solid var(--bord-tenu);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: width 0.32s var(--ressort), opacity 0.22s ease;
+}
+/* Replié : la largeur tombe à zéro. Les enfants gardent la leur (min-width),
+   sinon le contenu se réagencerait en accordéon pendant l'animation. */
+.chat-layout--replie .historique {
+  width: 0;
+  opacity: 0;
+  border-width: 0;
+  pointer-events: none;
+}
+.historique-entete,
+.historique-liste,
+.historique-note { min-width: 17rem; }
+
+.historique-entete {
+  padding: 0.9rem;
+  border-bottom: 0.5px solid var(--bord-faible);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.historique-nouvelle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-texte);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s var(--ressort);
+}
+.historique-nouvelle:hover { background: var(--accent-survol); }
+.historique-nouvelle:active { transform: scale(0.98); }
+.historique-nouvelle svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+
+.historique-recherche { position: relative; display: flex; align-items: center; }
+.historique-recherche svg {
+  position: absolute;
+  left: 10px;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--texte-5);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.historique-recherche input {
+  width: 100%;
+  padding: 8px 10px 8px 30px;
+  background: var(--fond-champ);
+  border: 0.5px solid var(--bord);
+  border-radius: 8px;
+  color: var(--texte-1);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.historique-recherche input::placeholder { color: var(--texte-5); }
+.historique-recherche input:focus { border-color: var(--bord-survol); background: var(--fond-doux); }
+
+.historique-liste { flex: 1; overflow-y: auto; padding: 0.5rem; }
+.historique-groupe-titre {
+  font-size: 10.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--texte-6);
+  padding: 0.75rem 0.5rem 0.35rem;
+}
+.historique-groupe:first-child .historique-groupe-titre { padding-top: 0.25rem; }
+
+.historique-item {
+  display: flex;
+  align-items: center;
+  border-radius: 9px;
+  transition: background 0.15s ease;
+}
+.historique-item:hover { background: var(--survol-doux); }
+.historique-item--actif { background: var(--fond-appuye); }
+.historique-item-ouvrir {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 4px 9px 10px;
+  background: none;
+  border: none;
+  color: var(--texte-2);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  /* Un titre long doit être coupé, pas passer à la ligne : la liste resterait
+     lisible mais chaque entrée aurait une hauteur différente. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.historique-item--actif .historique-item-ouvrir { color: var(--texte-0); }
+
+.historique-item-action {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 3px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--texte-5);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.historique-item:hover .historique-item-action,
+.historique-item:focus-within .historique-item-action { opacity: 1; }
+.historique-item-action:hover { color: var(--texte-0); background: var(--survol-appuye); }
+.historique-item-action--suppr:hover { color: var(--danger); }
+.historique-item-action svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+/* Sans souris il n'y a pas de survol : les actions doivent rester atteignables. */
+@media (hover: none) {
+  .historique-item-action { opacity: 1; }
+}
+
+/* Renommage : le titre est remplacé sur place par un champ de saisie. */
+.historique-item-renommer {
+  flex: 1;
+  min-width: 0;
+  margin: 3px;
+  padding: 6px 8px;
+  background: var(--fond-champ);
+  border: 0.5px solid var(--bord-survol);
+  border-radius: 7px;
+  color: var(--texte-1);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.historique-vide {
+  padding: 1.75rem 1rem;
+  text-align: center;
+  color: var(--texte-5);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.historique-note {
+  padding: 0.7rem 0.9rem;
+  border-top: 0.5px solid var(--bord-faible);
+  color: var(--texte-6);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.historique-note:empty { display: none; }
+
+.historique-bascule {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 2px;
+  background: transparent;
+  border: 0.5px solid var(--bord);
+  border-radius: 8px;
+  color: var(--texte-4);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.historique-bascule:hover { color: var(--texte-1); border-color: var(--bord-survol); background: var(--survol-doux); }
+.historique-bascule svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+
+/* Le voile n'existe que pour le tiroir des petits écrans. */
+.historique-voile { display: none; }
+
+@media (max-width: 860px) {
+  /* L'historique passe en tiroir glissant : sur cette largeur, deux colonnes
+     ne laisseraient pas assez de place au fil de conversation. */
+  .historique {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 45;
+    width: min(19rem, 86vw);
+    border-radius: 0 16px 16px 0;
+    transform: translateX(0);
+    transition: transform 0.32s var(--ressort);
+    box-shadow: 0 0 60px -10px var(--ombre);
+  }
+  .historique-entete,
+  .historique-liste,
+  .historique-note { min-width: 0; }
+  .chat-layout--replie .historique {
+    width: min(19rem, 86vw);
+    opacity: 1;
+    border-width: 0.5px;
+    pointer-events: auto;
+    transform: translateX(-101%);
+  }
+  /* :not([hidden]) est nécessaire : une règle d'auteur l'emporterait sur le
+     display:none que le navigateur applique à l'attribut hidden. */
+  .historique-voile:not([hidden]) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 44;
+    background: var(--voile);
+  }
+}
+
+/* ============================================================
+   Page /compte
+   ============================================================ */
+
+.compte-page {
+  width: 100%;
+  max-width: min(48rem, 100%);
+  margin: 0 auto;
+  padding: clamp(2rem, 6vw, 3.5rem) 0 clamp(3rem, 8vw, 4.5rem);
+  flex: 1;
+}
+.compte-titre {
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  color: var(--texte-0);
+  margin-bottom: 0.4rem;
+}
+.compte-sous-titre {
+  color: var(--texte-5);
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 2.25rem;
+}
+
+.carte {
+  background: var(--fond-eleve);
+  border: 0.5px solid var(--bord);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.carte-titre {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--texte-6);
+  margin-bottom: 1.25rem;
+}
+
+/* Identité */
+.profil { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.profil-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--bord);
+  flex: none;
+}
+.profil-initiale {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fond-appuye);
+  color: var(--texte-2);
+  font-size: 28px;
+  font-weight: 600;
+  user-select: none;
+}
+.profil-infos { min-width: 0; }
+.profil-nom { font-size: 20px; font-weight: 500; color: var(--texte-0); letter-spacing: -0.3px; }
+.profil-email { font-size: 14px; color: var(--texte-5); margin-top: 3px; word-break: break-all; }
+.profil-fournisseur {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 0.5px solid var(--bord);
+  background: var(--fond-doux);
+  color: var(--texte-3);
+  font-size: 12px;
+}
+.profil-fournisseur svg { width: 13px; height: 13px; }
+
+/* Réglages */
+.reglage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.95rem 0;
+  border-top: 0.5px solid var(--bord-faible);
+}
+/* Le premier réglage suit directement le titre de la carte : pas de filet
+   au-dessus. (Pas de :first-of-type ici — .carte-titre est un div lui aussi,
+   c'est donc lui le premier de son type, et le sélecteur ne matcherait rien.) */
+.carte-titre + .reglage { border-top: none; padding-top: 0; }
+.reglage-nom { font-size: 14.5px; color: var(--texte-1); }
+.reglage-aide { font-size: 12.5px; color: var(--texte-5); margin-top: 3px; max-width: 26rem; line-height: 1.5; }
+/* Mention de bas de carte, détachée du dernier réglage. */
+.reglage-note { margin-top: 1.25rem; max-width: none; }
+
+/* Sélecteur segmenté : le curseur glisse sous l'option choisie. */
+.segments {
+  display: inline-flex;
+  position: relative;
+  padding: 3px;
+  border-radius: 999px;
+  border: 0.5px solid var(--bord);
+  background: var(--fond-doux);
+  flex: none;
+}
+.segments-curseur {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  border-radius: 999px;
+  background: var(--fond-appuye);
+  border: 0.5px solid var(--bord-fort);
+  transition: transform 0.32s var(--ressort), width 0.32s var(--ressort);
+  pointer-events: none;
+}
+/* Premier placement du curseur : il doit apparaître sous la bonne option, pas
+   y glisser depuis la gauche. compte.js retire la classe juste après. */
+.segments-curseur.sans-transition { transition: none; }
+.segment {
+  position: relative;
+  z-index: 1;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texte-4);
+  font-family: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.segment:hover { color: var(--texte-2); }
+.segment[aria-checked="true"] { color: var(--texte-0); }
+
+/* Invitation à se connecter, quand personne ne l'est. */
+.compte-vide { text-align: center; padding: 1rem 0 0.5rem; }
+.compte-vide-icone {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fond-doux);
+  border: 0.5px solid var(--bord);
+  font-size: 24px;
+}
+.compte-vide p { color: var(--texte-5); font-size: 14.5px; line-height: 1.6; margin-bottom: 1.5rem; }
+.compte-liens { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.compte-liens .btn { width: auto; padding: 0 22px; margin-top: 0; }
+
+/* ============================================================
+   Révélation au défilement
+   ------------------------------------------------------------
+   La classe .reveal est posée par animations.js et non dans le HTML : sans
+   JavaScript, rien n'est masqué et la page reste entièrement lisible.
+   ============================================================ */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease, transform 0.7s var(--ressort);
+  transition-delay: var(--reveal-delai, 0s);
+  will-change: opacity, transform;
+}
+/* Une fois révélé, l'élément ne bouge plus : garder will-change coûterait une
+   couche de composition permanente pour rien. */
+.reveal.vu { opacity: 1; transform: none; will-change: auto; }
+
+/* Entrée du hero au chargement, en cascade.
+   Écrite en CSS et non posée par animations.js : ce script s'exécute au
+   DOMContentLoaded, donc potentiellement après la première peinture. Le hero
+   serait alors affiché, puis remis à zéro, puis réanimé — un clignotement. Une
+   animation CSS, elle, est prise en compte dès la première image. */
+.hero > * { animation: entreeHaut 0.75s var(--ressort) both; }
+.hero > *:nth-child(1) { animation-delay: 0s; }
+.hero > *:nth-child(2) { animation-delay: 0.09s; }
+.hero > *:nth-child(3) { animation-delay: 0.18s; }
+.hero > *:nth-child(4) { animation-delay: 0.27s; }
+.hero > *:nth-child(5) { animation-delay: 0.36s; }
+.hero > *:nth-child(6) { animation-delay: 0.45s; }
+@keyframes entreeHaut {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   Adaptations écran
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .features-grid--three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .features-grid--four, .features-grid--three { grid-template-columns: 1fr; }
+  .nav-links { gap: 1rem; }
+  .signup-panel {
+    top: 50%;
+    left: 50%;
+  }
+  /* Le prénom sort du bouton de compte : l'avatar suffit à l'identifier. */
+  .compte-bouton .compte-bouton-nom { display: none; }
+  .compte-menu { min-width: 13.5rem; }
+  .reglage { flex-direction: column; align-items: flex-start; }
+}
+
+/* ============================================================
+   Mouvement réduit
+   ------------------------------------------------------------
+   Deux déclencheurs : le réglage du système, et le choix explicite dans
+   /compte (attribut posé par preferences.js). Le premier doit fonctionner
+   même si le JavaScript ne s'exécute pas, d'où les deux blocs.
+   ============================================================ */
+
+:root[data-animations="reduites"] *,
+:root[data-animations="reduites"] *::before,
+:root[data-animations="reduites"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  animation-delay: 0s !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+:root[data-animations="reduites"] .reveal,
+:root[data-animations="reduites"] .hero > * {
+  opacity: 1;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .chat-welcome { animation: none; }
-  .chat-welcome.hiding { transition: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal, .hero > * { opacity: 1; transform: none; }
 }

@@ -1,5 +1,6 @@
 import os
 import secrets
+from datetime import timedelta
 
 import requests
 from authlib.integrations.flask_client import OAuth
@@ -7,7 +8,10 @@ from authlib.integrations.base_client import OAuthError
 from dotenv import load_dotenv
 from flask import (Flask, abort, jsonify, redirect, request, send_from_directory,
                    session, url_for)
+from werkzeug.middleware.proxy_fix import ProxyFix
 
+import comptes
+import conversations as conv
 from ia_en_python import bot, demarrer_quiz, repondre_quiz, signaler_reponse_inutile
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
@@ -24,6 +28,11 @@ FICHIERS_PUBLICS = frozenset({
     "style.css",
     "script.js",
     "chat.js",
+    "compte.js",
+    # Chargé en tête de chaque page, avant la peinture, pour poser le thème.
+    "preferences.js",
+    "nav-compte.js",
+    "animations.js",
     "ChatPY_logo.PNG",
     "perso.JPG",
     "Persone professionelle.jpg",
@@ -31,11 +40,40 @@ FICHIERS_PUBLICS = frozenset({
 
 app = Flask(__name__, static_folder=None)
 
+# ── Derrière un reverse proxy (nginx, Caddy, plateforme d'hébergement) ───────
+# Sans ça, Flask ne voit que la connexion interne du proxy : url_for(...,
+# _external=True) fabrique « http://127.0.0.1:5001/... » au lieu du vrai
+# domaine, et les deux flows OAuth échouent sur un redirect_uri_mismatch.
+#
+# Désactivé par défaut, et ce n'est pas de la prudence excessive : ces en-têtes
+# X-Forwarded-* sont déclaratives. Sans proxy devant pour les réécrire,
+# n'importe quel visiteur peut annoncer « X-Forwarded-Host: site-pirate.fr » et
+# détourner la redirection OAuth vers son domaine. On ne les croit donc que si
+# l'exploitant affirme qu'un proxy les contrôle, en disant combien il y en a.
+_PROXIES_DECLARES = os.environ.get("CHATPY_PROXIES", "0").strip()
+try:
+    NB_PROXIES = max(0, int(_PROXIES_DECLARES or "0"))
+except ValueError:
+    NB_PROXIES = 0
+if NB_PROXIES:
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=NB_PROXIES, x_proto=NB_PROXIES, x_host=NB_PROXIES, x_port=NB_PROXIES,
+    )
+
 # Signe le cookie de session, qui porte l'état du quiz et l'utilisateur connecté.
 # Sans clé fixe, chaque redémarrage du serveur invalide les quiz en cours et
 # déconnecte tout le monde — acceptable en local, à définir en production.
 CHATPY_SECRET_KEY = os.environ.get("CHATPY_SECRET_KEY", "").strip()
 app.secret_key = CHATPY_SECRET_KEY or secrets.token_hex(32)
+if not CHATPY_SECRET_KEY:
+    # Une clé tirée au sort n'est pas un défaut de sécurité — au contraire, elle
+    # invalide tout au redémarrage. Mais depuis que les comptes par mot de passe
+    # existent, quelqu'un peut s'inscrire puis se retrouver déconnecté au
+    # prochain lancement sans comprendre pourquoi : mieux vaut le dire.
+    print("⚠️  CHATPY_SECRET_KEY absente : une clé aléatoire est générée à chaque "
+          "démarrage.\n    Les comptes restent enregistrés, mais tout le monde "
+          "est déconnecté au redémarrage.")
 
 app.config.update(
     # Le cookie porte une identité : le JavaScript n'a aucune raison d'y toucher.
@@ -47,6 +85,11 @@ app.config.update(
     # En https uniquement : à 1 en local (http), le navigateur refuserait le
     # cookie et la connexion ne tiendrait jamais.
     SESSION_COOKIE_SECURE=os.environ.get("CHATPY_COOKIE_SECURE") == "1",
+    # Durée du cookie quand « rester connecté » est coché. Proche du défaut de
+    # Flask (31 jours), mais écrite ici pour être visible et réglable : c'est
+    # la seule valeur qui décide combien de temps une machine partagée reste
+    # connectée.
+    PERMANENT_SESSION_LIFETIME=timedelta(days=30),
 )
 
 # ── OAuth Google et GitHub ───────────────────────────────────────────────────
@@ -235,6 +278,68 @@ def auth_github_callback():
     return redirect("/?connexion=ok")
 
 
+# ── Comptes par email et mot de passe ────────────────────────────────────────
+# Troisième moyen de connexion, toujours disponible : contrairement à Google et
+# GitHub, il ne demande aucun identifiant à configurer. Voir comptes.py pour ce
+# qu'il ne fait pas (vérification d'adresse, mot de passe oublié) et pourquoi.
+
+
+def _ouvrir_session(utilisateur, rester_connecte=False):
+    """Installe l'identité dans la session.
+
+    session.clear() d'abord : un quiz en cours appartenait à la personne
+    précédente, et le laisser en place ferait noter ses réponses au nouveau venu.
+    """
+    session.clear()
+    session["utilisateur"] = utilisateur
+    # Sans « permanent », Flask pose un cookie que le navigateur jette à sa
+    # fermeture. C'est le défaut voulu ; la case à cocher demande l'inverse.
+    session.permanent = rester_connecte
+
+
+def _corps_json():
+    corps = request.get_json(silent=True)
+    if not isinstance(corps, dict):
+        return None, (jsonify({"error": "Corps de requête JSON invalide."}), 400)
+    return corps, None
+
+
+@app.route("/auth/inscription", methods=["POST"])
+def auth_inscription():
+    """Crée un compte local et ouvre la session dans la foulée."""
+    corps, erreur = _corps_json()
+    if erreur:
+        return erreur
+
+    utilisateur, motif = comptes.creer(
+        corps.get("email"),
+        corps.get("mot_de_passe"),
+        corps.get("confirmation"),
+        corps.get("nom"),
+    )
+    if motif:
+        return jsonify({"error": motif}), 400
+
+    _ouvrir_session(utilisateur, bool(corps.get("rester_connecte")))
+    return jsonify({"ok": True, "nom": utilisateur["nom"]})
+
+
+@app.route("/auth/connexion", methods=["POST"])
+def auth_connexion():
+    corps, erreur = _corps_json()
+    if erreur:
+        return erreur
+
+    utilisateur, motif = comptes.verifier(corps.get("email"), corps.get("mot_de_passe"))
+    if motif:
+        # 401 et non 400 : la requête est bien formée, c'est l'authentification
+        # qui est refusée.
+        return jsonify({"error": motif}), 401
+
+    _ouvrir_session(utilisateur, bool(corps.get("rester_connecte")))
+    return jsonify({"ok": True, "nom": utilisateur["nom"]})
+
+
 @app.route("/auth/logout", methods=["POST"])
 def auth_logout():
     """Ferme la session. POST seulement : en GET, un <img> suffirait à
@@ -265,6 +370,18 @@ def api_moi():
 @app.route("/chat")
 def chat_page():
     return send_from_directory(_DIR, "chat.html")
+
+
+@app.route("/compte")
+def compte_page():
+    """Espace utilisateur : profil de connexion et réglages d'affichage.
+
+    Servie à tout le monde et non réservée aux connectés : les réglages
+    d'affichage (thème, animations, taille du texte) vivent dans le navigateur
+    et n'ont rien à voir avec un compte. C'est compte.js qui adapte la seule
+    carte concernée selon ce que répond /api/moi.
+    """
+    return send_from_directory(_DIR, "compte.html")
 
 
 @app.route("/<path:nom>")
@@ -345,6 +462,88 @@ def api_feedback():
     if request.get_json(silent=True).get("utile") is False:
         signaler_reponse_inutile(question)
     return jsonify({"ok": True})
+
+
+# ── Historique des conversations ─────────────────────────────────────────────
+# Réservé aux comptes connectés : sans compte, il n'existe aucun endroit stable
+# où ranger des conversations côté serveur, et chat.js retombe sur le
+# localStorage du navigateur — le comportement d'avant.
+
+
+def _cle_ou_401():
+    """Clé de rangement du compte connecté, ou une réponse 401.
+
+    Elle est dérivée de la session et *jamais* d'un paramètre de requête :
+    accepter un identifiant fourni par le client reviendrait à laisser
+    n'importe qui lire l'historique de n'importe qui.
+    """
+    utilisateur = session.get("utilisateur")
+    if not utilisateur:
+        return None, (jsonify({"error": "Connexion requise."}), 401)
+    return conv.cle_utilisateur(utilisateur), None
+
+
+def _introuvable():
+    """404 en JSON : cette API n'a aucune raison de répondre du HTML."""
+    return jsonify({"error": "Conversation introuvable."}), 404
+
+
+@app.route("/api/conversations")
+def api_conversations_liste():
+    """Résumés des conversations, sans le corps des messages. `q` filtre."""
+    cle, erreur = _cle_ou_401()
+    if erreur:
+        return erreur
+    recherche = request.args.get("q", "")[:200]
+    return jsonify({"conversations": conv.lister(cle, recherche)})
+
+
+@app.route("/api/conversations/<identifiant>", methods=["GET"])
+def api_conversation_lire(identifiant):
+    cle, erreur = _cle_ou_401()
+    if erreur:
+        return erreur
+    conversation = conv.obtenir(cle, identifiant)
+    return jsonify(conversation) if conversation else _introuvable()
+
+
+@app.route("/api/conversations/<identifiant>", methods=["PUT"])
+def api_conversation_enregistrer(identifiant):
+    """Crée ou remplace une conversation entière."""
+    cle, erreur = _cle_ou_401()
+    if erreur:
+        return erreur
+
+    corps = request.get_json(silent=True)
+    if not isinstance(corps, dict):
+        return jsonify({"error": "Corps de requête JSON invalide."}), 400
+
+    # L'identifiant de l'URL fait foi. Un corps qui en porterait un autre
+    # écrirait ailleurs que là où le client croit écrire.
+    resume, motif = conv.enregistrer(cle, {**corps, "id": identifiant})
+    return (jsonify({"error": motif}), 400) if motif else jsonify(resume)
+
+
+@app.route("/api/conversations/<identifiant>", methods=["PATCH"])
+def api_conversation_renommer(identifiant):
+    cle, erreur = _cle_ou_401()
+    if erreur:
+        return erreur
+
+    titre, erreur_champ = _lire_message("titre")
+    if erreur_champ:
+        return erreur_champ
+
+    resume = conv.renommer(cle, identifiant, titre)
+    return jsonify(resume) if resume else _introuvable()
+
+
+@app.route("/api/conversations/<identifiant>", methods=["DELETE"])
+def api_conversation_supprimer(identifiant):
+    cle, erreur = _cle_ou_401()
+    if erreur:
+        return erreur
+    return jsonify({"ok": True}) if conv.supprimer(cle, identifiant) else _introuvable()
 
 
 if __name__ == "__main__":

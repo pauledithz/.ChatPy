@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>ChatPy — Chat</title>
   <link rel="icon" type="image/png" href="ChatPY_logo.PNG">
+  <!-- Chargé sans defer, avant tout contenu : le thème doit être posé sur <html>
+       avant la première peinture, sinon la page clignote au chargement. -->
+  <script src="preferences.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&display=swap">
@@ -14,24 +17,53 @@
 <div class="page-shell chat-page-shell">
 
   <nav class="nav">
-    <div class="nav-logo"><img class="nav-logo-img" src="ChatPY_logo.PNG" alt="" width="54" height="54"> ChatPy</div>
+    <a class="nav-logo" href="/"><img class="nav-logo-img" src="ChatPY_logo.PNG" alt="" width="54" height="54"> ChatPy</a>
     <div class="nav-links">
-      <a href="/">← Retour à l'accueil</a>
+      <a href="/">Accueil</a>
+      <a href="/compte">Mon compte</a>
+    </div>
+    <!-- nav-compte.js insère la bascule de thème, puis remplace ce lien par le
+         menu du compte si /api/moi signale quelqu'un de connecté. -->
+    <div class="nav-compte" id="navCompte">
+      <a class="nav-cta" href="/?inscription=1">Se connecter</a>
     </div>
   </nav>
 
-  <section class="chat-preview chat-preview--page">
+  <div class="chat-layout" id="chatLayout">
+
+    <!-- Historique. Rempli par chat.js depuis /api/conversations quand on est
+         connecté, depuis le localStorage sinon. -->
+    <aside class="historique" id="historique" aria-label="Historique des conversations">
+      <div class="historique-entete">
+        <button type="button" class="historique-nouvelle" id="nouvelleBtn">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>
+          Nouvelle conversation
+        </button>
+        <div class="historique-recherche">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg>
+          <input type="search" id="rechercheInput" placeholder="Rechercher…"
+                 autocomplete="off" aria-label="Rechercher dans les conversations">
+        </div>
+      </div>
+      <div class="historique-liste" id="historiqueListe"></div>
+      <p class="historique-note" id="historiqueNote"></p>
+    </aside>
+
+    <!-- Voile du tiroir sur petit écran : un clic dessus referme l'historique. -->
+    <div class="historique-voile" id="historiqueVoile" hidden></div>
+
+    <section class="chat-preview chat-preview--page">
     <div class="chat-header">
+      <button type="button" class="historique-bascule" id="historiqueBascule"
+              aria-expanded="true" aria-controls="historique" aria-label="Masquer l'historique">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
       <div class="chat-avatar"><img src="ChatPY_logo.PNG" alt="ChatPy" width="44" height="44" decoding="async"></div>
       <div class="chat-header-info">
-        <div class="chat-name">ChatPy</div>
+        <div class="chat-name" id="chatTitre">ChatPy</div>
         <div class="chat-status"><span class="chat-status-dot"></span> En ligne</div>
       </div>
       <span class="chat-quiz-badge" id="quizBadge" hidden>🎯 Quiz en cours</span>
-      <button type="button" class="chat-reset" id="resetBtn" title="Nouvelle conversation" hidden>
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5V5H11"/></svg>
-        <span>Nouvelle conversation</span>
-      </button>
     </div>
     <div class="chat-body" id="chatBody">
       <div class="chat-welcome" id="chatWelcome">
@@ -40,6 +72,7 @@
         <p class="chat-welcome-subtitle">
           Posez-moi une question sur Python, ou choisissez une suggestion ci-dessous.
         </p>
+        <!-- Personnalisé par chat.js une fois /api/moi connu : « Bonjour Paul 👋 ». -->
         <div class="chat-suggestions" id="chatSuggestions">
           <button type="button" class="chat-chip" data-send="C'est quoi une liste en Python ?">C'est quoi une liste ?</button>
           <button type="button" class="chat-chip" data-send="Comment créer une fonction ?">Comment créer une fonction ?</button>
@@ -55,9 +88,11 @@
         <svg viewBox="0 0 16 16"><path d="M2 2l12 6-12 6V9.5l8-1.5-8-1.5V2z"/></svg>
       </button>
     </form>
-  </section>
+    </section>
 
+  </div>
 </div>
+<script src="nav-compte.js"></script>
 <script src="chat.js"></script>
 </body>
 </html>

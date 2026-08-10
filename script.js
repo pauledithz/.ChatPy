@@ -187,11 +187,18 @@ function openSignupModal() {
   if (mainContent) mainContent.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = 'hidden';
 
-  // focus the first focusable control in the modal (fallback to panel)
-  const focusable = signupModal.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])');
-  const focusableArr = Array.prototype.slice.call(focusable).filter(el => el.offsetParent !== null);
-  if (focusableArr.length) {
-    focusableArr[0].focus();
+  // Recalculée à chaque Tab et non mise en cache à l'ouverture : basculer vers
+  // l'inscription fait apparaître deux champs, qu'une liste figée ignorerait.
+  function focusablesVisibles() {
+    const tous = signupModal.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])');
+    return Array.prototype.slice.call(tous).filter((el) => el.offsetParent !== null);
+  }
+
+  // Le premier champ utile plutôt que la croix de fermeture : on ouvre ce
+  // panneau pour s'y connecter, pas pour en sortir.
+  const premier = signupModal.querySelector('#champEmail') || focusablesVisibles()[0];
+  if (premier) {
+    premier.focus();
   } else if (signupPanel) {
     signupPanel.focus();
   }
@@ -203,6 +210,7 @@ function openSignupModal() {
       return;
     }
     if (e.key === 'Tab') {
+      const focusableArr = focusablesVisibles();
       if (focusableArr.length === 0) {
         e.preventDefault();
         return;
@@ -240,9 +248,29 @@ function closeSignupModal() {
   }
 }
 
+/* Les boutons d'appel à l'action mènent au modal d'inscription… tant que
+   personne n'est connecté. Une fois la session ouverte, proposer de créer un
+   compte n'a plus de sens : ils deviennent une entrée vers le chat.
+   Le drapeau est lu au moment du clic et non à l'abonnement, parce que
+   /api/moi répond après que ces écouteurs sont posés. */
+let compteConnecte = false;
+
 document.querySelectorAll('[data-action="start"]').forEach((button) => {
-  button.addEventListener('click', openSignupModal);
+  button.addEventListener('click', () => {
+    if (compteConnecte) window.location.href = '/chat';
+    else openSignupModal();
+  });
 });
+
+function adapterAppelsALAction() {
+  compteConnecte = true;
+  document.querySelectorAll('[data-action="start"]').forEach((button) => {
+    // Sans libellé de rechange, on laisse le texte d'origine : seul le
+    // comportement change. C'est le cas du bouton de la barre de navigation,
+    // que nav-compte.js remplace de toute façon par le menu du compte.
+    if (button.dataset.labelConnecte) button.textContent = button.dataset.labelConnecte;
+  });
+}
 
 document.querySelectorAll('[data-action="close-signup"]').forEach((button) => {
   button.addEventListener('click', closeSignupModal);
@@ -271,63 +299,128 @@ document.querySelectorAll('[data-action="demo"]').forEach((button) => {
 
 setTimeout(runConversation, 800);
 
-/* ── Compte connecté (Google ou GitHub) ───────────────────────────────────
-   Le serveur est seul à savoir qui est connecté : l'identité vit dans un
-   cookie signé et HttpOnly, donc illisible depuis ici. On la demande. */
+/* ── Retour des flows OAuth et ouverture à la demande ─────────────────────
+   L'affichage du compte lui-même (avatar, menu, déconnexion) vit dans
+   nav-compte.js, partagé avec /chat et /compte. Ne reste ici que ce qui est
+   propre à la page d'accueil : le modal d'inscription. */
 
-const navCompte = document.getElementById('navCompte');
+/* ── Connexion et inscription par email ───────────────────────────────────
+   Le même formulaire sert aux deux : les champs propres à l'inscription (nom,
+   confirmation) sont masqués par la classe form--connexion. Les deux routes
+   répondent en JSON et ouvrent la session côté serveur. */
 
-async function seDeconnecter() {
-  // POST et non GET : voir le commentaire de /auth/logout dans app.py.
-  await fetch('/auth/logout', { method: 'POST' });
-  window.location.reload();
+const formCompte = document.getElementById('formCompte');
+const champNom = document.getElementById('champNom');
+const champEmail = document.getElementById('champEmail');
+const champMotDePasse = document.getElementById('champMotDePasse');
+const champConfirmation = document.getElementById('champConfirmation');
+const champRester = document.getElementById('champRester');
+const formErreur = document.getElementById('formErreur');
+const boutonSoumettre = document.getElementById('boutonSoumettre');
+const lienBascule = document.getElementById('lienBascule');
+const texteBascule = document.getElementById('texteBascule');
+const lienOubli = document.getElementById('lienOubli');
+const signupSubtitle = document.getElementById('signupSubtitle');
+const signupTitle = document.getElementById('signupTitle');
+
+let modeInscription = false;
+
+function afficherMessage(texte, succes = false) {
+  if (!formErreur) return;
+  formErreur.textContent = texte;
+  formErreur.classList.toggle('form-erreur--succes', succes);
+  formErreur.hidden = false;
 }
 
-function initialeAvatar(nom) {
-  // Repli quand la photo du compte est absente ou refuse de se charger : mieux
-  // vaut une pastille avec l'initiale qu'une icône d'image cassée.
-  const pastille = document.createElement('span');
-  pastille.className = 'nav-photo nav-initiale';
-  pastille.setAttribute('aria-hidden', 'true');
-  pastille.textContent = (nom || '?').trim().charAt(0).toUpperCase() || '?';
-  return pastille;
+function effacerMessage() {
+  if (formErreur) formErreur.hidden = true;
 }
 
-function photoAvatar(url, nom) {
-  const image = document.createElement('img');
-  image.className = 'nav-photo';
-  image.alt = '';
-  image.width = 28;
-  image.height = 28;
-  image.decoding = 'async';
-  // Sans ça, le CDN de Google (et celui de GitHub) reçoit notre origine en
-  // Referer et répond une erreur au lieu de l'image : l'avatar s'affiche cassé.
-  image.referrerPolicy = 'no-referrer';
-  image.addEventListener('error', () => {
-    image.replaceWith(initialeAvatar(nom));
+function appliquerMode() {
+  formCompte.classList.toggle('form--connexion', !modeInscription);
+  signupTitle.textContent = modeInscription ? 'Créer votre compte ChatPy' : 'Se connecter à ChatPy';
+  signupSubtitle.textContent = modeInscription
+    ? 'Un email et un mot de passe suffisent — aucune vérification par courriel.'
+    : 'Retrouvez vos conversations et votre progression.';
+  boutonSoumettre.textContent = modeInscription ? 'Créer mon compte' : 'Se connecter';
+  texteBascule.textContent = modeInscription ? 'Vous avez déjà un compte ?' : "Vous n'avez pas de compte ?";
+  lienBascule.textContent = modeInscription ? 'Se connecter' : "S'inscrire";
+  // Le gestionnaire de mots de passe du navigateur doit savoir s'il s'agit
+  // d'en proposer un nouveau ou de remplir l'existant.
+  champMotDePasse.autocomplete = modeInscription ? 'new-password' : 'current-password';
+  effacerMessage();
+}
+
+function basculerMode() {
+  modeInscription = !modeInscription;
+  appliquerMode();
+  (modeInscription ? champNom : champEmail).focus();
+}
+
+if (formCompte) {
+  lienBascule.addEventListener('click', basculerMode);
+  lienBascule.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      basculerMode();
+    }
   });
-  image.src = url;
-  return image;
-}
 
-function afficherCompte(moi) {
-  if (!navCompte || !moi.connecte) return;
+  // Il n'y a pas de réinitialisation possible : ce serveur n'envoie aucun
+  // email. Le dire franchement vaut mieux qu'un lien qui ne fait rien.
+  const expliquerOubli = () => afficherMessage(
+    "Ce serveur n'envoie pas d'emails : il n'y a donc pas de réinitialisation "
+    + 'de mot de passe. Vous pouvez créer un nouveau compte, ou vous connecter '
+    + 'avec Google ou GitHub.');
+  lienOubli.addEventListener('click', expliquerOubli);
+  lienOubli.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      expliquerOubli();
+    }
+  });
 
-  const deconnexion = document.createElement('button');
-  deconnexion.type = 'button';
-  deconnexion.className = 'nav-deconnexion';
-  deconnexion.textContent = 'Se déconnecter';
-  deconnexion.addEventListener('click', seDeconnecter);
+  formCompte.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    effacerMessage();
 
-  const nom = document.createElement('span');
-  nom.className = 'nav-nom';
-  nom.textContent = moi.nom;
+    const corps = {
+      email: champEmail.value,
+      mot_de_passe: champMotDePasse.value,
+      rester_connecte: champRester.checked
+    };
+    if (modeInscription) {
+      corps.nom = champNom.value;
+      corps.confirmation = champConfirmation.value;
+    }
 
-  navCompte.replaceChildren(
-    moi.photo ? photoAvatar(moi.photo, moi.nom) : initialeAvatar(moi.nom),
-    nom,
-    deconnexion,
-  );
+    boutonSoumettre.disabled = true;
+    try {
+      const reponse = await fetch(modeInscription ? '/auth/inscription' : '/auth/connexion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(corps)
+      });
+      // Le serveur explique lui-même ce qui cloche (adresse invalide, mot de
+      // passe trop court, trop de tentatives) : on relaie son message plutôt
+      // que d'en inventer un moins précis.
+      const donnees = await reponse.json().catch(() => ({}));
+      if (!reponse.ok) {
+        afficherMessage(donnees.error || "La connexion n'a pas abouti.");
+        return;
+      }
+      // Rechargement complet plutôt qu'une mise à jour à la main : la barre de
+      // navigation, les boutons d'appel à l'action et le chat se construisent
+      // tous à partir de /api/moi, qu'ils réinterrogeront au chargement.
+      window.location.reload();
+    } catch (e) {
+      afficherMessage('Serveur injoignable. Réessayez dans un instant.');
+    } finally {
+      boutonSoumettre.disabled = false;
+    }
+  });
+
+  appliquerMode();
 }
 
 function signalerRetourOAuth() {
@@ -345,15 +438,27 @@ function signalerRetourOAuth() {
   window.history.replaceState({}, '', window.location.pathname);
 }
 
-fetch('/api/moi')
-  .then((reponse) => (reponse.ok ? reponse.json() : null))
-  .then((moi) => {
-    if (!moi) return;
-    afficherCompte(moi);
-    if (moi.connecte) closeSignupModal();
-  })
-  // Page ouverte en file://, sans serveur Flask : le reste du site marche
-  // quand même, seul le compte est indisponible.
-  .catch(() => {});
+function ouvrirDepuisAutrePage() {
+  // Le modal n'existe que sur cette page : les liens « Se connecter » de /chat
+  // et /compte y renvoient avec ?inscription=1 plutôt que de le dupliquer.
+  if (new URLSearchParams(window.location.search).get('inscription') !== '1') return;
+  openSignupModal();
+  window.history.replaceState({}, '', window.location.pathname);
+}
+
+// nav-compte.js a déjà lancé la requête : on réutilise sa promesse au lieu
+// d'interroger /api/moi une seconde fois.
+if (window.ChatPyMoi) {
+  window.ChatPyMoi.then((moi) => {
+    if (moi.connecte) {
+      closeSignupModal();
+      adapterAppelsALAction();
+    } else {
+      ouvrirDepuisAutrePage();
+    }
+  });
+} else {
+  ouvrirDepuisAutrePage();
+}
 
 signalerRetourOAuth();

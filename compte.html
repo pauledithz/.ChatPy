@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ChatPy — Mon compte</title>
+  <link rel="icon" type="image/png" href="ChatPY_logo.PNG">
+  <!-- Chargé sans defer, avant tout contenu : le thème doit être posé sur <html>
+       avant la première peinture, sinon la page clignote. -->
+  <script src="preferences.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page-shell">
+
+  <nav class="nav">
+    <a class="nav-logo" href="/"><img class="nav-logo-img" src="ChatPY_logo.PNG" alt="" width="54" height="54"> ChatPy</a>
+    <div class="nav-links">
+      <a href="/">Accueil</a>
+      <a href="/chat">Chat</a>
+    </div>
+    <!-- nav-compte.js insère la bascule de thème, puis remplace le lien de
+         connexion par le menu du compte si quelqu'un est connecté. -->
+    <div class="nav-compte" id="navCompte">
+      <a class="nav-cta" href="/?inscription=1">Se connecter</a>
+    </div>
+  </nav>
+
+  <main class="compte-page">
+    <h1 class="compte-titre">Mon compte</h1>
+    <p class="compte-sous-titre">
+      Votre identité de connexion et vos réglages d'affichage.
+    </p>
+
+    <!-- Rempli par compte.js à partir de /api/moi : profil si connecté,
+         invitation à se connecter sinon. -->
+    <section class="carte" id="carteIdentite">
+      <div class="carte-titre">Identité</div>
+      <p class="reglage-aide" id="identiteChargement">Chargement…</p>
+    </section>
+
+    <section class="carte">
+      <div class="carte-titre">Affichage</div>
+
+      <div class="reglage">
+        <div>
+          <div class="reglage-nom">Thème</div>
+          <p class="reglage-aide">
+            « Auto » suit le réglage clair/sombre de votre système d'exploitation.
+          </p>
+        </div>
+        <div class="segments" role="radiogroup" aria-label="Thème" data-pref="theme">
+          <span class="segments-curseur sans-transition" aria-hidden="true"></span>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="auto">Auto</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="clair">Clair</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="sombre">Sombre</button>
+        </div>
+      </div>
+
+      <div class="reglage">
+        <div>
+          <div class="reglage-nom">Animations</div>
+          <p class="reglage-aide">
+            « Réduites » supprime les apparitions au défilement et les transitions.
+            Le réglage « mouvement réduit » de votre système est respecté même en mode auto.
+          </p>
+        </div>
+        <div class="segments" role="radiogroup" aria-label="Animations" data-pref="animations">
+          <span class="segments-curseur sans-transition" aria-hidden="true"></span>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="auto">Complètes</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="reduites">Réduites</button>
+        </div>
+      </div>
+
+      <div class="reglage">
+        <div>
+          <div class="reglage-nom">Taille du texte des conversations</div>
+          <p class="reglage-aide">
+            S'applique aux messages et au champ de saisie de la page de chat.
+          </p>
+        </div>
+        <div class="segments" role="radiogroup" aria-label="Taille du texte" data-pref="taille">
+          <span class="segments-curseur sans-transition" aria-hidden="true"></span>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="petite">Petite</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="normale">Normale</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="grande">Grande</button>
+        </div>
+      </div>
+
+      <p class="reglage-aide reglage-note">
+        Ces réglages sont enregistrés dans ce navigateur, sur cet appareil. Ils
+        fonctionnent que vous soyez connecté ou non.
+      </p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-logo">ChatPy</div>
+    <p>© 2026 ChatPy — Tous droits réservés</p>
+  </footer>
+</div>
+
+<script src="nav-compte.js"></script>
+<script src="compte.js"></script>
+</body>
+</html>

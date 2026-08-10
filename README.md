@@ -48,9 +48,15 @@ Puis ouvrez `http://localhost:5001` (la landing page) ou directement `http://loc
 
 Le backend appelle la même logique que le CLI (`bot.traiter_message()` dans `ia_en_python.py`), donc l'historique (`.chatpy_history.json`) est partagé entre le CLI et le web. Le lien "Chat" est visible dans la nav de la landing page et accessible sans connexion : se connecter n'est jamais obligatoire pour discuter avec le bot.
 
+### Créer un compte par email (aucune configuration)
+
+Le formulaire du modal fonctionne : email + mot de passe, avec bascule entre connexion et inscription. Contrairement à Google et GitHub, il ne demande aucun identifiant à configurer — il marche sur un clone frais. Les comptes sont stockés dans `comptes.json` (haché en scrypt, jamais en clair, jamais committé).
+
+Deux limites assumées, dues à l'absence de serveur d'envoi d'emails : **les adresses ne sont pas vérifiées**, et **il n'y a pas de réinitialisation de mot de passe** — d'où la double saisie à l'inscription.
+
 ### Connexion Google et GitHub (optionnelle)
 
-Les deux boutons du modal d'inscription fonctionnent (les autres — email/mot de passe, Apple, Yahoo — restent décoratifs). Chacun demande une paire d'identifiants dans `.env` ; copiez le modèle et remplissez ce dont vous avez besoin :
+Ces deux boutons fonctionnent aussi (Apple et Yahoo restent décoratifs). Chacun demande une paire d'identifiants dans `.env` ; copiez le modèle et remplissez ce dont vous avez besoin :
 
 ```bash
 cp .env.example .env
@@ -64,7 +70,43 @@ python3 -c "import secrets; print(secrets.token_hex(32))"   # CHATPY_SECRET_KEY
 
 L'URL de redirection doit être identique au caractère près, sinon le fournisseur refuse avec `redirect_uri_mismatch`. Tant qu'une paire reste vide, la route `/auth/<fournisseur>` correspondante répond 503 et le reste du site fonctionne normalement : on peut n'en configurer qu'un, ou aucun.
 
-La connexion ne vit que dans le cookie de session : il n'y a pas de base d'utilisateurs, et l'historique reste commun à tous les visiteurs.
+La connexion vit dans le cookie de session. Une fois connecté, vos conversations sont archivées côté serveur (`conversations.json`, cloisonné par compte) et vous les retrouvez depuis n'importe quel appareil ; sans compte, elles restent dans votre navigateur. Le journal `.chatpy_history.json`, lui, alimente le contexte du bot et reste commun à tous.
+
+---
+
+## Mise en ligne
+
+`python3 app.py` lance le **serveur de développement** de Werkzeug : il n'est ni conçu ni durci pour être exposé sur Internet. En production, utilisez le `Procfile` fourni :
+
+```bash
+gunicorn --workers 1 --threads 8 --timeout 60 --bind 0.0.0.0:$PORT app:app
+```
+
+### Un seul worker, ce n'est pas négociable
+
+Toute la persistance de ChatPy repose sur des fichiers JSON protégés par des `threading.Lock`. Ces verrous fonctionnent entre **fils d'exécution**, pas entre **processus**. Avec `--workers 4`, deux processus peuvent lire, modifier et réécrire `comptes.json` en même temps : le second écrase le premier, et un compte disparaît. Le blocage anti-force-brute serait lui aussi compté par worker (5 tentatives × 4 workers = 20).
+
+`--workers 1 --threads 8` conserve toutes les hypothèses du code tout en servant plusieurs visiteurs à la fois. Pour aller au-delà, il faudrait remplacer les fichiers JSON par une vraie base de données.
+
+> `gunicorn` ne tourne pas sous Windows. Y utiliser `waitress` : `waitress-serve --threads=8 --port=5001 app:app`.
+
+### Réglages `.env` en production
+
+| Variable | Valeur | Pourquoi |
+|----------|--------|----------|
+| `CHATPY_SECRET_KEY` | une clé fixe | Sans elle, une clé aléatoire est tirée à chaque démarrage : tout le monde est déconnecté à chaque redéploiement |
+| `CHATPY_COOKIE_SECURE` | `1` | Réserve le cookie de session au HTTPS |
+| `CHATPY_DEBUG` | vide | Le debugger Werkzeug permet l'exécution de code arbitraire |
+| `CHATPY_PROXIES` | `1` derrière un proxy | Sinon les redirections OAuth pointent vers `127.0.0.1` |
+
+**HTTPS est obligatoire** : depuis l'ajout des comptes par mot de passe, ceux-ci circulent sur le réseau.
+
+`CHATPY_PROXIES` ne doit être renseigné **que** si un reverse proxy réécrit réellement les en-têtes `X-Forwarded-*`. Les activer sans proxy devant laisserait n'importe quel visiteur annoncer `X-Forwarded-Host: site-pirate.fr` et détourner la connexion OAuth vers son domaine. La plupart des hébergeurs (Render, Railway, Fly, Heroku) en ont un : `1`.
+
+### À faire aussi
+
+- **Déclarer les URL de redirection de production** dans la console Google Cloud et les réglages de l'OAuth App GitHub (`https://votre-domaine/auth/google/callback` et `.../auth/github/callback`). Celles de `localhost` ne fonctionneront pas en ligne.
+- **Sauvegarder `comptes.json`.** C'est l'unique copie des comptes, et il n'existe pas de « mot de passe oublié » : le perdre enferme définitivement les utilisateurs dehors. `conversations.json` mérite le même soin.
 
 ---
 
