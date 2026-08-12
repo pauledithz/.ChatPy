@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ChatPy is a Python FAQ chatbot, usable either as a CLI or through a Flask web backend, paired with a static landing page. It answers questions about Python using fuzzy string matching and a confidence score system. There is no database and no external dependencies beyond the Python standard library, except for Flask (only required for the web backend, not the CLI).
+ChatPy is a Python FAQ chatbot, usable either as a CLI or through a Flask web backend, paired with a static landing page. It answers questions about Python using fuzzy string matching and a confidence score system. There are no external dependencies beyond the Python standard library, except for Flask (only required for the web backend, not the CLI). The one database is SQLite through the stdlib `sqlite3` — it holds the user accounts and nothing else (see "The accounts database" below); every other store is a JSON file.
 
 ## Running the Project
 
@@ -46,9 +46,10 @@ See `lacunes.py` under Architecture below.
 python3 -m unittest test_chatpy -v
 python3 -m unittest tests.test_lacunes -v
 python3 -m unittest tests.test_i18n -v
+python3 -m unittest tests.test_base_donnees -v
 python3 -m unittest discover -v
 ```
-Covers normalization, the matching pipeline (typos, rephrasings, the opposite-meaning trap), the two suggestion sources, the gap journal's two counters, quiz scoring, the web quiz state machine, and persistence (atomic writes, history cap, corrupted-file handling). `tests/test_i18n.py` reads `i18n.js` as text (this repo has no JavaScript runtime) to check the translation catalogue: one translation per language per key, placeholders preserved, no key used but undeclared, and the French fallback still present in the HTML. Tests that write redirect the runtime files to a temp dir via `unittest.mock.patch` — they never touch the real `.chatpy_history.json`. Run them after any change to `ia_en_python.py`.
+Covers normalization, the matching pipeline (typos, rephrasings, the opposite-meaning trap), the two suggestion sources, the gap journal's two counters, quiz scoring, the web quiz state machine, and persistence (atomic writes, history cap, corrupted-file handling). `tests/test_i18n.py` reads `i18n.js` as text (this repo has no JavaScript runtime) to check the translation catalogue: one translation per language per key, placeholders preserved, no key used but undeclared, and the French fallback still present in the HTML. `tests/test_base_donnees.py` covers the accounts database: no plaintext password on disk, what a signup and a sign-in write, the schema's two guarantees (one local account per address, no local account without a hash), the one-shot import of the old `comptes.json`, and the fact that the database is never served. Tests that write redirect the runtime files to a temp dir via `unittest.mock.patch` — they never touch the real `.chatpy_history.json` nor the real `chatpy.db`. Run them after any change to `ia_en_python.py`.
 
 ## Architecture
 
@@ -58,7 +59,7 @@ Everything lives in `ia_en_python.py` — no imports outside the standard librar
 - `faq.json` — nested `{category: {question: answer}}`, loaded into `faq_categories`; flattened into `faq` and `norm_vers_original` (normalized question → original question) for lookups.
 - `aide_concepts.json` — keyed by topic slug (e.g. `"variable"`, `"fonction"`), each entry has `titre`, `mots_cles`, `definition`, a `niveaux` list (🟢 débutant / 🟡 intermédiaire / 🔴 avancé, each with a `code` sample), plus optional `erreurs_courantes` and `a_retenir`. Powers the `aide <sujet>` command via `_chercher_concept()` / `_formater_concept()`.
 - `.chatpy_history.json` — generated at runtime, persists conversation history across sessions (`ChatBot._charger_historique` / `_sauvegarder_historique`). Capped at `HISTORIQUE_MAX_MESSAGES` (oldest dropped), since the whole file is rewritten on every message. **That cap is a cost limit, not a comfort setting**: at ~220 bytes per entry, the former value of 1,000,000 meant rewriting 210 MB on every single message once full. It is 2,000 now (~450 KB). Truncating it costs nobody their conversations — those live in `conversations.json` or in the browser; this journal only feeds the bot's context.
-- `comptes.json` — generated at runtime, the email/password accounts: `{"<email>": {id, nom, email, empreinte, cree}}`, where `empreinte` is a scrypt hash and never a password. Git-ignored, and absent from `FICHIERS_PUBLICS` so it is never served.
+- `chatpy.db` — generated at runtime, the SQLite database holding **every account**, whatever the sign-in method (see "The accounts database"). Git-ignored, `chmod 600`, and absent from `FICHIERS_PUBLICS` so it is never served. It replaced `comptes.json`, which is imported once and renamed `comptes.json.repris`.
 - `conversations.json` — generated at runtime, the archived conversations of **logged-in users only**, keyed `{"<fournisseur>-<id>": [conversation, …]}`. Managed by `conversations.py`; see the history section below. Git-ignored, like every runtime file.
 - `questions_sans_reponse.json` — generated at runtime, records questions worth adding to `faq.json`, with two independent counters per entry: `occurrences` (bumped by `_logger_question_sans_reponse()` when a question fell through every matching stage) and `pouces_bas` (bumped by `signaler_reponse_inutile()` when a user thumbs-downs an answer in the web chat). The second one is the only way to spot a question that *did* match an FAQ entry — just not the right one. Both go through `_incrementer_journal()`; `_vaut_la_peine_d_etre_logguee()` filters out noise (single words, 5000-character pastes) so the journal only holds genuine FAQ gaps.
 
@@ -141,7 +142,7 @@ Request-body validation for both lives in `_lire_message()`.
 - Scope is `read:user user:email` — the broader `user` scope would also grant *write* access to the profile.
 - `GET /auth/github` and `GET /auth/github/callback`, mirroring the Google routes. The session entry carries `fournisseur: "google" | "github"`, since both providers number their accounts independently and nothing else would tell Google user 42 from GitHub user 42.
 
-**Email + password accounts (`comptes.py`).** The third sign-in method, and the only one that needs no configuration at all — it works on a fresh clone, unlike Google and GitHub. Accounts live in `comptes.json` as scrypt hashes via `werkzeug.security` (already a Flask dependency, so nothing was added to `requirements.txt`).
+**Email + password accounts (`comptes.py`).** The third sign-in method, and the only one that needs no configuration at all — it works on a fresh clone, unlike Google and GitHub. `comptes.py` decides *what* is acceptable (validation, hashing, lockout); `base_donnees.py` decides *where* it is written. Passwords are scrypt hashes via `werkzeug.security` (already a Flask dependency, so nothing was added to `requirements.txt`).
 - `POST /auth/inscription` — `{email, mot_de_passe, confirmation, nom, rester_connecte}` → creates the account and opens the session. `POST /auth/connexion` — same minus `confirmation`/`nom`. Both answer JSON so the modal never reloads the page to show an error.
 - **Two things it deliberately does not do, both for the same reason — there is no SMTP server:** addresses are never verified, and there is no password reset. That first point is a real asymmetry with Google and GitHub, whose unverified accounts are *rejected*; an address typed here proves nothing, which is why local accounts are tagged `fournisseur: "local"` — so a future privilege can require a verified one. The second point is why signup asks for the password twice: a typo would lock someone out permanently.
 - **Account enumeration is guarded on two channels.** Wrong password and unknown address return the byte-identical message, and an unknown address is still checked against a throwaway hash (`_empreinte_factice()`) so the response takes just as long — without it, an instant reply would say "nobody is registered here". Measured at 71 ms vs 72 ms.
@@ -164,6 +165,30 @@ The signup modal's email/password form is **live**, not decorative: one `<form i
 `<a class="btn google">` and `<a class="btn github">` in `Index.html` point at `/auth/google` and `/auth/github` — a navigation, not a form submit, hence `<a>` and not `<button>`. `nav-compte.js` fills `#navCompte` from `/api/moi`; `script.js` keeps only what is specific to the landing page — the `/?connexion=…` alerts (which name no provider, since both flows share those codes) and the signup modal. The modal exists on `Index.html` alone, so the "Se connecter" links on `/chat` and `/compte` point at `/?inscription=1`, which `script.js` turns into an `openSignupModal()` call rather than duplicating the markup on three pages. The `[data-action="start"]` buttons open that modal only while nobody is logged in; once `/api/moi` reports a session, `adapterAppelsALAction()` relabels them from their `data-label-connecte` attribute and sends them to `/chat` instead. Since `/` now redirects a session holder away, that branch is a safety net rather than the normal path — it still fires on a page the browser served from its back-forward cache, or in a tab left open while another one signed in. The flag is read *inside* the click handler, not captured when the listeners are attached, because `/api/moi` answers well after that point. The rest of the signup modal (email/password, Apple, Yahoo) is still decorative.
 
 Flask's automatic static folder is disabled (`static_folder=None`). Assets are served one by one from the `FICHIERS_PUBLICS` allow-list, because the project root also holds source code and the runtime conversation logs — serving the directory wholesale would expose them. **A new CSS/JS/image file referenced by a page must be added to `FICHIERS_PUBLICS` or it will 404.**
+
+## The accounts database
+
+**`base_donnees.py` + `schema.sql` own `chatpy.db`, the one SQLite store in the project.** One table, `utilisateurs`, with one row per person who has ever signed in — through Google, GitHub, or an email/password account alike. Google and GitHub users have no separate registration step: their first sign-in inserts the row (`enregistrer_connexion()`, called from both callbacks through `app._memoriser()`).
+
+**Why a database here and nowhere else.** Accounts are the one store this project cannot afford to lose or corrupt: there is no password reset, so an account silently dropped by an interleaved read-modify-write is gone for good. A whole-file JSON rewrite is only safe behind a `threading.Lock`, which protects nothing between processes — that is exactly what pins the Procfile to `--workers 1`. SQLite locks the file itself, so writing an account is atomic no matter how many processes are running. The other three JSON stores keep their format; nothing else moved.
+
+**What a row holds:** `fournisseur`, `id_externe`, `nom`, `email`, `photo`, `cree`, `derniere_connexion`, `nb_connexions`, and `empreinte`. Points that matter:
+
+- **`empreinte` is a scrypt hash, never a password**, and it is NULL for Google and GitHub — their password is never shown to us. A test reads the raw bytes of the database file and asserts the password does not appear in them; that is the property everything else protects. Storing plaintext would make a stolen file catastrophic, since people reuse passwords elsewhere.
+- **The key is `(fournisseur, id_externe)`, not the email** — the same key that partitions `conversations.json`. Google user 42 and GitHub user 42 are different people, and the same person may hold both with the same address.
+- **A partial unique index covers local emails only** (`WHERE fournisseur = 'local'`). The address is the login of a local account, so two cannot share it; a Google account at that same address is fine and stays a separate row. The duplicate is caught by the index rather than a prior `SELECT`, which two simultaneous signups would both pass.
+- **A `CHECK` refuses a local account without a hash** — an account you could enter without a password. That is why `verifier()` calls `noter_connexion()` (a plain `UPDATE`) instead of the upsert: the upsert would resurrect a deleted local row without its hash.
+- Timestamps are ISO 8601 UTC text, readable as-is in any SQL browser and sortable as strings.
+
+**The schema lives in `schema.sql`, not in Python.** `base_donnees.py` runs it with `executescript`; everything is `IF NOT EXISTS`, so replaying it costs nothing. Adding a column means editing that file — and, since the statements are `CREATE`-only, adding an `ALTER TABLE … ADD COLUMN` guarded against re-running.
+
+**Nothing is created at import time.** The schema is laid down on the first actual use (`_preparer()`, memoised per path). Two reasons: importing a module should not create files, and `app.py` imports `comptes` *before* calling `load_dotenv()`, so `CHATPY_DB` would still be invisible at that point. **`CHATPY_DB`** moves the database out of the repo, which production needs — most hosts rebuild the code directory on each deploy, and a database left there would go with it.
+
+**Migration is automatic and one-shot.** The first access imports any legacy `comptes.json` (`ON CONFLICT DO NOTHING`, millisecond timestamps converted to ISO) and renames it `comptes.json.repris` — renamed, not deleted, because it is the only copy of accounts nobody could sign into again if the import went wrong.
+
+**Tests never touch the real database.** `tests/__init__.py` redirects `BASE_FILE` to a temp dir at import (covering `python3 -m unittest`, which ignores conftest), and `tests/conftest.py` adds a per-test fresh database under pytest. Both also clear `CHATPY_DB` from the environment, since it wins over `BASE_FILE`. This is not hypothetical: before that guard, a run of the auth tests wrote its fake Google profiles into the real `chatpy.db`.
+
+**Reading and exporting.** `python3 base_donnees.py` prints the accounts table (never the hashes); `--csv` writes `export_comptes.csv` for a spreadsheet (no hashes, UTF-8 BOM or Excel mangles the accents); `--sql` dumps the whole database as SQL for backup — that dump *does* carry the hashes, so it is as sensitive as the database itself. The CSV is git-ignored and `chmod 600`, like the database.
 
 ## Conversation history
 
@@ -244,11 +269,11 @@ Motion is cut by two independent triggers: the system's `prefers-reduced-motion`
 
 `python3 app.py` is the Werkzeug **development** server and must not face the internet. The committed `Procfile` runs `gunicorn --workers 1 --threads 8`.
 
-**The single worker is load-bearing, not a performance choice.** Every JSON store in this project (`comptes.json`, `conversations.json`, `.chatpy_history.json`, `questions_sans_reponse.json`) is guarded by a `threading.Lock`, which serialises threads *within one process* and does nothing across processes. Two gunicorn workers can interleave a read-modify-write on `comptes.json` and silently drop an account; `comptes._tentatives` (the brute-force lockout) would likewise be counted per worker, multiplying the allowed attempts by the worker count. Raising `--workers` requires replacing the JSON files with a real database first — there is no smaller fix.
+**The single worker is load-bearing, not a performance choice.** The three remaining JSON stores (`conversations.json`, `.chatpy_history.json`, `questions_sans_reponse.json`) are guarded by a `threading.Lock`, which serialises threads *within one process* and does nothing across processes: two gunicorn workers can interleave a read-modify-write and silently drop a conversation. `comptes._tentatives` (the brute-force lockout) lives in memory and would likewise be counted per worker, multiplying the allowed attempts by the worker count. Accounts themselves are safe — `chatpy.db` is SQLite, which locks across processes — but that only removes the *worst* consequence, not the reason. Raising `--workers` means moving those three files to the database first.
 
 **`CHATPY_PROXIES`** enables `ProxyFix` and defaults to `0`. Behind a reverse proxy it must be set, or `url_for(..., _external=True)` builds the callback URL from the internal connection and both OAuth flows die on `redirect_uri_mismatch`. It is opt-in because `X-Forwarded-*` are just claims: with no proxy rewriting them, any visitor could send `X-Forwarded-Host: attacker.example` and redirect the OAuth flow to their own domain. Production also needs a fixed `CHATPY_SECRET_KEY`, `CHATPY_COOKIE_SECURE=1`, `CHATPY_DEBUG` unset, and the production callback URLs registered in both provider consoles.
 
-`comptes.json` is the only copy of every account, and there is no password reset — losing it locks users out permanently. It needs a backup; so does `conversations.json`.
+`chatpy.db` is the only copy of every account, and there is no password reset — losing it locks users out permanently. It needs a backup (`python3 base_donnees.py --sql > sauvegarde.sql`, or a plain copy of the file while the server is stopped); so does `conversations.json`. On a host that rebuilds the code directory at each deploy, set `CHATPY_DB` to a path on the persistent disk *before* the first sign-up, or the database is recreated empty on the next deploy.
 
 ## Key Customization Points
 
@@ -277,6 +302,9 @@ Motion is cut by two independent triggers: the system's `prefers-reduced-motion`
 | Speed/feel of every transition | `--ressort` (easing curve) in `style.css` |
 | Entries in the account dropdown | `creerMenuCompte()` in `nav-compte.js` |
 | Password rules, lockout after failed logins | `MIN_MOT_DE_PASSE`, `TENTATIVES_MAX`, `BLOCAGE_SECONDES` in `comptes.py` |
+| Add a column or a table to the accounts database | `schema.sql` (plus an `ALTER TABLE … ADD COLUMN` for an existing base), then the `INSERT`/`SELECT` concerned in `base_donnees.py` |
+| Where the accounts database lives | `CHATPY_DB` in `.env`, else `BASE_FILE` in `base_donnees.py` |
+| See who has signed in | `python3 base_donnees.py` (`--csv` to read it in a spreadsheet, `--sql` to dump the base for backup) |
 | How long "rester connecté" lasts | `PERMANENT_SESSION_LIFETIME` in `app.py` |
 | Where a successful login lands | `PAGE_APRES_CONNEXION` in `app.py` — the three sign-in methods and `index()` all read it |
 | Whether the landing page stays open to signed-in users | the `session.get("utilisateur")` test in `index()` (`app.py`), plus `adapterLiensAccueil()` in `nav-compte.js` for the nav links |

@@ -15,13 +15,17 @@ Ce qu'il ne fait pas, et pourquoi :
   justifie la confirmation du mot de passe à l'inscription : une faute de frappe
   ne se rattrape pas.
 
-Le fichier `comptes.json` contient des empreintes scrypt, jamais de mot de passe
-en clair, et n'est évidemment jamais servi par le web (il n'est pas dans
-FICHIERS_PUBLICS) ni committé (il est dans .gitignore).
+Les comptes sont rangés dans la base SQLite (`chatpy.db`, voir base_donnees.py),
+qui a remplacé l'ancien `comptes.json` — repris automatiquement au premier
+démarrage. Ce module ne décide plus *où* écrire, seulement *quoi* : validation,
+empreinte du mot de passe, limitation des tentatives.
+
+Ce qui y est enregistré est une empreinte scrypt, jamais un mot de passe en
+clair : on peut vérifier qu'un mot de passe correspond, jamais le relire. La
+base n'est ni servie par le web (absente de FICHIERS_PUBLICS) ni committée
+(elle est dans .gitignore).
 """
 
-import json
-import os
 import re
 import secrets
 import threading
@@ -29,10 +33,7 @@ import time
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
-import ia_en_python as ia
-
-_DIR = os.path.dirname(os.path.abspath(__file__))
-COMPTES_FILE = os.path.join(_DIR, "comptes.json")
+import base_donnees as bdd
 
 _verrou = threading.Lock()
 
@@ -198,23 +199,6 @@ def normaliser_email(email):
     return email.strip().lower() if isinstance(email, str) else ""
 
 
-def _charger():
-    try:
-        with open(COMPTES_FILE, "r", encoding="utf-8") as f:
-            donnees = json.load(f)
-    except FileNotFoundError:
-        return {}
-    except (json.JSONDecodeError, OSError):
-        # Surtout ne pas repartir d'un fichier vide en silence : ce serait
-        # effacer tous les comptes. On le met de côté et on le signale.
-        ia._mettre_de_cote(
-            COMPTES_FILE,
-            "comptes.json est illisible : plus aucun compte local ne peut se connecter.",
-        )
-        return {}
-    return donnees if isinstance(donnees, dict) else {}
-
-
 def _publier(compte):
     """Le compte tel qu'il entre en session — jamais l'empreinte."""
     return {
@@ -266,27 +250,25 @@ def creer(email, mot_de_passe, confirmation=None, nom=None, langue=LANGUE_DEFAUT
     if motif:
         return None, motif
 
-    with _verrou:
-        comptes = _charger()
-        if valeurs["email"] in comptes:
-            # Cet aveu permet d'apprendre qu'une adresse est inscrite. Le taire
-            # obligerait à confirmer par email pour lever l'ambiguïté, ce qu'on
-            # ne sait pas faire ici — et un message vague ferait tourner en rond
-            # quelqu'un qui a simplement oublié qu'il avait déjà un compte.
-            return None, _msg("compte_existant", langue)
+    compte = {
+        # Identifiant tiré au sort, indépendant de l'adresse : il sert de clé
+        # de rangement pour l'historique (« local-<id> »), et changer
+        # d'adresse un jour ne doit pas dissocier quelqu'un de ses données.
+        "id": secrets.token_hex(16),
+        "nom": valeurs["nom"],
+        "email": valeurs["email"],
+    }
+    # L'empreinte est calculée hors de toute transaction : scrypt prend quelques
+    # dizaines de millisecondes, et les passer à tenir la base verrouillée
+    # bloquerait toutes les autres connexions pendant ce temps.
+    empreinte = generate_password_hash(valeurs["mot_de_passe"])
 
-        compte = {
-            # Identifiant tiré au sort, indépendant de l'adresse : il sert de clé
-            # de rangement pour l'historique (« local-<id> »), et changer
-            # d'adresse un jour ne doit pas dissocier quelqu'un de ses données.
-            "id": secrets.token_hex(16),
-            "nom": valeurs["nom"],
-            "email": valeurs["email"],
-            "empreinte": generate_password_hash(valeurs["mot_de_passe"]),
-            "cree": int(_maintenant() * 1000),
-        }
-        comptes[valeurs["email"]] = compte
-        ia._ecrire_json_atomique(COMPTES_FILE, comptes)
+    if not bdd.creer_compte_local(compte["id"], compte["nom"], compte["email"], empreinte):
+        # Cet aveu permet d'apprendre qu'une adresse est inscrite. Le taire
+        # obligerait à confirmer par email pour lever l'ambiguïté, ce qu'on
+        # ne sait pas faire ici — et un message vague ferait tourner en rond
+        # quelqu'un qui a simplement oublié qu'il avait déjà un compte.
+        return None, _msg("compte_existant", langue)
 
     return _publier(compte), None
 
@@ -326,7 +308,7 @@ def verifier(email, mot_de_passe, langue=LANGUE_DEFAUT):
             minutes = max(1, round(reste / 60))
             return None, _msg("trop_de_tentatives", langue, minutes=minutes)
 
-        compte = _charger().get(email)
+        compte = bdd.lire_compte_local(email)
         # Même sur une adresse inconnue, on paie le prix d'une vérification :
         # voir _empreinte_factice().
         empreinte = compte["empreinte"] if compte else _empreinte_factice()
@@ -340,4 +322,7 @@ def verifier(email, mot_de_passe, langue=LANGUE_DEFAUT):
 
         _tentatives.pop(email, None)
 
+    # Date et compteur de connexions, comme pour Google et GitHub. Hors du
+    # verrou : cette écriture ne touche pas au décompte des tentatives.
+    bdd.noter_connexion("local", compte["id"])
     return _publier(compte), None
