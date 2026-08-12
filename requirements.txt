@@ -3,6 +3,7 @@ python-dotenv>=1.0
 Authlib>=1.3
 requests>=2.31
 
+
 # Serveur de production. app.run() est le serveur de développement de
 # Werkzeug : il n'est ni conçu ni durci pour être exposé sur Internet.
 # À lancer avec UN SEUL worker — voir le Procfile et le README.

@@ -8,8 +8,19 @@ __pycache__/
 questions_sans_reponse.json
 conversations.json
 comptes.json
+comptes.json.repris
 .env
+
+# Base SQLite des comptes (schema.sql, lui, est committé). Les fichiers -wal et
+# -shm sont les journaux du mode WAL, créés à côté de la base.
+chatpy.db
+chatpy.db-wal
+chatpy.db-shm
+
+# Export de la base : contient de vraies adresses email.
+export_comptes.csv
 
 # Écriture atomique et mise de côté des fichiers illisibles.
 .tmp_chatpy_*.json
 *.corrompu
+

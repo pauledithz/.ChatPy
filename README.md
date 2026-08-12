@@ -50,9 +50,29 @@ Le backend appelle la même logique que le CLI (`bot.traiter_message()` dans `ia
 
 ### Créer un compte par email (aucune configuration)
 
-Le formulaire du modal fonctionne : email + mot de passe, avec bascule entre connexion et inscription. Contrairement à Google et GitHub, il ne demande aucun identifiant à configurer — il marche sur un clone frais. Les comptes sont stockés dans `comptes.json` (haché en scrypt, jamais en clair, jamais committé).
+Le formulaire du modal fonctionne : email + mot de passe, avec bascule entre connexion et inscription. Contrairement à Google et GitHub, il ne demande aucun identifiant à configurer — il marche sur un clone frais.
 
 Deux limites assumées, dues à l'absence de serveur d'envoi d'emails : **les adresses ne sont pas vérifiées**, et **il n'y a pas de réinitialisation de mot de passe** — d'où la double saisie à l'inscription.
+
+### Où sont rangés les comptes
+
+Dans une base **SQLite**, `chatpy.db`, créée toute seule au premier démarrage (module `base_donnees.py`, schéma dans `schema.sql`). Une ligne par personne connectée, quel que soit son moyen de connexion : nom, email, fournisseur (`local` / `google` / `github`), date de création, date de dernière connexion et nombre de passages.
+
+**Le mot de passe n'y est jamais écrit en clair** : seule y figure son empreinte scrypt, qui permet de vérifier un mot de passe sans jamais pouvoir le relire. Les comptes Google et GitHub n'ont même pas d'empreinte — leur mot de passe reste chez eux. La base est en `chmod 600`, ignorée par git, et jamais servie par le web.
+
+Pour voir qui s'est inscrit :
+
+```bash
+python3 base_donnees.py             # la table des comptes dans le terminal
+python3 base_donnees.py --csv       # export_comptes.csv → Numbers, Excel
+python3 base_donnees.py --sql       # dump SQL brut de la base (sauvegarde)
+```
+
+La première ligne affichée rappelle toujours quel fichier est lu : `Base : chatpy.db`.
+
+Pour ouvrir la base elle-même : l'extension VS Code **SQLite Viewer** (double-clic sur `chatpy.db`), ou en ligne de commande `sqlite3 chatpy.db`, déjà installé sur macOS.
+
+Un ancien `comptes.json` est repris automatiquement au premier lancement, puis renommé `comptes.json.repris` : rien à faire, et rien n'est supprimé. `CHATPY_DB` déplace la base ailleurs (indispensable en production, voir plus bas).
 
 ### Connexion Google et GitHub (optionnelle)
 
@@ -84,9 +104,11 @@ gunicorn --workers 1 --threads 8 --timeout 60 --bind 0.0.0.0:$PORT app:app
 
 ### Un seul worker, ce n'est pas négociable
 
-Toute la persistance de ChatPy repose sur des fichiers JSON protégés par des `threading.Lock`. Ces verrous fonctionnent entre **fils d'exécution**, pas entre **processus**. Avec `--workers 4`, deux processus peuvent lire, modifier et réécrire `comptes.json` en même temps : le second écrase le premier, et un compte disparaît. Le blocage anti-force-brute serait lui aussi compté par worker (5 tentatives × 4 workers = 20).
+Les conversations et l'historique du bot reposent sur des fichiers JSON protégés par des `threading.Lock`. Ces verrous fonctionnent entre **fils d'exécution**, pas entre **processus**. Avec `--workers 4`, deux processus peuvent lire, modifier et réécrire `conversations.json` en même temps : le second écrase le premier. Le blocage anti-force-brute, qui vit en mémoire, serait lui aussi compté par worker (5 tentatives × 4 workers = 20).
 
-`--workers 1 --threads 8` conserve toutes les hypothèses du code tout en servant plusieurs visiteurs à la fois. Pour aller au-delà, il faudrait remplacer les fichiers JSON par une vraie base de données.
+Les comptes, eux, ne risquent plus rien : ils sont dans SQLite, qui verrouille entre processus. Mais ça n'enlève que la pire conséquence, pas la raison.
+
+`--workers 1 --threads 8` conserve toutes les hypothèses du code tout en servant plusieurs visiteurs à la fois. Pour aller au-delà, il faudrait déplacer ces fichiers JSON dans la base à leur tour.
 
 > `gunicorn` ne tourne pas sous Windows. Y utiliser `waitress` : `waitress-serve --threads=8 --port=5001 app:app`.
 
@@ -106,7 +128,8 @@ Toute la persistance de ChatPy repose sur des fichiers JSON protégés par des `
 ### À faire aussi
 
 - **Déclarer les URL de redirection de production** dans la console Google Cloud et les réglages de l'OAuth App GitHub (`https://votre-domaine/auth/google/callback` et `.../auth/github/callback`). Celles de `localhost` ne fonctionneront pas en ligne.
-- **Sauvegarder `comptes.json`.** C'est l'unique copie des comptes, et il n'existe pas de « mot de passe oublié » : le perdre enferme définitivement les utilisateurs dehors. `conversations.json` mérite le même soin.
+- **Renseigner `CHATPY_DB`** avec un chemin sur le disque persistant de l'hébergeur (`/var/data/chatpy.db` par exemple), **avant la première inscription**. La plupart des hébergeurs reconstruisent le dossier du code à chaque déploiement : une base restée là repartirait vide, avec tous les comptes.
+- **Sauvegarder `chatpy.db`.** C'est l'unique copie des comptes, et il n'existe pas de « mot de passe oublié » : le perdre enferme définitivement les utilisateurs dehors. Une copie du fichier serveur arrêté, ou `python3 base_donnees.py --sql > sauvegarde.sql`. `conversations.json` mérite le même soin.
 
 ---
 
@@ -274,9 +297,13 @@ La suite de tests n'utilise que la bibliothèque standard (`unittest`) et ne tou
 
 ```bash
 python3 -m unittest test_chatpy -v
+python3 -m unittest tests.test_base_donnees -v   # comptes et base SQLite
+python3 -m unittest discover -v                  # tout
 ```
 
 Lancez-la après toute modification de `ia_en_python.py`.
+
+Les tests qui écrivent redirigent la base et les fichiers d'exécution vers un dossier temporaire : `chatpy.db` et vos vrais comptes ne sont jamais touchés.
 
 ---
 

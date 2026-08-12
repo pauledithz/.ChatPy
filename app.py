@@ -1,5 +1,6 @@
 import os
 import secrets
+import sqlite3
 from datetime import timedelta
 
 import requests
@@ -10,6 +11,7 @@ from flask import (Flask, abort, jsonify, redirect, request, send_from_directory
                    session, url_for)
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+import base_donnees as bdd
 import comptes
 import conversations as conv
 from ia_en_python import bot, demarrer_quiz, repondre_quiz, signaler_reponse_inutile
@@ -22,8 +24,9 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(_DIR, ".env"))
 
 # Liste blanche des fichiers servis au public. Tout le reste du dossier
-# (code source, .chatpy_history.json, questions_sans_reponse.json, .env)
-# doit rester inaccessible depuis le web.
+# (code source, .chatpy_history.json, questions_sans_reponse.json, .env, et
+# surtout chatpy.db qui contient les comptes) doit rester inaccessible depuis
+# le web.
 FICHIERS_PUBLICS = frozenset({
     "style.css",
     "script.js",
@@ -182,6 +185,22 @@ def index():
     return reponse
 
 
+def _memoriser(utilisateur):
+    """Inscrit le passage de quelqu'un dans la base SQLite (voir base_donnees).
+
+    Une panne d'écriture ne fait pas échouer la connexion : l'identité qui
+    compte pour la suite de la visite vit dans le cookie de session, la ligne en
+    base n'est qu'une trace. Refuser d'ouvrir une session parce que le disque
+    est plein enlèverait au visiteur bien plus que la trace manquante ne coûte —
+    d'où l'avertissement en console plutôt qu'une erreur.
+    """
+    try:
+        bdd.enregistrer_connexion(utilisateur)
+    except (sqlite3.Error, OSError, RuntimeError) as erreur:
+        print(f"⚠️  Connexion de {utilisateur.get('fournisseur')} non enregistrée "
+              f"dans la base : {erreur}")
+
+
 @app.route("/auth/google")
 def auth_google():
     """Envoie l'utilisateur s'authentifier chez Google."""
@@ -223,6 +242,7 @@ def auth_google_callback():
         # ce champ, rien ne distinguerait l'utilisateur Google 42 du GitHub 42.
         "fournisseur": "google",
     }
+    _memoriser(session["utilisateur"])
     return redirect(PAGE_APRES_CONNEXION)
 
 
@@ -304,6 +324,7 @@ def auth_github_callback():
         "photo": profil.get("avatar_url", ""),
         "fournisseur": "github",
     }
+    _memoriser(session["utilisateur"])
     return redirect(PAGE_APRES_CONNEXION)
 
 
