@@ -3,11 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>ChatPy — Mon compte</title>
+  <title data-i18n="compte.titre_page">ChatPy — Mon compte</title>
   <link rel="icon" type="image/png" href="ChatPY_logo.PNG">
   <!-- Chargé sans defer, avant tout contenu : le thème doit être posé sur <html>
        avant la première peinture, sinon la page clignote. -->
   <script src="preferences.js"></script>
+  <!-- Après preferences.js, dont il lit le réglage « langue », et sans defer
+       pour la même raison. -->
+  <script src="i18n.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&display=swap">
@@ -19,87 +22,192 @@
   <nav class="nav">
     <a class="nav-logo" href="/"><img class="nav-logo-img" src="ChatPY_logo.PNG" alt="" width="54" height="54"> ChatPy</a>
     <div class="nav-links">
-      <a href="/">Accueil</a>
-      <a href="/chat">Chat</a>
+      <a href="/" data-i18n="nav.accueil">Accueil</a>
+      <a href="/chat" data-i18n="nav.chat">Chat</a>
     </div>
     <!-- nav-compte.js insère la bascule de thème, puis remplace le lien de
          connexion par le menu du compte si quelqu'un est connecté. -->
     <div class="nav-compte" id="navCompte">
-      <a class="nav-cta" href="/?inscription=1">Se connecter</a>
+      <a class="nav-cta" href="/?inscription=1" data-i18n="nav.connexion">Se connecter</a>
     </div>
   </nav>
 
   <main class="compte-page">
-    <h1 class="compte-titre">Mon compte</h1>
-    <p class="compte-sous-titre">
+    <h1 class="compte-titre" data-i18n="compte.titre">Mon compte</h1>
+    <p class="compte-sous-titre" data-i18n="compte.sous_titre">
       Votre identité de connexion et vos réglages d'affichage.
     </p>
 
     <!-- Rempli par compte.js à partir de /api/moi : profil si connecté,
          invitation à se connecter sinon. -->
     <section class="carte" id="carteIdentite">
-      <div class="carte-titre">Identité</div>
-      <p class="reglage-aide" id="identiteChargement">Chargement…</p>
+      <div class="carte-titre" data-i18n="compte.identite">Identité</div>
+      <p class="reglage-aide" id="identiteChargement" data-i18n="compte.chargement">Chargement…</p>
     </section>
 
     <section class="carte">
-      <div class="carte-titre">Affichage</div>
+      <div class="carte-titre" data-i18n="compte.affichage">Affichage</div>
+
+      <!-- Une liste déroulante et non des segments : sept choix ne tiennent pas
+           en boutons côte à côte, et la liste native reste utilisable au clavier
+           comme au doigt. compte.js la relie au même ChatPyPrefs.definir(). -->
+      <div class="reglage">
+        <div>
+          <div class="reglage-nom" data-i18n="compte.langue">Langue</div>
+          <p class="reglage-aide" data-i18n="compte.langue_aide">
+            La langue de l'interface : menus, boutons et messages du site. Les
+            réponses du chatbot restent en français.
+          </p>
+        </div>
+        <select class="reglage-select" id="selectLangue" data-pref="langue"
+                aria-label="Langue" data-i18n-attr="aria-label:compte.langue">
+          <option value="auto" data-i18n="compte.langue_auto">Automatique (langue du navigateur)</option>
+          <!-- Chaque langue dans sa propre langue : jamais traduite. -->
+          <option value="fr">Français</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="de">Deutsch</option>
+          <option value="it">Italiano</option>
+          <option value="pt">Português</option>
+        </select>
+      </div>
 
       <div class="reglage">
         <div>
-          <div class="reglage-nom">Thème</div>
-          <p class="reglage-aide">
+          <div class="reglage-nom" data-i18n="compte.theme">Thème</div>
+          <p class="reglage-aide" data-i18n="compte.theme_aide">
             « Auto » suit le réglage clair/sombre de votre système d'exploitation.
           </p>
         </div>
-        <div class="segments" role="radiogroup" aria-label="Thème" data-pref="theme">
+        <div class="segments" role="radiogroup" aria-label="Thème" data-pref="theme"
+             data-i18n-attr="aria-label:compte.theme">
           <span class="segments-curseur sans-transition" aria-hidden="true"></span>
-          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="auto">Auto</button>
-          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="clair">Clair</button>
-          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="sombre">Sombre</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="auto" data-i18n="compte.theme_auto">Auto</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="clair" data-i18n="compte.theme_clair">Clair</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="sombre" data-i18n="compte.theme_sombre">Sombre</button>
         </div>
       </div>
 
       <div class="reglage">
         <div>
-          <div class="reglage-nom">Animations</div>
-          <p class="reglage-aide">
+          <div class="reglage-nom" data-i18n="compte.animations">Animations</div>
+          <p class="reglage-aide" data-i18n="compte.animations_aide">
             « Réduites » supprime les apparitions au défilement et les transitions.
             Le réglage « mouvement réduit » de votre système est respecté même en mode auto.
           </p>
         </div>
-        <div class="segments" role="radiogroup" aria-label="Animations" data-pref="animations">
+        <div class="segments" role="radiogroup" aria-label="Animations" data-pref="animations"
+             data-i18n-attr="aria-label:compte.animations">
           <span class="segments-curseur sans-transition" aria-hidden="true"></span>
-          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="auto">Complètes</button>
-          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="reduites">Réduites</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="auto" data-i18n="compte.animations_completes">Complètes</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="reduites" data-i18n="compte.animations_reduites">Réduites</button>
         </div>
       </div>
 
       <div class="reglage">
         <div>
-          <div class="reglage-nom">Taille du texte des conversations</div>
-          <p class="reglage-aide">
+          <div class="reglage-nom" data-i18n="compte.taille">Taille du texte des conversations</div>
+          <p class="reglage-aide" data-i18n="compte.taille_aide">
             S'applique aux messages et au champ de saisie de la page de chat.
           </p>
         </div>
-        <div class="segments" role="radiogroup" aria-label="Taille du texte" data-pref="taille">
+        <div class="segments" role="radiogroup" aria-label="Taille du texte" data-pref="taille"
+             data-i18n-attr="aria-label:compte.taille">
           <span class="segments-curseur sans-transition" aria-hidden="true"></span>
-          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="petite">Petite</button>
-          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="normale">Normale</button>
-          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="grande">Grande</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="petite" data-i18n="compte.taille_petite">Petite</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="normale" data-i18n="compte.taille_normale">Normale</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="grande" data-i18n="compte.taille_grande">Grande</button>
         </div>
       </div>
 
-      <p class="reglage-aide reglage-note">
+      <p class="reglage-aide reglage-note" data-i18n="compte.note_affichage">
         Ces réglages sont enregistrés dans ce navigateur, sur cet appareil. Ils
         fonctionnent que vous soyez connecté ou non.
+      </p>
+    </section>
+
+    <section class="carte">
+      <div class="carte-titre" data-i18n="compte.chatbot">Chatbot</div>
+
+      <div class="reglage">
+        <div>
+          <div class="reglage-nom" data-i18n="compte.sensibilite">Sensibilité des réponses</div>
+          <p class="reglage-aide" data-i18n="compte.sensibilite_aide">
+            À partir de quelle confiance ChatPy ose répondre. « Stricte » répond
+            moins souvent mais se trompe rarement ; « large » tente sa chance
+            plus volontiers. Dans les deux cas, les questions écartées vous sont
+            proposées sous « Vouliez-vous dire ».
+          </p>
+        </div>
+        <div class="segments" role="radiogroup" aria-label="Sensibilité des réponses" data-pref="sensibilite"
+             data-i18n-attr="aria-label:compte.sensibilite">
+          <span class="segments-curseur sans-transition" aria-hidden="true"></span>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="stricte" data-i18n="compte.sensibilite_stricte">Stricte</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="normale" data-i18n="compte.sensibilite_normale">Normale</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="large" data-i18n="compte.sensibilite_large">Large</button>
+        </div>
+      </div>
+
+      <div class="reglage">
+        <div>
+          <div class="reglage-nom" data-i18n="compte.suggestions">Suggestions de suivi</div>
+          <p class="reglage-aide" data-i18n="compte.suggestions_aide">
+            Les questions proposées en boutons sous les réponses, pour continuer
+            sur le même sujet ou rattraper une question mal comprise.
+          </p>
+        </div>
+        <div class="segments" role="radiogroup" aria-label="Suggestions de suivi" data-pref="suggestions"
+             data-i18n-attr="aria-label:compte.suggestions">
+          <span class="segments-curseur sans-transition" aria-hidden="true"></span>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="visibles" data-i18n="compte.affichees">Affichées</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="masquees" data-i18n="compte.masquees">Masquées</button>
+        </div>
+      </div>
+
+      <div class="reglage">
+        <div>
+          <div class="reglage-nom" data-i18n="compte.retours">Retour sur les réponses</div>
+          <p class="reglage-aide" data-i18n="compte.retours_aide">
+            Les boutons 👍 et 👎 sous chaque réponse. Le pouce vers le bas est le
+            seul moyen de nous signaler une réponse trouvée mais fausse : les
+            masquer nous prive de ce signal.
+          </p>
+        </div>
+        <div class="segments" role="radiogroup" aria-label="Retour sur les réponses" data-pref="retours"
+             data-i18n-attr="aria-label:compte.retours">
+          <span class="segments-curseur sans-transition" aria-hidden="true"></span>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="visibles" data-i18n="compte.affiches">Affichés</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="masques" data-i18n="compte.masques">Masqués</button>
+        </div>
+      </div>
+
+      <div class="reglage">
+        <div>
+          <div class="reglage-nom" data-i18n="compte.saisie">Indicateur de saisie</div>
+          <p class="reglage-aide" data-i18n="compte.saisie_aide">
+            Les trois points animés pendant que ChatPy prépare sa réponse.
+            « Directe » l'affiche dès qu'elle arrive, sans attente visible.
+          </p>
+        </div>
+        <div class="segments" role="radiogroup" aria-label="Indicateur de saisie" data-pref="saisie"
+             data-i18n-attr="aria-label:compte.saisie">
+          <span class="segments-curseur sans-transition" aria-hidden="true"></span>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="animee" data-i18n="compte.saisie_animee">Animé</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="directe" data-i18n="compte.saisie_directe">Directe</button>
+        </div>
+      </div>
+
+      <p class="reglage-aide reglage-note" data-i18n="compte.note_chatbot">
+        Enregistrés dans ce navigateur, comme les réglages d'affichage. La
+        sensibilité accompagne chaque question envoyée : elle ne change rien
+        pour les autres visiteurs.
       </p>
     </section>
   </main>
 
   <footer class="footer">
     <div class="footer-logo">ChatPy</div>
-    <p>© 2026 ChatPy — Tous droits réservés</p>
+    <p data-i18n="commun.droits">© 2026 ChatPy — Tous droits réservés</p>
   </footer>
 </div>
 

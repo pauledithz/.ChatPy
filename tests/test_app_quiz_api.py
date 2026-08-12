@@ -60,7 +60,7 @@ def test_api_chat_delegates_non_quiz_message_to_bot(client, monkeypatch):
     # suggestions séparées du texte pour en faire des boutons cliquables.
     monkeypatch.setattr(
         app_module.bot, "repondre",
-        lambda message: {"response": f"echo:{message}",
+        lambda message, sensibilite=None: {"response": f"echo:{message}",
                          "suggestions": ["une autre question"],
                          "titre_suggestions": "Questions liées"},
     )

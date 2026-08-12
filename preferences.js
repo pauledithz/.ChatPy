@@ -1,5 +1,5 @@
 /* ============================================================================
-   Préférences d'affichage — thème, animations, taille du texte.
+   Préférences — affichage (thème, animations, taille) et chatbot.
    ----------------------------------------------------------------------------
    Ce fichier est chargé de façon *synchrone* dans le <head> de chaque page,
    avant tout contenu. C'est volontaire : les attributs data-theme / data-taille
@@ -19,10 +19,30 @@
 
   // Valeurs admises. Toute autre valeur (fichier trafiqué, ancienne version)
   // retombe sur le défaut plutôt que de poser un attribut inconnu.
+  //
+  // `attribut: null` désigne un réglage que le CSS ne peut pas appliquer seul :
+  // il est lu par le script concerné via ChatPyPrefs.lire(). Les autres se
+  // règlent entièrement en CSS, ce qui a un avantage concret pour le chat —
+  // masquer les suggestions ou les pouces vaut aussi pour les messages déjà
+  // affichés, sans rien redessiner.
   var SCHEMA = {
+    // La langue de l'interface. `attribut: null` parce que l'attribut à poser
+    // est `lang` sur <html>, et que la règle « le défaut n'écrit rien » ne vaut
+    // pas ici : un document doit toujours déclarer sa langue. C'est i18n.js qui
+    // s'en charge, en même temps qu'il remplace les textes — ce que le CSS ne
+    // saurait de toute façon pas faire.
+    langue: { valeurs: ['auto', 'fr', 'en', 'es', 'de', 'it', 'pt'], defaut: 'auto', attribut: null },
     theme: { valeurs: ['auto', 'clair', 'sombre'], defaut: 'auto', attribut: 'data-theme' },
     animations: { valeurs: ['auto', 'reduites'], defaut: 'auto', attribut: 'data-animations' },
-    taille: { valeurs: ['petite', 'normale', 'grande'], defaut: 'normale', attribut: 'data-taille' }
+    taille: { valeurs: ['petite', 'normale', 'grande'], defaut: 'normale', attribut: 'data-taille' },
+    suggestions: { valeurs: ['visibles', 'masquees'], defaut: 'visibles', attribut: 'data-suggestions' },
+    retours: { valeurs: ['visibles', 'masques'], defaut: 'visibles', attribut: 'data-retours' },
+    // L'indicateur de saisie se supprime à la source dans chat.js : le masquer
+    // en CSS laisserait la ligne — et donc l'avatar — occuper le vide.
+    saisie: { valeurs: ['animee', 'directe'], defaut: 'animee', attribut: null },
+    // Seul réglage qui voyage jusqu'au serveur : chat.js le joint à chaque
+    // envoi sur /api/chat, où il choisit le seuil de confiance du bot.
+    sensibilite: { valeurs: ['stricte', 'normale', 'large'], defaut: 'normale', attribut: null }
   };
 
   var racine = document.documentElement;
@@ -61,6 +81,7 @@
   function appliquer() {
     for (var cle in SCHEMA) {
       var regle = SCHEMA[cle];
+      if (!regle.attribut) continue;
       // Le défaut ne pose aucun attribut : le CSS de base et les media queries
       // (prefers-color-scheme, prefers-reduced-motion) reprennent la main, ce
       // qui est exactement le sens de « auto ».
@@ -81,13 +102,13 @@
   }
 
   var api = {
-    /** Copie des réglages courants (theme, animations, taille). */
+    /** Copie des réglages courants, une clé par entrée du SCHEMA. Copie et non
+     *  référence : un appelant qui bricole l'objet ne doit pas modifier l'état
+     *  réel sans passer par definir(), qui seul persiste et prévient. */
     lire: function () {
-      return {
-        theme: prefs.theme,
-        animations: prefs.animations,
-        taille: prefs.taille
-      };
+      var copie = {};
+      for (var cle in SCHEMA) copie[cle] = prefs[cle];
+      return copie;
     },
 
     /** Le thème réellement rendu à l'écran, « auto » résolu. */

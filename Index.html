@@ -8,6 +8,10 @@
   <!-- Chargé sans defer, avant tout contenu : le thème doit être posé sur <html>
        avant la première peinture, sinon la page clignote au chargement. -->
   <script src="preferences.js"></script>
+  <!-- Après preferences.js, dont il lit le réglage « langue », et sans defer
+       pour la même raison : il masque brièvement la page hors français plutôt
+       que de la laisser s'afficher puis se réécrire sous les yeux. -->
+  <script src="i18n.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&display=swap">
@@ -19,15 +23,15 @@
   <nav class="nav">
     <a class="nav-logo" href="/"><img class="nav-logo-img" src="ChatPY_logo.PNG" alt="" width="54" height="54"> ChatPy</a>
     <div class="nav-links">
-      <a href="#features">Fonctionnalités</a>
-      <a href="#docs">Docs</a>
-      <a href="#tarifs">Tarifs</a>
-      <a href="/chat">Chat</a>
+      <a href="#features" data-i18n="nav.fonctionnalites">Fonctionnalités</a>
+      <a href="#docs" data-i18n="nav.docs">Docs</a>
+      <a href="#tarifs" data-i18n="nav.tarifs">Tarifs</a>
+      <a href="/chat" data-i18n="nav.chat">Chat</a>
     </div>
     <!-- nav-compte.js insère la bascule de thème, puis remplace ce bouton par
          le menu du compte si /api/moi signale quelqu'un de connecté. -->
     <div class="nav-compte" id="navCompte">
-      <button type="button" class="nav-cta" data-action="start">Commencer →</button>
+      <button type="button" class="nav-cta" data-action="start" data-i18n="nav.commencer">Commencer →</button>
     </div>
   </nav>
 
@@ -72,15 +76,21 @@
     </div>
 
     <section class="hero">
-      <div class="hero-badge"><span class="badge-pulse"></span> Disponible maintenant</div>
-      <h1>L'IA qui <span>comprend</span><br>vraiment vos besoins</h1>
-      <p>ChatPy est un assistant intelligent conçu pour vous aider à penser, écrire, coder et créer — plus vite et mieux qu'avant.</p>
+      <div class="hero-badge"><span class="badge-pulse"></span> <span data-i18n="accueil.badge">Disponible maintenant</span></div>
+      <!-- data-i18n-html et non data-i18n : le <span> porte le dégradé et le
+           <br> tient la coupure. Le balisage vient du catalogue, jamais du
+           dehors. -->
+      <h1 data-i18n-html="accueil.h1">L'IA qui <span>comprend</span><br>vraiment vos besoins</h1>
+      <p data-i18n="accueil.accroche">ChatPy est un assistant intelligent conçu pour vous aider à penser, écrire, coder et créer — plus vite et mieux qu'avant.</p>
       <!-- data-label-connecte : libellé pris par script.js quand quelqu'un est
-           déjà connecté. Le texte reste dans le HTML, avec le reste de la copie,
-           plutôt que codé en dur dans le script. -->
+           déjà connecté. Sa clé de traduction voyage à côté, dans
+           data-label-connecte-i18n, pour que le script traduise le libellé de
+           remplacement comme le reste. -->
       <div class="hero-btns">
-        <button type="button" class="btn-primary" data-action="start" data-label-connecte="Ouvrir le chat →">Essayer gratuitement</button>
-        <button type="button" class="btn-secondary" data-action="demo">Voir la démo</button>
+        <button type="button" class="btn-primary" data-action="start"
+                data-label-connecte="Ouvrir le chat →" data-label-connecte-i18n="accueil.ouvrir_chat"
+                data-i18n="accueil.essayer">Essayer gratuitement</button>
+        <button type="button" class="btn-secondary" data-action="demo" data-i18n="accueil.demo">Voir la démo</button>
       </div>
 
       <div class="chat-preview">
@@ -88,7 +98,7 @@
           <div class="chat-avatar"><img src="ChatPY_logo.PNG" alt="ChatPy" width="44" height="44" decoding="async"></div>
           <div>
             <div class="chat-name">ChatPy</div>
-            <div class="chat-status"><span class="chat-status-dot"></span> En ligne</div>
+            <div class="chat-status"><span class="chat-status-dot"></span> <span data-i18n="commun.en_ligne">En ligne</span></div>
           </div>
         </div>
         <div class="chat-body" id="chatBody"></div>
@@ -106,41 +116,43 @@
        sans JavaScript ou en mouvement réduit. animations.js ne fait que le
        remplacer le temps du comptage, à partir des attributs data-*. -->
   <div class="stats">
-    <div class="stat"><div class="stat-num" data-compteur="98" data-suffixe="%">98%</div><div class="stat-label">Satisfaction</div></div>
-    <div class="stat"><div class="stat-num" data-compteur="2" data-suffixe="M+">2M+</div><div class="stat-label">Conversations</div></div>
-    <div class="stat"><div class="stat-num" data-compteur="0.3" data-decimales="1" data-suffixe="s">0.3s</div><div class="stat-label">Temps de réponse</div></div>
+    <div class="stat"><div class="stat-num" data-compteur="98" data-suffixe="%">98%</div><div class="stat-label" data-i18n="accueil.stat_satisfaction">Satisfaction</div></div>
+    <div class="stat"><div class="stat-num" data-compteur="2" data-suffixe="M+">2M+</div><div class="stat-label" data-i18n="accueil.stat_conversations">Conversations</div></div>
+    <div class="stat"><div class="stat-num" data-compteur="0.3" data-decimales="1" data-suffixe="s">0.3s</div><div class="stat-label" data-i18n="accueil.stat_temps">Temps de réponse</div></div>
   </div>
 
   <section class="features" id="features">
-    <div class="section-label">Fonctionnalités</div>
-    <div class="section-title">Tout ce dont vous avez besoin</div>
+    <div class="section-label" data-i18n="nav.fonctionnalites">Fonctionnalités</div>
+    <div class="section-title" data-i18n="accueil.features_titre">Tout ce dont vous avez besoin</div>
     <div class="features-grid features-grid--four">
-      <div class="feat-card"><div class="feat-icon">✦</div><h3>Raisonnement avancé</h3><p>ChatPy analyse et structure vos problèmes complexes avec clarté.</p></div>
-      <div class="feat-card"><div class="feat-icon">{ }</div><h3>Génération de code</h3><p>Python, JS, SQL et plus — du code propre, commenté et expliqué.</p></div>
-      <div class="feat-card"><div class="feat-icon">✍</div><h3>Rédaction intelligente</h3><p>Emails, rapports, articles — adapté à votre style et ton.</p></div>
-      <div class="feat-card"><div class="feat-icon">◈</div><h3>Mémoire contextuelle</h3><p>ChatPy se souvient du fil de votre conversation pour des réponses cohérentes.</p></div>
+      <div class="feat-card"><div class="feat-icon">✦</div><h3 data-i18n="accueil.feat1_titre">Raisonnement avancé</h3><p data-i18n="accueil.feat1_texte">ChatPy analyse et structure vos problèmes complexes avec clarté.</p></div>
+      <div class="feat-card"><div class="feat-icon">{ }</div><h3 data-i18n="accueil.feat2_titre">Génération de code</h3><p data-i18n="accueil.feat2_texte">Python, JS, SQL et plus — du code propre, commenté et expliqué.</p></div>
+      <div class="feat-card"><div class="feat-icon">✍</div><h3 data-i18n="accueil.feat3_titre">Rédaction intelligente</h3><p data-i18n="accueil.feat3_texte">Emails, rapports, articles — adapté à votre style et ton.</p></div>
+      <div class="feat-card"><div class="feat-icon">◈</div><h3 data-i18n="accueil.feat4_titre">Mémoire contextuelle</h3><p data-i18n="accueil.feat4_texte">ChatPy se souvient du fil de votre conversation pour des réponses cohérentes.</p></div>
     </div>
   </section>
 
   <section class="features docs" id="docs">
-    <div class="section-label">Documentation</div>
-    <div class="section-title">Guide rapide pour commencer</div>
+    <div class="section-label" data-i18n="accueil.docs_label">Documentation</div>
+    <div class="section-title" data-i18n="accueil.docs_titre">Guide rapide pour commencer</div>
     <div class="features-grid features-grid--three">
-      <div class="feat-card"><div class="feat-icon">1</div><h3>Créer un compte</h3><p>Inscrivez-vous en moins d'une minute et configurez votre profil.</p></div>
-      <div class="feat-card"><div class="feat-icon">2</div><h3>Lancer une conversation</h3><p>Posez une question, générez du code ou demandez un plan détaillé.</p></div>
-      <div class="feat-card"><div class="feat-icon">3</div><h3>Exporter vos résultats</h3><p>Sauvegardez vos réponses, snippets et idées pour votre workflow.</p></div>
+      <div class="feat-card"><div class="feat-icon">1</div><h3 data-i18n="accueil.doc1_titre">Créer un compte</h3><p data-i18n="accueil.doc1_texte">Inscrivez-vous en moins d'une minute et configurez votre profil.</p></div>
+      <div class="feat-card"><div class="feat-icon">2</div><h3 data-i18n="accueil.doc2_titre">Lancer une conversation</h3><p data-i18n="accueil.doc2_texte">Posez une question, générez du code ou demandez un plan détaillé.</p></div>
+      <div class="feat-card"><div class="feat-icon">3</div><h3 data-i18n="accueil.doc3_titre">Exporter vos résultats</h3><p data-i18n="accueil.doc3_texte">Sauvegardez vos réponses, snippets et idées pour votre workflow.</p></div>
     </div>
   </section>
 
   <section class="cta-section" id="tarifs">
-    <h2>Prêt à essayer ChatPy ?</h2>
-    <p>Rejoignez des milliers d'utilisateurs qui pensent déjà plus vite.</p>
-    <button type="button" class="btn-primary" data-action="start" data-label-connecte="Ouvrir le chat →">Créer un compte gratuit →</button>
+    <h2 data-i18n="accueil.cta_titre">Prêt à essayer ChatPy ?</h2>
+    <p data-i18n="accueil.cta_texte">Rejoignez des milliers d'utilisateurs qui pensent déjà plus vite.</p>
+    <button type="button" class="btn-primary" data-action="start"
+            data-label-connecte="Ouvrir le chat →" data-label-connecte-i18n="accueil.ouvrir_chat"
+            data-i18n="accueil.cta_bouton">Créer un compte gratuit →</button>
   </section>
 
   <footer class="footer">
     <div class="footer-logo">ChatPy</div>
-    <p>© 2026 ChatPy — Tous droits réservés</p>
+    <p data-i18n="commun.droits">© 2026 ChatPy — Tous droits réservés</p>
   </footer>
 </div>
 
@@ -152,7 +164,11 @@
          script.js bascule entre les deux modes via la classe form--connexion,
          qui masque les champs propres à l'inscription. -->
     <form class="form form--connexion" id="formCompte" novalidate>
-      <button type="button" class="signup-close" data-action="close-signup" aria-label="Fermer">×</button>
+      <button type="button" class="signup-close" data-action="close-signup" aria-label="Fermer"
+              data-i18n-attr="aria-label:modale.fermer">×</button>
+      <!-- Le titre et le sous-titre sont réécrits par appliquerMode() dans
+           script.js à chaque bascule connexion / inscription : ils n'ont pas de
+           data-i18n, qui les figerait sur la version « connexion ». -->
       <div class="form-header">
         <h2 id="signupTitle">Se connecter à ChatPy</h2>
         <p class="signup-subtitle" id="signupSubtitle">Retrouvez vos conversations et votre progression.</p>
@@ -160,7 +176,7 @@
 
       <div class="champ-inscription">
         <div class="flex-column">
-          <label for="champNom">Nom</label>
+          <label for="champNom" data-i18n="modale.nom">Nom</label>
         </div>
         <div class="inputForm">
           <svg class="icone-trait" height="20" width="20" viewBox="0 0 24 24"
@@ -170,12 +186,13 @@
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
           <input type="text" id="champNom" class="input" placeholder="Comment doit-on vous appeler ?"
-                 autocomplete="name" maxlength="60" />
+                 autocomplete="name" maxlength="60"
+                 data-i18n-attr="placeholder:modale.nom_placeholder" />
         </div>
       </div>
 
       <div class="flex-column">
-        <label for="champEmail">Email </label>
+        <label for="champEmail" data-i18n="modale.email">Email </label>
       </div>
       <div class="inputForm">
         <svg
@@ -191,11 +208,12 @@
           </g>
         </svg>
         <input type="email" id="champEmail" class="input" placeholder="Entrer votre Email"
-               autocomplete="email" maxlength="254" required />
+               autocomplete="email" maxlength="254" required
+               data-i18n-attr="placeholder:modale.email_placeholder" />
       </div>
 
       <div class="flex-column">
-        <label for="champMotDePasse"> Mot de passe </label>
+        <label for="champMotDePasse" data-i18n="modale.mot_de_passe"> Mot de passe </label>
       </div>
       <div class="inputForm">
         <svg
@@ -212,7 +230,8 @@
           ></path>
         </svg>
         <input type="password" id="champMotDePasse" class="input"
-               placeholder="Entrer votre Mot de passe" autocomplete="current-password" required />
+               placeholder="Entrer votre Mot de passe" autocomplete="current-password" required
+               data-i18n-attr="placeholder:modale.mot_de_passe_placeholder" />
       </div>
 
       <!-- Confirmation, à l'inscription seulement. Ce serveur n'envoie aucun
@@ -220,7 +239,7 @@
            frappe ici enfermerait dehors définitivement. -->
       <div class="champ-inscription">
         <div class="flex-column">
-          <label for="champConfirmation">Confirmer le mot de passe</label>
+          <label for="champConfirmation" data-i18n="modale.confirmation">Confirmer le mot de passe</label>
         </div>
         <div class="inputForm">
           <svg class="icone-trait" height="20" width="20" viewBox="0 0 24 24"
@@ -231,7 +250,8 @@
             <path d="m9.5 16 1.7 1.7 3.3-3.4"></path>
           </svg>
           <input type="password" id="champConfirmation" class="input"
-                 placeholder="Retapez votre mot de passe" autocomplete="new-password" />
+                 placeholder="Retapez votre mot de passe" autocomplete="new-password"
+                 data-i18n-attr="placeholder:modale.confirmation_placeholder" />
         </div>
       </div>
 
@@ -240,19 +260,21 @@
           <!-- Une case et non un bouton radio : un radio seul ne peut plus être
                décoché une fois coché. -->
           <input type="checkbox" id="champRester" />
-          <label for="champRester">Rester connecté</label>
+          <label for="champRester" data-i18n="modale.rester">Rester connecté</label>
         </div>
-        <span class="span" id="lienOubli" role="button" tabindex="0">Mot de passe oublié ?</span>
+        <span class="span" id="lienOubli" role="button" tabindex="0" data-i18n="modale.oubli">Mot de passe oublié ?</span>
       </div>
 
       <p class="form-erreur" id="formErreur" role="alert" hidden></p>
 
+      <!-- Ces trois libellés changent avec le mode : appliquerMode() les écrit,
+           d'où l'absence de data-i18n ici aussi. -->
       <button type="submit" class="button-submit" id="boutonSoumettre">Se connecter</button>
       <p class="p">
         <span id="texteBascule">Vous n'avez pas de compte ?</span>
         <span class="span" id="lienBascule" role="button" tabindex="0">S'inscrire</span>
       </p>
-      <p class="p line">Ou avec</p>
+      <p class="p line" data-i18n="modale.ou_avec">Ou avec</p>
 
       <div class="flex-row">
         <a href="/auth/google" class="btn google" data-provider="google">

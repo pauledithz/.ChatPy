@@ -66,6 +66,31 @@ SEUIL_CORRESPONDANCE = 0.5
 # Plus bas, les propositions deviennent du bruit qui ressemble à du hasard.
 SEUIL_PROPOSITION = 0.3
 
+# Sensibilité du bot, réglable par visiteur depuis /compte. Un seul curseur est
+# exposé — le seuil à partir duquel le bot ose répondre plutôt que d'avouer
+# qu'il n'a pas compris :
+#   stricte — répond moins souvent, mais presque jamais à côté de la plaque ;
+#   large   — répond plus souvent, au prix de rapprochements discutables.
+# Toutes les valeurs restent au-dessus de SEUIL_PROPOSITION : en dessous, la
+# bande des « vouliez-vous dire ? » se refermerait et un échec ne proposerait
+# plus rien. Baisser le seuil ne fait donc jamais perdre le filet de rattrapage.
+SENSIBILITES = {
+    "stricte": 0.65,
+    "normale": SEUIL_CORRESPONDANCE,
+    "large": 0.38,
+}
+SENSIBILITE_DEFAUT = "normale"
+
+
+def seuil_de_sensibilite(nom):
+    """Seuil de réponse correspondant à un nom de sensibilité.
+
+    Un nom inconnu (front plus récent que le serveur, requête bricolée à la
+    main) retombe sur la normale au lieu d'être refusé : ce réglage est un
+    confort d'affichage, pas une autorisation à contrôler.
+    """
+    return SENSIBILITES.get(nom, SENSIBILITES[SENSIBILITE_DEFAUT])
+
 # Réponse d'échec, renvoyée telle quelle : les front-ends la reconnaissent pour
 # proposer des questions proches plutôt que de laisser l'utilisateur sans issue.
 REPONSE_INCOMPRISE = ("❌ Désolé, je ne comprends pas votre question ou elle ne se situe pas dans "
@@ -193,14 +218,21 @@ def _scanner_faq(message_normalise):
     return scores
 
 
-def questions_proches(message, limite=3):
+def questions_proches(message, limite=3, seuil=None):
     """Questions de la FAQ trop peu sûres pour être répondues, mais assez proches
     pour être proposées après un « je ne comprends pas ».
 
     Le score seul ne suffit pas : la ressemblance des lettres fait remonter des
     questions sans aucun rapport ("dresser un lama" → "décompresser un tuple").
     On exige donc au moins un mot de sujet en commun, à une faute près.
+
+    `seuil` est le plafond de la bande, c'est-à-dire le seuil de réponse
+    effectivement appliqué. Il doit rester celui qui a servi à répondre, sinon
+    la bande et la réponse se désaccordent : en sensibilité stricte, une
+    question écartée à 60% doit reparaître ici, et non tomber dans le vide.
     """
+    if seuil is None:
+        seuil = SEUIL_CORRESPONDANCE
     message_normalise = normaliser_texte(message)
     mots_message = _mots_significatifs(message_normalise)
     if not mots_message:
@@ -208,7 +240,7 @@ def questions_proches(message, limite=3):
 
     proches = []
     for q, conf in _scanner_faq(message_normalise):
-        if not SEUIL_PROPOSITION * 100 <= conf < SEUIL_CORRESPONDANCE * 100:
+        if not SEUIL_PROPOSITION * 100 <= conf < seuil * 100:
             continue
         if _recouvrement_mots(mots_message, _mots_significatifs(normaliser_texte(q))) > 0:
             proches.append(q)
@@ -328,7 +360,24 @@ def _chercher_concept(sujet):
     return None
 
 
-def chatbot_response(message):
+def chatbot_response(message, seuil=None, trace=None):
+    """Réponse du bot, en texte.
+
+    `seuil` est la confiance minimale pour oser répondre ; None applique
+    SEUIL_CORRESPONDANCE, c'est-à-dire la sensibilité normale.
+
+    `trace`, si un dict est fourni, reçoit sous la clé "question" l'entrée de la
+    FAQ effectivement retenue — rien du tout pour une commande, une salutation
+    ou un échec. Les suggestions de suivi en ont besoin : les chercher à partir
+    du message tapé exigeait la formulation exacte, alors que tout le pipeline
+    ci-dessous existe justement pour absorber les reformulations. Un paramètre
+    de sortie plutôt qu'un tuple parce que cette fonction est l'entrée du
+    pipeline pour le CLI et une vingtaine de tests : changer son type de retour
+    les aurait tous touchés pour un besoin qui ne concerne que repondre().
+    Le dict appartient à l'appelant, donc rien n'est partagé entre threads.
+    """
+    if seuil is None:
+        seuil = SEUIL_CORRESPONDANCE
     message = message.lower().strip()
 
     # aide <sujet> — explication progressive débutant → avancé
@@ -425,18 +474,22 @@ def chatbot_response(message):
     # 1. Recherche exacte normalisée
     if message_normalise in norm_vers_original:
         original_q = norm_vers_original[message_normalise]
+        if trace is not None:
+            trace["question"] = original_q
         return f"✓ {faq[original_q]}\n\n💡 Confiance: 100%"
 
     # 2. Recherche par score hybride (lettres + vocabulaire) sur toute la FAQ.
     # Un seul passage remplace l'ancien duo fuzzy matching / similarité brute :
     # il tolère les fautes de frappe ET les reformulations ("c'est quoi une liste").
+    scores = _scanner_faq(message_normalise)
     meilleures_correspondances = [
-        (q, faq[q], conf) for q, conf in _scanner_faq(message_normalise)
-        if conf >= SEUIL_CORRESPONDANCE * 100
+        (q, faq[q], conf) for q, conf in scores if conf >= seuil * 100
     ]
 
     if meilleures_correspondances:
-        _, best_answer, confiance = meilleures_correspondances[0]
+        meilleure_q, best_answer, confiance = meilleures_correspondances[0]
+        if trace is not None:
+            trace["question"] = meilleure_q
         response = f"✓ {best_answer}\n\n💡 Confiance: {confiance}%"
         if confiance < 70 and len(meilleures_correspondances) > 1:
             response += "\n\nℹ️ D'autres réponses possibles :\n"
@@ -456,7 +509,13 @@ def chatbot_response(message):
     elif _contient_mot(message, MOTS_AU_REVOIR):
         return "👋 Au revoir ! Continue à apprendre Python le plus possible !"
     else:
-        _logger_question_sans_reponse(message)
+        # Le journal des lacunes reste jugé au seuil par défaut, jamais à celui
+        # du visiteur : une question que la FAQ traite très bien, laissée sans
+        # réponse parce que ce visiteur a demandé « stricte », n'est pas une
+        # lacune de la FAQ. La consigner enverrait lacunes.py réécrire une
+        # entrée qui n'a rien à se reprocher.
+        if not scores or scores[0][1] < SEUIL_CORRESPONDANCE * 100:
+            _logger_question_sans_reponse(message)
         return REPONSE_INCOMPRISE
 
 
@@ -627,7 +686,6 @@ class ChatBot:
     """Classe pour gérer le chatbot avec mémoire de conversation"""
     def __init__(self):
         self.historique = []
-        self.questions_posees = set()
         self._charger_historique()
         self.relations = {
             "qu'est-ce qu'une fonction": ["comment faire une fonction", "comment documenter une fonction"],
@@ -677,17 +735,50 @@ class ChatBot:
     def ajouter_message(self, role, message):
         self.historique.append({"role": role, "message": message})
 
-    def obtenir_suggestions(self, question):
-        question_norm = normaliser_texte(question)
-        suggestions = []
-        for q_source, q_liees in self.relations.items():
-            if normaliser_texte(q_source) in question_norm or question_norm in normaliser_texte(q_source):
-                suggestions = q_liees
-                break
-        suggestions = [s for s in suggestions if s not in self.questions_posees]
-        return suggestions[:2]
+    @staticmethod
+    def _voisines_de_categorie(question_faq):
+        """Les autres questions de la catégorie, en partant de la suivante.
 
-    def repondre(self, message):
+        En tournant plutôt qu'en repartant du début : sinon toutes les
+        questions d'une même catégorie proposeraient les deux mêmes voisines.
+        """
+        for questions in faq_categories.values():
+            liste = list(questions)
+            if question_faq in liste:
+                depart = liste.index(question_faq)
+                return [liste[(depart + n) % len(liste)] for n in range(1, len(liste))]
+        return []
+
+    def obtenir_suggestions(self, question_faq):
+        """Questions à proposer après une réponse trouvée.
+
+        `question_faq` est l'entrée de la FAQ retenue, jamais le message tapé.
+        C'est tout l'objet du correctif : chercher à partir du texte brut
+        revenait à exiger la formulation exacte du dictionnaire ci-dessous, si
+        bien que « c'est quoi une liste » ne proposait rien alors que
+        « qu'est-ce qu'une liste » fonctionnait.
+
+        Rien n'est filtré sur les questions déjà posées. `bot` est un singleton
+        partagé par tout le site et par le CLI : un tel ensemble ne ferait que
+        grossir, et les suggestions s'éteindraient peu à peu pour tout le monde
+        jusqu'au redémarrage du serveur.
+        """
+        if not question_faq:
+            return []
+        question_norm = normaliser_texte(question_faq)
+
+        # Les relations écrites à la main priment : elles sont choisies pour
+        # leur pertinence et peuvent traverser les catégories.
+        for q_source, q_liees in self.relations.items():
+            if normaliser_texte(q_source) == question_norm:
+                return q_liees[:2]
+
+        # À défaut, les voisines de catégorie. Sans ce repli, 50 des 55
+        # questions de la FAQ n'auraient jamais la moindre suggestion — le
+        # dictionnaire ci-dessus n'en couvre que cinq.
+        return self._voisines_de_categorie(question_faq)[:2]
+
+    def repondre(self, message, sensibilite=None):
         """Réponse complète : le texte, plus les questions à proposer ensuite.
 
         Les suggestions sortent à part du texte pour que le chat web les affiche
@@ -695,15 +786,26 @@ class ChatBot:
         Deux cas les alimentent, et un seul des deux s'applique à la fois :
         après une réponse trouvée, les questions liées prolongent le sujet ;
         après un échec, les quasi-correspondances offrent un rattrapage.
+
+        `sensibilite` est le réglage du visiteur ("stricte", "normale",
+        "large") ; il n'est pas mémorisé ici. L'instance `bot` est un singleton
+        partagé par tout le site et par le CLI : la retenir en attribut ferait
+        subir à chacun le choix du dernier arrivé.
         """
-        response = chatbot_response(message)
+        seuil = seuil_de_sensibilite(sensibilite) if sensibilite else SEUIL_CORRESPONDANCE
+        # trace récupère la question de la FAQ retenue : c'est elle qui commande
+        # les suggestions, et non le message tapé. Elle remplace aussi le test
+        # « "Confiance:" in response », qui devinait le succès en reniflant le
+        # texte de la réponse.
+        trace = {}
+        response = chatbot_response(message, seuil, trace)
 
         suggestions, titre = [], ""
-        if "Confiance:" in response:
-            suggestions = self.obtenir_suggestions(message)
+        if trace.get("question"):
+            suggestions = self.obtenir_suggestions(trace["question"])
             titre = TITRE_QUESTIONS_LIEES
         elif response == REPONSE_INCOMPRISE:
-            suggestions = questions_proches(message)
+            suggestions = questions_proches(message, seuil=seuil)
             titre = TITRE_QUESTIONS_PROCHES
 
         # Ajout ET écriture sous le même verrou : deux requêtes web simultanées
@@ -713,7 +815,6 @@ class ChatBot:
             self.ajouter_message("utilisateur", message)
             self.ajouter_message("assistant", response)
             self._sauvegarder_historique()
-        self.questions_posees.add(normaliser_texte(message))
         return {"response": response,
                 "suggestions": suggestions,
                 "titre_suggestions": titre if suggestions else ""}

@@ -67,7 +67,7 @@ def test_message_normal_hors_quiz_appelle_bot_repondre(app_module, client, monke
     suggestions à part du texte, pour que le web en fasse des boutons."""
     appels = []
 
-    def faux_repondre(message):
+    def faux_repondre(message, sensibilite=None):
         appels.append(message)
         return {"response": "réponse du bot", "suggestions": [], "titre_suggestions": ""}
 
@@ -84,6 +84,61 @@ def test_message_normal_hors_quiz_appelle_bot_repondre(app_module, client, monke
         "quiz_actif": False,
     }
     assert appels == ["bonjour"]
+
+
+# ── /api/chat : réglage de sensibilité ──────────────────────────────────────
+# Il vient du navigateur (localStorage, réglé sur /compte) et accompagne chaque
+# message : `bot` est un singleton partagé, le serveur ne peut pas le mémoriser.
+
+def _capturer_sensibilite(app_module, monkeypatch):
+    recu = {}
+
+    def faux_repondre(message, sensibilite=None):
+        recu["valeur"] = sensibilite
+        return {"response": "ok", "suggestions": [], "titre_suggestions": ""}
+
+    monkeypatch.setattr(app_module.bot, "repondre", faux_repondre)
+    return recu
+
+
+def test_sensibilite_transmise_au_bot(app_module, client, monkeypatch):
+    recu = _capturer_sensibilite(app_module, monkeypatch)
+
+    client.post("/api/chat", json={"message": "bonjour", "sensibilite": "stricte"})
+
+    assert recu["valeur"] == "stricte"
+
+
+def test_sensibilite_absente_laisse_le_reglage_par_defaut(app_module, client, monkeypatch):
+    """Un front plus ancien, ou le CLI, n'envoie rien : le bot doit répondre
+    comme avant plutôt que de refuser la requête."""
+    recu = _capturer_sensibilite(app_module, monkeypatch)
+
+    resp = client.post("/api/chat", json={"message": "bonjour"})
+
+    assert resp.status_code == 200
+    assert recu["valeur"] == ""
+
+
+@pytest.mark.parametrize("valeur", [{"a": 1}, ["stricte"], 42, None, True])
+def test_sensibilite_non_textuelle_est_ignoree(app_module, client, monkeypatch, valeur):
+    """SENSIBILITES est un dict : une valeur non hachable y lèverait un
+    TypeError au lieu de retomber sur la normale. Elle est écartée avant."""
+    recu = _capturer_sensibilite(app_module, monkeypatch)
+
+    resp = client.post("/api/chat", json={"message": "bonjour", "sensibilite": valeur})
+
+    assert resp.status_code == 200
+    assert recu["valeur"] == ""
+
+
+def test_sensibilite_inconnue_ne_fait_pas_echouer_la_requete(app_module, client):
+    """Bout en bout, sans doublure : un nom inventé retombe sur la normale."""
+    resp = client.post("/api/chat", json={"message": "qu'est-ce qu'une variable",
+                                          "sensibilite": "extralarge"})
+
+    assert resp.status_code == 200
+    assert "Confiance: 100%" in resp.get_json()["response"]
 
 
 def test_quiz_demarre_sur_message_quiz(app_module, client, monkeypatch):
@@ -171,7 +226,8 @@ def test_message_apres_quiz_termine_repart_sur_bot_normal(app_module, client, mo
     monkeypatch.setattr(iep, "faq", {"Q1": "R1"})
     monkeypatch.setattr(
         app_module.bot, "repondre",
-        lambda msg: {"response": "réponse normale", "suggestions": [], "titre_suggestions": ""},
+        lambda msg, sensibilite=None: {"response": "réponse normale", "suggestions": [],
+                                       "titre_suggestions": ""},
     )
 
     client.post("/api/chat", json={"message": "quiz"})

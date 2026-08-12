@@ -1,3 +1,7 @@
+function T(cle, params) {
+  return window.ChatPyI18n ? window.ChatPyI18n.t(cle, params) : cle;
+}
+
 const chatBody = document.getElementById('chatBody');
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
@@ -70,7 +74,7 @@ function el(tag, className, texte) {
 function blocCode(texte) {
   const wrap = el('div', 'code-block');
   wrap.appendChild(el('pre', null, texte));
-  const btn = el('button', 'code-copy', 'Copier');
+  const btn = el('button', 'code-copy', T('chat.copier'));
   btn.type = 'button';
   wrap.appendChild(btn);
   return wrap;
@@ -129,7 +133,7 @@ function renderAI(text) {
     if (conf) {
       const score = parseInt(conf[1], 10);
       const niveau = score >= 70 ? 'msg-badge--haut' : 'msg-badge--bas';
-      frag.appendChild(el('span', 'msg-badge ' + niveau, 'Confiance ' + score + '%'));
+      frag.appendChild(el('span', 'msg-badge ' + niveau, T('chat.confiance', { score: score })));
       i++;
       continue;
     }
@@ -224,13 +228,13 @@ function blocSuggestions(suggestions, titre) {
 function blocFeedback(question) {
   const bloc = el('div', 'msg-feedback');
   bloc.dataset.question = question;
-  bloc.appendChild(el('span', 'msg-feedback-label', 'Cette réponse vous a-t-elle aidé ?'));
-  for (const [utile, emoji, libelle] of [['1', '👍', 'Réponse utile'],
-                                         ['0', '👎', 'Réponse inutile']]) {
+  bloc.appendChild(el('span', 'msg-feedback-label', T('chat.feedback_label')));
+  for (const [utile, emoji, cle] of [['1', '👍', 'chat.feedback_utile'],
+                                     ['0', '👎', 'chat.feedback_inutile']]) {
     const btn = el('button', 'msg-feedback-btn', emoji);
     btn.type = 'button';
     btn.dataset.utile = utile;
-    btn.setAttribute('aria-label', libelle);
+    btn.setAttribute('aria-label', T(cle));
     bloc.appendChild(btn);
   }
   return bloc;
@@ -270,7 +274,7 @@ function avatarUtilisateur() {
     // Personne de connecté : le portrait de démonstration, comme avant.
     const generique = el('img');
     generique.src = 'perso.JPG';
-    generique.alt = 'Utilisateur';
+    generique.alt = T('commun.utilisateur');
     generique.width = 36;
     generique.height = 36;
     generique.decoding = 'async';
@@ -290,6 +294,30 @@ function avatarUtilisateur() {
   photo.addEventListener('error', () => photo.replaceWith(initialeCompte()));
   photo.src = moiCompte.photo;
   return photo;
+}
+
+// Même règle que animations.js : le choix explicite de /compte d'abord, le
+// réglage du système ensuite. Consulté ici parce que ce script fait des choses
+// que le CSS ne peut pas annuler — faire défiler en douceur, et attendre.
+function mouvementReduit() {
+  if (window.ChatPyPrefs && window.ChatPyPrefs.lire().animations === 'reduites') return true;
+  return Boolean(window.matchMedia
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+function pause(ms) {
+  return ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
+}
+
+/** Ramène la conversation tout en bas ; `doux` fait défiler au lieu de sauter. */
+function defilerEnBas(doux) {
+  // scrollTo({behavior}) manque sur les navigateurs anciens : le repli est le
+  // saut direct, c'est-à-dire le comportement qu'avait cette page avant.
+  if (doux && typeof chatBody.scrollTo === 'function') {
+    chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
+  } else {
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
 }
 
 // `extras` (réponses du bot uniquement) : { suggestions, titre, question }.
@@ -329,21 +357,27 @@ function addRow(type, text, isTyping, animate = true, extras = null) {
     row.appendChild(bubble);
   }
 
+  // Sans animation, la classe est posée *avant* l'insertion : defilerEnBas()
+  // lit scrollHeight, ce qui force un calcul de style, et l'état initial
+  // (opacité 0) serait donc résolu avant la classe. Chaque message d'une
+  // conversation restaurée apparaîtrait alors en fondu, un par un.
+  if (!animate) row.classList.add('visible');
   chatBody.appendChild(row);
-  chatBody.scrollTop = chatBody.scrollHeight;
   if (animate) {
+    // En douceur pour un message qui arrive, d'un coup pour une conversation
+    // qu'on restaure : faire défiler cinquante messages sous les yeux de
+    // l'utilisateur n'aurait aucun sens.
+    defilerEnBas(!mouvementReduit());
     requestAnimationFrame(() => requestAnimationFrame(() => row.classList.add('visible')));
   } else {
-    row.classList.add('visible');
+    defilerEnBas(false);
   }
   return row;
 }
 
 function majQuizUI() {
   quizBadge.hidden = !quizActif;
-  chatInput.placeholder = quizActif
-    ? 'Votre réponse… (tapez « fin » pour arrêter)'
-    : 'Posez une question sur Python…';
+  chatInput.placeholder = T(quizActif ? 'chat.placeholder_quiz' : 'chat.placeholder');
 }
 
 // ---------------------------------------------------------------------------
@@ -503,8 +537,8 @@ function conversationVide() {
 
 function titreDeduit(conv) {
   const premiere = conv.messages.find((m) => m.type === 'user');
-  if (!premiere) return 'Nouvelle conversation';
-  return premiere.text.replace(/\s+/g, ' ').trim().slice(0, 80) || 'Nouvelle conversation';
+  if (!premiere) return T('chat.nouvelle');
+  return premiere.text.replace(/\s+/g, ' ').trim().slice(0, 80) || T('chat.nouvelle');
 }
 
 function majTitreEntete() {
@@ -541,9 +575,13 @@ async function enregistrerMaintenant() {
 
   const resume = await magasin.enregistrer(conversation);
   if (!resume) {
-    historiqueNote.textContent = "⚠ La dernière conversation n'a pas pu être enregistrée.";
+    historiqueNote.textContent = T('chat.erreur_enregistrement');
+    // Marqué pour que majNoteHistorique() ne recouvre pas l'avertissement au
+    // prochain changement de langue.
+    historiqueNote.dataset.erreur = '1';
     return;
   }
+  delete historiqueNote.dataset.erreur;
   conversation.maj = resume.maj;
   modifie = false;
   await rafraichirListe();
@@ -578,7 +616,7 @@ function afficherConversation(conv, restaurerQuiz = false) {
 
   majQuizUI();
   majTitreEntete();
-  chatBody.scrollTop = chatBody.scrollHeight;
+  defilerEnBas(false);
 }
 
 /** Clôt proprement un quiz en cours avant de quitter la conversation.
@@ -598,11 +636,31 @@ async function terminerQuizSiBesoin() {
 // Envoi
 // ---------------------------------------------------------------------------
 
+// Réglages du chatbot, relus à chaque usage plutôt que capturés au chargement :
+// /compte est une autre page, mais un second onglet de ce chat peut les avoir
+// changés entre-temps. Sans preferences.js (page ouverte en file://), on prend
+// les valeurs par défaut.
+function reglages() {
+  return window.ChatPyPrefs ? window.ChatPyPrefs.lire() : {};
+}
+
+/* Durée minimale d'affichage des trois points.
+
+   Elle existe parce que le bot répond en 3 ms : il ne parle à aucune API, il
+   compare des chaînes en mémoire. Sans plancher, la ligne des points est créée
+   et retirée dans la même frame, donc jamais peinte — le réglage « Animé /
+   Directe » de /compte ne changeait alors rien de visible, ni dans un sens ni
+   dans l'autre. Ce délai est délibéré et ne s'applique qu'à cette ligne :
+   « Directe » le supprime entièrement, et il saute en mouvement réduit. */
+const DUREE_MIN_SAISIE = 550;
+
 async function sendMessage(message) {
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message })
+    // Le serveur ne mémorise pas ce réglage : `bot` est un singleton partagé
+    // par tous les visiteurs et par le CLI. Il voyage donc à chaque message.
+    body: JSON.stringify({ message, sensibilite: reglages().sensibilite })
   });
   if (!response.ok) {
     throw new Error('Erreur serveur (' + response.status + ')');
@@ -621,11 +679,26 @@ async function envoyer(message) {
   // Le titre se fige sur la première question : l'en-tête doit le refléter
   // tout de suite, sans attendre l'enregistrement.
   majTitreEntete();
-  const typingRow = addRow('ai', '', true);
+  // Petite impulsion sur le bouton : le message part, ça se voit.
+  sendBtn.classList.add('chat-send--envoi');
+  setTimeout(() => sendBtn.classList.remove('chat-send--envoi'), 400);
+  // En mode « directe », rien ne s'affiche pendant l'attente : la réponse
+  // apparaît d'un coup. La ligne des trois points n'est pas juste masquée, elle
+  // n'est pas créée — sinon son avatar occuperait le vide.
+  const debut = performance.now();
+  const typingRow = reglages().saisie === 'directe' ? null : addRow('ai', '', true);
 
   try {
     const data = await sendMessage(message);
-    typingRow.remove();
+    if (typingRow) {
+      // Le plancher ne s'applique qu'ici, et jamais en mouvement réduit :
+      // faire patienter quelqu'un devant des points qui sautent est exactement
+      // ce que ce réglage demande d'éviter.
+      if (!mouvementReduit()) {
+        await pause(DUREE_MIN_SAISIE - (performance.now() - debut));
+      }
+      typingRow.remove();
+    }
     quizActif = Boolean(data.quiz_actif);
     majQuizUI();
     // Le serveur seul sait si la réponse vient de la FAQ ou du quiz : le message
@@ -638,8 +711,8 @@ async function envoyer(message) {
     addRow('ai', data.response, false, true, extras);
     ajouterMessage('ai', data.response, extras);
   } catch (err) {
-    typingRow.remove();
-    addRow('ai', '❌ Impossible de contacter le serveur ChatPy. Réessayez dans un instant.', false);
+    if (typingRow) typingRow.remove();
+    addRow('ai', T('chat.erreur_serveur'), false);
   } finally {
     chatInput.disabled = false;
     sendBtn.disabled = false;
@@ -665,11 +738,11 @@ async function copierCode(btn) {
   const libelle = btn.dataset.label;
   try {
     await navigator.clipboard.writeText(pre.textContent);
-    btn.textContent = 'Copié';
+    btn.textContent = T('chat.copie');
   } catch (e) {
     // Presse-papiers refusé (contexte non sécurisé, permission) : on le dit
     // plutôt que de laisser croire à une copie réussie.
-    btn.textContent = 'Échec';
+    btn.textContent = T('chat.copie_echec');
   }
   btn.classList.add('code-copy--fait');
   btn._resetTimer = setTimeout(() => {
@@ -686,8 +759,7 @@ async function envoyerFeedback(btn) {
   // Le bloc entier est remplacé : le vote ne se rejoue pas, et le retour est
   // immédiat même si la requête échoue — rien de vital n'en dépend côté client.
   bloc.replaceWith(el('div', 'msg-feedback msg-feedback--envoye',
-    utile ? '👍 Merci pour votre retour !'
-          : '👎 Merci — cette question est notée pour améliorer la FAQ.'));
+    T(utile ? 'chat.feedback_merci' : 'chat.feedback_note')));
   try {
     await fetch('/api/feedback', {
       method: 'POST',
@@ -744,10 +816,10 @@ function groupeDe(maj) {
   const minuit = new Date();
   minuit.setHours(0, 0, 0, 0);
   const debut = minuit.getTime();
-  if (maj >= debut) return "Aujourd'hui";
-  if (maj >= debut - jour) return 'Hier';
-  if (maj >= debut - 7 * jour) return '7 derniers jours';
-  return 'Plus ancien';
+  if (maj >= debut) return T('chat.groupe_aujourdhui');
+  if (maj >= debut - jour) return T('chat.groupe_hier');
+  if (maj >= debut - 7 * jour) return T('chat.groupe_semaine');
+  return T('chat.groupe_ancien');
 }
 
 function boutonAction(libelle, chemin, action) {
@@ -770,8 +842,8 @@ function elementConversation(resume) {
   ouvrir.addEventListener('click', () => ouvrirConversation(resume.id));
   item.appendChild(ouvrir);
 
-  item.appendChild(boutonAction('Renommer', ICONE_CRAYON, () => demarrerRenommage(item, resume)));
-  const suppr = boutonAction('Supprimer', ICONE_POUBELLE, () => supprimerConversation(resume));
+  item.appendChild(boutonAction(T('chat.renommer'), ICONE_CRAYON, () => demarrerRenommage(item, resume)));
+  const suppr = boutonAction(T('chat.supprimer'), ICONE_POUBELLE, () => supprimerConversation(resume));
   suppr.classList.add('historique-item-action--suppr');
   item.appendChild(suppr);
 
@@ -782,9 +854,8 @@ function rendreListe() {
   historiqueListe.replaceChildren();
 
   if (resumesAffiches.length === 0) {
-    historiqueListe.appendChild(el('div', 'historique-vide', rechercheInput.value.trim()
-      ? 'Aucune conversation ne correspond à cette recherche.'
-      : 'Vos conversations apparaîtront ici au fil de vos questions.'));
+    historiqueListe.appendChild(el('div', 'historique-vide',
+      T(rechercheInput.value.trim() ? 'chat.vide_recherche' : 'chat.vide')));
     return;
   }
 
@@ -885,7 +956,7 @@ function demarrerRenommage(item, resume) {
 }
 
 async function supprimerConversation(resume) {
-  if (!window.confirm(`Supprimer « ${resume.titre} » ?\n\nCette conversation sera définitivement perdue.`)) return;
+  if (!window.confirm(T('chat.confirmer_suppression', { titre: resume.titre }))) return;
   if (!await magasin.supprimer(resume.id)) return;
 
   // Si c'était celle à l'écran, on repart d'un fil vierge : laisser affichée
@@ -904,7 +975,8 @@ const ecranEtroit = window.matchMedia('(max-width: 860px)');
 function appliquerEtatPanneau(ouvert) {
   chatLayout.classList.toggle('chat-layout--replie', !ouvert);
   historiqueBascule.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
-  historiqueBascule.setAttribute('aria-label', ouvert ? "Masquer l'historique" : "Afficher l'historique");
+  historiqueBascule.setAttribute('aria-label',
+    T(ouvert ? 'chat.masquer_historique' : 'chat.afficher_historique'));
   // Le voile n'a de sens qu'en mode tiroir, où le panneau recouvre le fil.
   historiqueVoile.hidden = !(ouvert && ecranEtroit.matches);
 }
@@ -1003,13 +1075,70 @@ async function migrerAncienneConversation() {
   }
 }
 
-function personnaliserAccueil() {
+/* Les deux retouches de l'écran d'accueil que le catalogue seul ne peut pas
+   faire : le prénom, qui est une donnée, et la note de langue, qui n'a de sens
+   que hors français (sa traduction française est vide, exprès).
+   `racine` est un paramètre parce que cet écran doit aussi être retouché dans
+   welcomeHTML, gardé hors du DOM — voir retraduireAccueilMemoire(). */
+function personnaliserAccueil(racine = chatBody) {
+  const note = racine.querySelector('#chatNoteLangue');
+  if (note) {
+    const texte = T('chat.note_langue');
+    note.textContent = texte;
+    note.hidden = texte === '';
+  }
+
   if (!moiCompte.connecte) return;
-  const titre = chatBody.querySelector('.chat-welcome-title');
+  const titre = racine.querySelector('.chat-welcome-title');
   if (!titre) return;
   const prenom = (moiCompte.nom || '').trim().split(/\s+/)[0];
-  if (prenom) titre.textContent = `Bonjour ${prenom} 👋`;
+  // Le titre garde son data-i18n : i18n.js le ramènera à « Bonjour 👋 » au
+  // prochain changement de langue, et cette fonction y remettra le prénom
+  // aussitôt après.
+  if (prenom) titre.textContent = T('chat.bonjour_prenom', { prenom });
 }
+
+/** Le pied du panneau : où sont rangées les conversations, et donc ce qu'on
+ *  gagne à se connecter. Sauté tant qu'un échec d'enregistrement y est
+ *  affiché — cet avertissement-là compte davantage que la note d'usage. */
+function majNoteHistorique() {
+  if (historiqueNote.dataset.erreur === '1') return;
+  historiqueNote.textContent = T(moiCompte.connecte ? 'chat.note_compte' : 'chat.note_local');
+}
+
+/* Le gabarit de l'écran d'accueil est gardé en HTML, hors du DOM, pour être
+   réaffiché à chaque nouvelle conversation. Hors du DOM, i18n.js ne le voit
+   pas : on le repasse donc dans un conteneur détaché pour le traduire, sinon
+   « Nouvelle conversation » ramènerait l'accueil dans la langue précédente. */
+function retraduireAccueilMemoire() {
+  const tampon = document.createElement('div');
+  tampon.innerHTML = welcomeHTML;
+  if (window.ChatPyI18n) window.ChatPyI18n.appliquer(tampon);
+  personnaliserAccueil(tampon);
+  welcomeHTML = tampon.innerHTML;
+}
+
+/* Changer de langue depuis /compte (ou depuis un autre onglet) réécrit la page
+   sans la recharger. Les bulles déjà affichées ne portent pas de data-i18n —
+   elles sont construites par renderAI à partir du texte du bot — donc on les
+   reconstruit à partir des données de la conversation, ce que fait déjà
+   afficherConversation(). Deux états qu'elle remet à zéro au passage doivent
+   survivre : le quiz en cours, qui vit dans la session du serveur, et le
+   drapeau `modifie`, dont la perte annulerait un enregistrement en attente. */
+document.addEventListener('chatpy:langue', () => {
+  const quiz = quizActif;
+  const enAttente = modifie;
+
+  if (conversation) afficherConversation(conversation);
+
+  quizActif = quiz;
+  modifie = enAttente;
+  majQuizUI();
+  personnaliserAccueil();
+  retraduireAccueilMemoire();
+  majNoteHistorique();
+  rendreListe();
+});
 
 async function initialiser(moi) {
   moiCompte = moi || { connecte: false };
@@ -1022,9 +1151,7 @@ async function initialiser(moi) {
   // doit réafficher l'accueil personnalisé, pas le gabarit anonyme.
   welcomeHTML = chatBody.innerHTML;
 
-  historiqueNote.textContent = moiCompte.connecte
-    ? 'Conversations enregistrées sur votre compte : vous les retrouverez depuis n’importe quel appareil.'
-    : 'Conversations enregistrées dans ce navigateur seulement. Connectez-vous pour les retrouver ailleurs.';
+  majNoteHistorique();
 
   initPanneau();
   await migrerAncienneConversation();

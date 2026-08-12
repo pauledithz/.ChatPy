@@ -212,12 +212,176 @@ class TestSuggestions(unittest.TestCase):
         self.assertEqual(resultat["suggestions"], [])
         self.assertEqual(resultat["titre_suggestions"], "")
 
+    def test_une_reformulation_donne_les_memes_suggestions(self):
+        """Le défaut d'origine : les suggestions étaient cherchées à partir du
+        message tapé, donc la formulation exacte du dictionnaire `relations`
+        était exigée. « c'est quoi une liste » ne proposait rien."""
+        canonique = self._repondre("qu'est-ce qu'une liste")
+        reformule = self._repondre("c'est quoi une liste")
+
+        self.assertTrue(reformule["suggestions"])
+        self.assertEqual(reformule["suggestions"], canonique["suggestions"])
+
+    def test_une_faute_de_frappe_donne_les_memes_suggestions(self):
+        canonique = self._repondre("comment trier une liste")
+        avec_faute = self._repondre("coment trier une list")
+
+        self.assertTrue(avec_faute["suggestions"])
+        self.assertEqual(avec_faute["suggestions"], canonique["suggestions"])
+
+    def test_toute_question_de_la_faq_a_des_suggestions(self):
+        """Le dictionnaire `relations` n'en couvre que cinq ; le repli sur les
+        voisines de catégorie doit couvrir les cinquante autres."""
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(chatpy, "HISTORY_FILE", os.path.join(tmp, "h.json")):
+                bot = chatpy.ChatBot()
+        sans = [q for q in chatpy.faq if not bot.obtenir_suggestions(q)]
+        self.assertEqual(sans, [])
+
+    def test_une_suggestion_est_toujours_une_vraie_question_de_la_faq(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(chatpy, "HISTORY_FILE", os.path.join(tmp, "h.json")):
+                bot = chatpy.ChatBot()
+        for question in chatpy.faq:
+            for suggestion in bot.obtenir_suggestions(question):
+                self.assertIn(suggestion, chatpy.faq)
+                # Reproposer la question à laquelle on vient de répondre serait
+                # la plus visible des absurdités.
+                self.assertNotEqual(suggestion, question)
+
+    def test_les_relations_ecrites_a_la_main_priment(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(chatpy, "HISTORY_FILE", os.path.join(tmp, "h.json")):
+                bot = chatpy.ChatBot()
+        for source, attendues in bot.relations.items():
+            self.assertEqual(bot.obtenir_suggestions(source), attendues[:2], source)
+
+    def test_toutes_les_cles_de_relations_existent_dans_la_faq(self):
+        """Une clé mal orthographiée ne déclencherait jamais, sans rien dire :
+        le repli sur la catégorie masquerait la panne."""
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(chatpy, "HISTORY_FILE", os.path.join(tmp, "h.json")):
+                bot = chatpy.ChatBot()
+        connues = {chatpy.normaliser_texte(q) for q in chatpy.faq}
+        for source, liees in bot.relations.items():
+            self.assertIn(chatpy.normaliser_texte(source), connues, source)
+            for q in liees:
+                self.assertIn(q, chatpy.faq, q)
+
+    def test_trace_designe_la_question_retenue(self):
+        trace = {}
+        chatpy.chatbot_response("c'est quoi une liste", trace=trace)
+        self.assertEqual(trace["question"], "qu'est-ce qu'une liste")
+
+    def test_trace_reste_vide_hors_reponse_de_la_faq(self):
+        """Ni une commande, ni une salutation, ni un échec ne retiennent une
+        question — et ne doivent donc proposer aucune suite."""
+        for message in ["help", "liste", "bonjour", "comment dresser un lama sauvage"]:
+            trace = {}
+            with patch.object(chatpy, "_logger_question_sans_reponse"):
+                chatpy.chatbot_response(message, trace=trace)
+            self.assertEqual(trace, {}, message)
+
     def test_traiter_message_remet_les_suggestions_en_texte(self):
         with tempfile.TemporaryDirectory() as tmp:
             with patch.object(chatpy, "HISTORY_FILE", os.path.join(tmp, "h.json")):
                 texte = chatpy.ChatBot().traiter_message("qu'est-ce qu'une fonction")
         self.assertIn(f"📌 {chatpy.TITRE_QUESTIONS_LIEES}:", texte)
         self.assertIn("1. ", texte)
+
+
+class TestSensibilite(unittest.TestCase):
+    """Le seuil de réponse réglable par visiteur (carte « Chatbot » de /compte)."""
+
+    FAQ = {"comment ajouter un élément à une liste": "Avec append()."}
+
+    def setUp(self):
+        # FAQ réduite à une entrée : les scores restent lisibles et le test ne
+        # dépend pas du contenu réel de faq.json, qui bouge à chaque ajout.
+        self._patchs = [
+            patch.object(chatpy, "faq", self.FAQ),
+            patch.object(chatpy, "norm_vers_original",
+                         {chatpy.normaliser_texte(q): q for q in self.FAQ}),
+        ]
+        for p in self._patchs:
+            p.start()
+            self.addCleanup(p.stop)
+
+    def test_noms_connus_donnent_des_seuils_ordonnes(self):
+        strict = chatpy.seuil_de_sensibilite("stricte")
+        normal = chatpy.seuil_de_sensibilite("normale")
+        large = chatpy.seuil_de_sensibilite("large")
+        self.assertGreater(strict, normal)
+        self.assertGreater(normal, large)
+        self.assertEqual(normal, chatpy.SEUIL_CORRESPONDANCE)
+
+    def test_toutes_les_sensibilites_laissent_vivre_les_propositions(self):
+        """Un seuil sous SEUIL_PROPOSITION refermerait la bande « vouliez-vous
+        dire ? » : un échec ne proposerait alors plus rien du tout."""
+        for nom, seuil in chatpy.SENSIBILITES.items():
+            self.assertGreater(seuil, chatpy.SEUIL_PROPOSITION, nom)
+
+    def test_nom_inconnu_retombe_sur_la_normale(self):
+        for valeur in ["", "TRÈS large", None, "normale2"]:
+            self.assertEqual(chatpy.seuil_de_sensibilite(valeur),
+                             chatpy.SEUIL_CORRESPONDANCE)
+
+    def _confiance(self, message):
+        scores = chatpy._scanner_faq(chatpy.normaliser_texte(message))
+        return scores[0][1] if scores else 0
+
+    def test_stricte_refuse_ce_que_la_normale_accepte(self):
+        """Une question de confiance moyenne : répondue en normale, écartée en
+        stricte. C'est tout l'effet visible du réglage."""
+        message = "element liste"
+        confiance = self._confiance(message)
+        # Le test n'a de sens que dans la bande entre les deux seuils.
+        self.assertTrue(chatpy.SEUIL_CORRESPONDANCE * 100 <= confiance
+                        < chatpy.SENSIBILITES["stricte"] * 100,
+                        f"confiance {confiance}% hors de la bande testée")
+
+        with patch.object(chatpy, "_logger_question_sans_reponse"):
+            normale = chatpy.chatbot_response(message)
+            stricte = chatpy.chatbot_response(
+                message, chatpy.seuil_de_sensibilite("stricte"))
+        self.assertIn("Confiance:", normale)
+        self.assertEqual(stricte, chatpy.REPONSE_INCOMPRISE)
+
+    def test_stricte_ne_pollue_pas_le_journal_des_lacunes(self):
+        """Une question que la FAQ traite bien n'est pas une lacune, même quand
+        le réglage du visiteur l'a fait passer pour un échec."""
+        with patch.object(chatpy, "_logger_question_sans_reponse") as logger:
+            chatpy.chatbot_response("element liste",
+                                    chatpy.seuil_de_sensibilite("stricte"))
+        logger.assert_not_called()
+
+    def test_un_vrai_echec_reste_journalise_en_stricte(self):
+        with patch.object(chatpy, "_logger_question_sans_reponse") as logger:
+            chatpy.chatbot_response("comment dresser un lama sauvage",
+                                    chatpy.seuil_de_sensibilite("stricte"))
+        logger.assert_called_once()
+
+    def test_la_bande_des_propositions_suit_le_seuil_applique(self):
+        """Écartée en stricte, la question doit reparaître en « vouliez-vous
+        dire ? » : sans ça, le réglage ferait disparaître la réponse ET son
+        rattrapage."""
+        message = "element liste"
+        self.assertEqual(chatpy.questions_proches(message), [])
+        proches = chatpy.questions_proches(
+            message, seuil=chatpy.seuil_de_sensibilite("stricte"))
+        self.assertEqual(proches, list(self.FAQ))
+
+    def test_repondre_transmet_la_sensibilite(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(chatpy, "HISTORY_FILE", os.path.join(tmp, "h.json")), \
+                 patch.object(chatpy, "QUESTIONS_SANS_REPONSE_FILE", os.path.join(tmp, "j.json")):
+                bot = chatpy.ChatBot()
+                normale = bot.repondre("element liste")
+                stricte = bot.repondre("element liste",
+                                       sensibilite="stricte")
+        self.assertIn("Confiance:", normale["response"])
+        self.assertEqual(stricte["response"], chatpy.REPONSE_INCOMPRISE)
+        self.assertEqual(stricte["titre_suggestions"], chatpy.TITRE_QUESTIONS_PROCHES)
 
 
 class TestJournalDesLacunes(unittest.TestCase):

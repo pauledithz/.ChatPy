@@ -9,8 +9,13 @@
 (function () {
   'use strict';
 
+  function T(cle, params) {
+    return window.ChatPyI18n ? window.ChatPyI18n.t(cle, params) : cle;
+  }
+
   // ── Carte « Identité » ────────────────────────────────────────────────────
 
+  // Des noms propres : ils ne se traduisent dans aucune langue.
   var FOURNISSEURS = {
     google: 'Google',
     github: 'GitHub'
@@ -40,8 +45,10 @@
     // sur son code brut plutôt que d'afficher une chaîne vide.
     badge.appendChild(document.createTextNode(
       fournisseur === 'local'
-        ? 'Compte ChatPy (email et mot de passe)'
-        : 'Connecté via ' + (FOURNISSEURS[fournisseur] || fournisseur || 'un fournisseur externe')
+        ? T('compte.local')
+        : T('compte.via', {
+            fournisseur: FOURNISSEURS[fournisseur] || fournisseur || T('compte.fournisseur_inconnu')
+          })
     ));
     return badge;
   }
@@ -56,7 +63,7 @@
       : el('span', 'profil-photo profil-initiale', (moi.nom || '?').charAt(0).toUpperCase()));
 
     var infos = el('div', 'profil-infos');
-    infos.appendChild(el('div', 'profil-nom', moi.nom || 'Compte ChatPy'));
+    infos.appendChild(el('div', 'profil-nom', moi.nom || T('commun.compte_chatpy')));
     if (moi.email) infos.appendChild(el('div', 'profil-email', moi.email));
     infos.appendChild(badgeFournisseur(moi.fournisseur));
     profil.appendChild(infos);
@@ -71,17 +78,14 @@
     // La connexion par email et mot de passe ne dépend d'aucune configuration :
     // elle est toujours proposée, contrairement à Google et GitHub.
     vide.appendChild(el('p', null, moi.oauth_disponible
-      ? "Vous n'êtes pas connecté. Créez un compte, ou connectez-vous avec "
-        + 'Google ou GitHub, pour retrouver vos conversations depuis '
-        + "n'importe quel appareil."
-      : "Vous n'êtes pas connecté. Créez un compte avec votre email pour "
-        + "retrouver vos conversations depuis n'importe quel appareil."));
+      ? T('compte.invitation_oauth')
+      : T('compte.invitation_simple')));
 
     var liens = el('div', 'compte-liens');
-    var connexion = el('a', 'btn', 'Se connecter');
+    var connexion = el('a', 'btn', T('nav.connexion'));
     connexion.href = '/?inscription=1';
     liens.appendChild(connexion);
-    var chat = el('a', 'btn', 'Ouvrir le chat');
+    var chat = el('a', 'btn', T('nav.ouvrir_chat'));
     chat.href = '/chat';
     liens.appendChild(chat);
     vide.appendChild(liens);
@@ -92,16 +96,32 @@
   var carteIdentite = document.getElementById('carteIdentite');
   var chargement = document.getElementById('identiteChargement');
 
+  /* Cette carte est bâtie en JavaScript à partir de /api/moi, et son texte
+     dépend de données (le nom, le fournisseur) autant que du catalogue : plutôt
+     que de semer des data-i18n qu'il faudrait ensuite recoller aux bonnes
+     valeurs, on la redessine entièrement quand la langue change. Elle tient en
+     quelques nœuds, et c'est le seul endroit de la page dans ce cas. */
+  function rendreIdentite(moi) {
+    if (!carteIdentite) return;
+    // Tout sauf le titre de la carte, qui porte son propre data-i18n.
+    var titre = carteIdentite.querySelector('.carte-titre');
+    carteIdentite.replaceChildren();
+    if (titre) carteIdentite.appendChild(titre);
+    if (moi.connecte) rendreProfil(carteIdentite, moi);
+    else rendreInvitation(carteIdentite, moi);
+  }
+
   if (carteIdentite && window.ChatPyMoi) {
     window.ChatPyMoi.then(function (moi) {
       if (chargement) chargement.remove();
-      if (moi.connecte) rendreProfil(carteIdentite, moi);
-      else rendreInvitation(carteIdentite, moi);
+      rendreIdentite(moi);
+      document.addEventListener('chatpy:langue', function () { rendreIdentite(moi); });
     });
   } else if (chargement) {
     // Sans serveur (page ouverte directement), l'identité est indisponible ;
     // les réglages, eux, restent utilisables.
-    chargement.textContent = 'Identité indisponible : le serveur ChatPy ne répond pas.';
+    chargement.setAttribute('data-i18n', 'compte.identite_indisponible');
+    chargement.textContent = T('compte.identite_indisponible');
   }
 
   // ── Sélecteurs segmentés ──────────────────────────────────────────────────
@@ -160,10 +180,30 @@
     synchroniser(groupe);
   });
 
+  // ── Listes déroulantes ────────────────────────────────────────────────────
+  // Même contrat que les segments (data-pref + ChatPyPrefs.definir), pour les
+  // réglages à trop de valeurs pour tenir en boutons côte à côte : la langue.
+
+  var listes = Array.prototype.slice.call(document.querySelectorAll('select[data-pref]'));
+
+  listes.forEach(function (liste) {
+    liste.addEventListener('change', function () {
+      if (window.ChatPyPrefs) window.ChatPyPrefs.definir(liste.dataset.pref, liste.value);
+    });
+    if (window.ChatPyPrefs) liste.value = window.ChatPyPrefs.lire()[liste.dataset.pref];
+  });
+
+  function synchroniserListes() {
+    if (!window.ChatPyPrefs) return;
+    var prefs = window.ChatPyPrefs.lire();
+    listes.forEach(function (liste) { liste.value = prefs[liste.dataset.pref]; });
+  }
+
   // Une préférence peut aussi changer ailleurs : la bascule de thème de la
   // barre de navigation agit sur le même réglage que le premier groupe.
   document.addEventListener('chatpy:prefs', function () {
     groupes.forEach(synchroniser);
+    synchroniserListes();
   });
 
   // Le curseur est posé une première fois sans transition, puis on la rétablit
@@ -187,4 +227,12 @@
     document.fonts.ready.then(fixerCurseurs);
   }
   window.addEventListener('resize', fixerCurseurs);
+
+  // « Complètes » ne fait pas la même largeur que « Vollständig » : le curseur
+  // se replace après la traduction, sinon il resterait aux mesures d'avant et
+  // déborderait du segment actif. Reporté d'une frame, le temps que la nouvelle
+  // mise en page soit calculée.
+  document.addEventListener('chatpy:langue', function () {
+    requestAnimationFrame(fixerCurseurs);
+  });
 })();
