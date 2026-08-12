@@ -131,7 +131,7 @@ def test_connexion_reussie_remplit_la_session(app_configure):
     client, reponse = _callback_avec_profil(app_configure, PROFIL_GOOGLE)
 
     assert reponse.status_code == 302
-    assert reponse.headers["Location"] == "/?connexion=ok"
+    assert reponse.headers["Location"] == "/chat"
 
     moi = client.get("/api/moi").get_json()
     assert moi["connecte"] is True

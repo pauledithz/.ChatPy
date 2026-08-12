@@ -214,6 +214,14 @@
 :root[data-taille="petite"] { --taille-chat: 13px; }
 :root[data-taille="grande"] { --taille-chat: 16.5px; }
 
+/* Réglages du chatbot (préférences utilisateur, voir preferences.js).
+   Masquer en CSS et non en JS a un effet voulu : le réglage s'applique aussi
+   aux messages déjà à l'écran et à ceux restaurés d'une ancienne conversation,
+   sans avoir à les redessiner. Les blocs restent dans le DOM, ce qui est sans
+   conséquence : ils ne portent aucune donnée que la page n'ait déjà. */
+:root[data-suggestions="masquees"] .msg-suggest { display: none; }
+:root[data-retours="masques"] .msg-feedback { display: none; }
+
 /* ============================================================
    Base
    ============================================================ */
@@ -606,16 +614,32 @@ body {
 .chat-status { font-size: 11px; color: var(--texte-6); display: flex; align-items: center; }
 .chat-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 12px; min-height: 200px; }
 
+/* Entrée des messages : chacun vient de son côté de la conversation — la
+   question depuis la droite, la réponse depuis la gauche. Le léger décalage
+   horizontal en dit plus qu'un fondu vertical identique pour les deux, et
+   c'est la seule animation qui distingue les deux voix. */
 .msg-row {
   display: flex;
   align-items: flex-end;
   gap: 8px;
   opacity: 0;
-  transform: translateY(12px) scale(0.98);
-  transition: opacity 0.4s ease, transform 0.45s var(--ressort);
+  transform: translate(-14px, 10px) scale(0.97);
+  transition: opacity 0.35s ease, transform 0.5s var(--ressort);
 }
-.msg-row.user-row { flex-direction: row-reverse; }
+.msg-row.user-row {
+  flex-direction: row-reverse;
+  transform: translate(14px, 10px) scale(0.97);
+}
 .msg-row.visible { opacity: 1; transform: none; }
+
+/* L'avatar arrive juste après sa bulle, jamais avant : il accompagne le
+   message au lieu de le précéder. */
+.msg-row .msg-mini-avatar {
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.3s ease 0.08s, transform 0.4s var(--ressort) 0.08s;
+}
+.msg-row.visible .msg-mini-avatar { opacity: 1; transform: none; }
 
 .msg-mini-avatar { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; }
 .avatar-user {
@@ -667,11 +691,39 @@ body {
   border-radius: 14px 14px 14px 2px;
 }
 
-.typing-indicator { display: flex; align-items: center; gap: 4px; padding: 12px 14px; background: var(--bulle-fond); border: 0.5px solid var(--bulle-contour); border-radius: 14px 14px 14px 2px; width: fit-content; }
+/* Trois points d'attente. chat.js leur garantit une durée minimale à l'écran
+   (DUREE_MIN_SAISIE) : le bot répond en quelques millisecondes, sans ce
+   plancher rien de tout ceci ne serait jamais peint. */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--bulle-fond);
+  border: 0.5px solid var(--bulle-contour);
+  border-radius: 14px 14px 14px 2px;
+  width: fit-content;
+  animation: typingIn 0.32s var(--ressort) both;
+}
+@keyframes typingIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.9); transform-origin: left bottom; }
+  to   { opacity: 1; transform: none; }
+}
 .typing-dot { width: 6px; height: 6px; background: #aaa; border-radius: 50%; animation: typingBounce 1.2s infinite ease-in-out; }
 .typing-dot:nth-child(2) { animation-delay: 0.2s; }
 .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-5px); opacity: 1; } }
+
+/* Pendant qu'il « écrit », l'avatar du bot respire doucement. Ciblé sur la
+   ligne qui contient l'indicateur, donc il s'arrête tout seul quand la réponse
+   remplace les points. */
+.msg-row:has(.typing-indicator) .avatar-ai {
+  animation: avatarRespire 1.6s ease-in-out infinite;
+}
+@keyframes avatarRespire {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.07); }
+}
 
 .cursor { display: inline-block; width: 2px; height: 14px; background: #333; margin-left: 1px; vertical-align: middle; animation: blink 0.8s step-end infinite; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
@@ -696,6 +748,23 @@ body {
 .chat-send.active { background: var(--accent-survol); transform: scale(0.95); }
 .chat-send:disabled { opacity: 0.4; cursor: default; }
 .chat-send svg { width: 14px; height: 14px; fill: var(--accent-texte); }
+
+/* Impulsion au départ du message. Posée par chat.js et retirée 400 ms plus
+   tard : le bouton est désactivé pendant l'envoi, donc sans ça il se contente
+   de pâlir, et rien ne signale que quelque chose est parti. */
+.chat-send--envoi { animation: envoiPulse 0.4s var(--ressort); }
+@keyframes envoiPulse {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(0.86); }
+  100% { transform: scale(1); }
+}
+.chat-send--envoi svg { animation: envoiFleche 0.4s var(--ressort); }
+@keyframes envoiFleche {
+  0%   { transform: translate(0, 0); opacity: 1; }
+  45%  { transform: translate(9px, -9px); opacity: 0; }
+  46%  { transform: translate(-7px, 7px); opacity: 0; }
+  100% { transform: translate(0, 0); opacity: 1; }
+}
 
 /* Page de chat fonctionnelle (/chat) */
 .chat-page-shell { padding-top: 0; }
@@ -798,6 +867,28 @@ body {
 .chat-chip:active { transform: scale(0.97); }
 .chat-chip--accent { background: var(--accent); color: var(--accent-texte); border-color: var(--accent); }
 .chat-chip--accent:hover { background: var(--accent-survol); color: var(--accent-texte); }
+
+/* Cascade des pastilles : elles arrivent l'une après l'autre au lieu de
+   surgir en bloc. Le rang vient de nth-child — ni l'accueil (cinq) ni les
+   suggestions sous une réponse (trois au plus) ne dépassent six.
+
+   `backwards` et surtout pas `both` : avec `both`, l'état final de
+   l'animation (transform: none) resterait appliqué et écraserait le
+   translateY du survol, qui ne fonctionnerait plus après coup. */
+.chat-suggestions .chat-chip,
+.msg-suggest-chips .chat-chip {
+  animation: chipIn 0.42s var(--ressort) backwards;
+}
+.chat-suggestions .chat-chip:nth-child(1), .msg-suggest-chips .chat-chip:nth-child(1) { animation-delay: 0.06s; }
+.chat-suggestions .chat-chip:nth-child(2), .msg-suggest-chips .chat-chip:nth-child(2) { animation-delay: 0.12s; }
+.chat-suggestions .chat-chip:nth-child(3), .msg-suggest-chips .chat-chip:nth-child(3) { animation-delay: 0.18s; }
+.chat-suggestions .chat-chip:nth-child(4) { animation-delay: 0.24s; }
+.chat-suggestions .chat-chip:nth-child(5) { animation-delay: 0.30s; }
+.chat-suggestions .chat-chip:nth-child(n + 6) { animation-delay: 0.36s; }
+@keyframes chipIn {
+  from { opacity: 0; transform: translateY(9px) scale(0.95); }
+  to   { opacity: 1; transform: none; }
+}
 
 /* ── Contenu interne de la bulle du bot ────────────────────────────────────
    Cette bulle reste blanche dans les deux thèmes : les couleurs ci-dessous
@@ -1878,6 +1969,43 @@ a.btn {
 }
 .segment:hover { color: var(--texte-2); }
 .segment[aria-checked="true"] { color: var(--texte-0); }
+
+/* Liste déroulante, pour les réglages à trop de valeurs pour tenir en segments
+   (la langue en compte sept). Le contrôle natif est gardé tel quel — flèche
+   comprise : il apporte le clavier, la recherche à la frappe et, sur mobile, le
+   sélecteur plein écran du système, que redessiner à la main ferait perdre. On
+   ne retouche donc que la bordure, le fond et la typographie, comme pour les
+   segments juste au-dessus.
+   `color-scheme` sur :root fait déjà peindre la liste déroulée par le système
+   dans le bon thème : rien à styler sur les <option>, ce que Windows et Safari
+   ignoreraient de toute façon. */
+.reglage-select {
+  flex: none;
+  max-width: 100%;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 0.5px solid var(--bord);
+  background-color: var(--fond-doux);
+  color: var(--texte-1);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+.reglage-select:hover { border-color: var(--bord-fort); }
+.reglage-select:focus-visible {
+  outline: 2px solid var(--bord-survol);
+  outline-offset: 2px;
+}
+
+/* Note de l'écran d'accueil du chat : le bot ne répond qu'en français, ce que
+   les autres langues doivent savoir avant la première question. */
+.chat-welcome-langue {
+  margin-top: 0.6rem;
+  font-size: 12.5px;
+  color: var(--texte-5);
+  max-width: 34rem;
+}
 
 /* Invitation à se connecter, quand personne ne l'est. */
 .compte-vide { text-align: center; padding: 1rem 0 0.5rem; }

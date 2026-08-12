@@ -1,22 +1,23 @@
-const conversations = [
-    {
-      user: "Peux-tu m'expliquer comment fonctionne une API REST ?",
-      ai: "Bien sûr ! Une API REST permet à deux applications de communiquer via HTTP. Tu envoies une requête (GET, POST, PUT…) à une URL, et le serveur te renvoie une réponse en JSON. C'est la base du web moderne. ✦"
-    },
-    {
-      user: "Génère-moi un script Python pour lire un fichier CSV.",
-      ai: "Voici un exemple simple avec pandas : import pandas as pd — df = pd.read_csv('fichier.csv') — print(df.head()). Rapide, lisible, et facile à adapter à ton projet !"
-    },
-    {
-      user: "Comment améliorer les performances de mon site web ?",
-      ai: "Plusieurs pistes : compresse tes images, minifie tes fichiers CSS/JS, active le cache navigateur, et utilise un CDN. Ces optimisations peuvent diviser ton temps de chargement par 2 ou 3. ⚡"
-    },
-    {
-      user: "Aide-moi à rédiger un email professionnel pour un client.",
-      ai: "Avec plaisir ! Commence par un contexte clair, exprime ta demande de façon concise, et termine par une invitation à l'action. Dis-moi le sujet et je t'écris un brouillon complet en quelques secondes."
-    }
+function T(cle, params) {
+  return window.ChatPyI18n ? window.ChatPyI18n.t(cle, params) : cle;
+}
+
+/* La démonstration animée du hero. Seules les clés sont listées ici : le texte
+   est lu au moment de jouer chaque échange, si bien qu'un changement de langue
+   s'applique à la conversation suivante sans rien interrompre — réécrire celle
+   qui est en train de se taper à l'écran serait autrement plus visible. */
+const CONVERSATIONS_DEMO = [
+    ['demo.q1', 'demo.r1'],
+    ['demo.q2', 'demo.r2'],
+    ['demo.q3', 'demo.r3'],
+    ['demo.q4', 'demo.r4']
   ];
-  
+
+  function conversationDemo(index) {
+    const paire = CONVERSATIONS_DEMO[index % CONVERSATIONS_DEMO.length];
+    return { user: T(paire[0]), ai: T(paire[1]) };
+  }
+
   let currentConv = 0;
   const chatBody = document.getElementById('chatBody');
 const inputText = document.getElementById('inputText');
@@ -39,7 +40,7 @@ function addRow(type, content, isTyping) {
     if (type === 'user') {
       const photo = document.createElement('img');
       photo.src = 'Persone professionelle.jpg';
-      photo.alt = 'Utilisateur';
+      photo.alt = T('commun.utilisateur');
       photo.width = 36;
       photo.height = 36;
       photo.decoding = 'async';
@@ -110,7 +111,7 @@ async function runConversation() {
   if (conversationRunning) return;
   conversationRunning = true;
   try {
-    const conv = conversations[currentConv % conversations.length];
+    const conv = conversationDemo(currentConv);
     currentConv++;
 
     await typeInInput(conv.user);
@@ -268,7 +269,15 @@ function adapterAppelsALAction() {
     // Sans libellé de rechange, on laisse le texte d'origine : seul le
     // comportement change. C'est le cas du bouton de la barre de navigation,
     // que nav-compte.js remplace de toute façon par le menu du compte.
-    if (button.dataset.labelConnecte) button.textContent = button.dataset.labelConnecte;
+    if (!button.dataset.labelConnecte) return;
+    // On déplace aussi la clé de traduction : sans ça, le prochain changement
+    // de langue rendrait au bouton son libellé de visiteur déconnecté.
+    if (button.dataset.labelConnecteI18n) {
+      button.setAttribute('data-i18n', button.dataset.labelConnecteI18n);
+    }
+    button.textContent = button.dataset.labelConnecteI18n
+      ? T(button.dataset.labelConnecteI18n)
+      : button.dataset.labelConnecte;
   });
 }
 
@@ -338,13 +347,13 @@ function effacerMessage() {
 
 function appliquerMode() {
   formCompte.classList.toggle('form--connexion', !modeInscription);
-  signupTitle.textContent = modeInscription ? 'Créer votre compte ChatPy' : 'Se connecter à ChatPy';
-  signupSubtitle.textContent = modeInscription
-    ? 'Un email et un mot de passe suffisent — aucune vérification par courriel.'
-    : 'Retrouvez vos conversations et votre progression.';
-  boutonSoumettre.textContent = modeInscription ? 'Créer mon compte' : 'Se connecter';
-  texteBascule.textContent = modeInscription ? 'Vous avez déjà un compte ?' : "Vous n'avez pas de compte ?";
-  lienBascule.textContent = modeInscription ? 'Se connecter' : "S'inscrire";
+  signupTitle.textContent = T(modeInscription ? 'modale.titre_inscription' : 'modale.titre_connexion');
+  signupSubtitle.textContent = T(modeInscription
+    ? 'modale.sous_titre_inscription'
+    : 'modale.sous_titre_connexion');
+  boutonSoumettre.textContent = T(modeInscription ? 'modale.soumettre_inscription' : 'modale.soumettre_connexion');
+  texteBascule.textContent = T(modeInscription ? 'modale.deja_compte' : 'modale.pas_de_compte');
+  lienBascule.textContent = T(modeInscription ? 'modale.soumettre_connexion' : 'modale.inscrire');
   // Le gestionnaire de mots de passe du navigateur doit savoir s'il s'agit
   // d'en proposer un nouveau ou de remplir l'existant.
   champMotDePasse.autocomplete = modeInscription ? 'new-password' : 'current-password';
@@ -368,10 +377,7 @@ if (formCompte) {
 
   // Il n'y a pas de réinitialisation possible : ce serveur n'envoie aucun
   // email. Le dire franchement vaut mieux qu'un lien qui ne fait rien.
-  const expliquerOubli = () => afficherMessage(
-    "Ce serveur n'envoie pas d'emails : il n'y a donc pas de réinitialisation "
-    + 'de mot de passe. Vous pouvez créer un nouveau compte, ou vous connecter '
-    + 'avec Google ou GitHub.');
+  const expliquerOubli = () => afficherMessage(T('modale.oubli_explication'));
   lienOubli.addEventListener('click', expliquerOubli);
   lienOubli.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -387,7 +393,12 @@ if (formCompte) {
     const corps = {
       email: champEmail.value,
       mot_de_passe: champMotDePasse.value,
-      rester_connecte: champRester.checked
+      rester_connecte: champRester.checked,
+      // Ces refus-là sont rédigés côté serveur (adresse invalide, mot de passe
+      // trop court, trop de tentatives) : il ne peut les traduire que si on lui
+      // dit dans quelle langue est cette page. Le réglage vit dans le
+      // localStorage, le serveur n'y a aucun accès.
+      langue: window.ChatPyI18n ? window.ChatPyI18n.langue() : 'fr'
     };
     if (modeInscription) {
       corps.nom = champNom.value;
@@ -406,33 +417,42 @@ if (formCompte) {
       // que d'en inventer un moins précis.
       const donnees = await reponse.json().catch(() => ({}));
       if (!reponse.ok) {
-        afficherMessage(donnees.error || "La connexion n'a pas abouti.");
+        afficherMessage(donnees.error || T('modale.echec'));
         return;
       }
-      // Rechargement complet plutôt qu'une mise à jour à la main : la barre de
-      // navigation, les boutons d'appel à l'action et le chat se construisent
-      // tous à partir de /api/moi, qu'ils réinterrogeront au chargement.
-      window.location.reload();
+      // Direction le chat, comme au retour de Google et de GitHub : c'est là
+      // que vivent les conversations qu'on vient d'ouvrir un compte pour
+      // retrouver. La destination est celle qu'annonce le serveur, avec un
+      // repli au cas où une vieille version répondrait sans elle. Navigation
+      // complète et non mise à jour à la main : toute la page se reconstruit
+      // à partir de /api/moi, qu'elle réinterrogera au chargement.
+      window.location.assign(donnees.redirection || '/chat');
     } catch (e) {
-      afficherMessage('Serveur injoignable. Réessayez dans un instant.');
+      afficherMessage(T('modale.serveur_injoignable'));
     } finally {
       boutonSoumettre.disabled = false;
     }
   });
 
   appliquerMode();
+
+  // Ce formulaire écrit lui-même ses libellés selon le mode : i18n.js, qui ne
+  // repasse que sur les data-i18n, ne peut pas les atteindre.
+  document.addEventListener('chatpy:langue', appliquerMode);
 }
 
 function signalerRetourOAuth() {
-  // app.py redirige vers /?connexion=... après le passage chez le fournisseur.
-  // Le message ne le nomme pas : les deux flows partagent ces mêmes codes.
+  // Seuls les échecs reviennent ici : une connexion réussie part directement
+  // sur /chat (PAGE_APRES_CONNEXION dans app.py) et ne repasse pas par cette
+  // page. Le message ne nomme pas le fournisseur : les deux flows partagent
+  // ces mêmes codes.
   const etat = new URLSearchParams(window.location.search).get('connexion');
   if (!etat) return;
 
   if (etat === 'echec') {
-    alert("La connexion a échoué ou a été annulée.");
+    alert(T('oauth.echec'));
   } else if (etat === 'email_non_verifie') {
-    alert("Aucune adresse email vérifiée sur ce compte : connexion refusée.");
+    alert(T('oauth.email_non_verifie'));
   }
   // Nettoie l'URL, sinon le message revient à chaque rechargement.
   window.history.replaceState({}, '', window.location.pathname);

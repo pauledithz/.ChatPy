@@ -14,6 +14,14 @@
 (function () {
   'use strict';
 
+  // Raccourci vers le catalogue de i18n.js. À défaut de ce fichier — 404 parce
+  // qu'il manque à FICHIERS_PUBLICS, par exemple — t() rend la clé, ce qui se
+  // voit tout de suite, plutôt qu'un libellé vide qui ferait disparaître le
+  // bouton sans explication.
+  function T(cle, params) {
+    return window.ChatPyI18n ? window.ChatPyI18n.t(cle, params) : cle;
+  }
+
   var navCompte = document.getElementById('navCompte');
 
   // Une seule requête par page, partagée. Le .catch() rend une identité vide
@@ -22,6 +30,25 @@
     .then(function (reponse) { return reponse.ok ? reponse.json() : null; })
     .then(function (moi) { return moi || { connecte: false, oauth_disponible: false }; })
     .catch(function () { return { connecte: false, oauth_disponible: false }; });
+
+  // ── Liens vers l'accueil ──────────────────────────────────────────────────
+  // Connecté, « / » redirige vers le chat (voir index() dans app.py) : les
+  // liens qui y mènent deviennent des rebonds. Le logo repart donc vers le
+  // chat, et l'entrée « Accueil » disparaît au lieu de promettre une page que
+  // le serveur refusera. Fait ici et non dans le HTML de chaque page : c'est
+  // /api/moi qui tranche, et ce fichier est le seul à l'interroger.
+
+  function adapterLiensAccueil() {
+    var logo = document.querySelector('.nav-logo[href="/"]');
+    if (logo) logo.href = '/chat';
+    document.querySelectorAll('.nav-links a[href="/"]').forEach(function (lien) {
+      lien.remove();
+    });
+  }
+
+  window.ChatPyMoi.then(function (moi) {
+    if (moi.connecte) adapterLiensAccueil();
+  });
 
   // ── Fabriques ─────────────────────────────────────────────────────────────
 
@@ -77,7 +104,7 @@
   // d'autres tailles : une seule gestion du repli sur l'initiale.
   window.ChatPyAvatar = avatar;
 
-  function itemMenu(libelle, cheminIcone, options) {
+  function itemMenu(cle, cheminIcone, options) {
     options = options || {};
     var item = document.createElement(options.href ? 'a' : 'button');
     item.className = 'compte-menu-item' + (options.classe ? ' ' + options.classe : '');
@@ -88,7 +115,13 @@
       item.type = 'button';
     }
     item.appendChild(icone(cheminIcone));
-    item.appendChild(document.createTextNode(libelle));
+    // Le libellé dans un <span data-i18n> plutôt qu'en nœud texte nu : i18n.js
+    // repasse sur tout le document au changement de langue, et ce menu se
+    // retrouve donc retraduit sans que ce fichier ait à le reconstruire.
+    var libelle = document.createElement('span');
+    libelle.setAttribute('data-i18n', cle);
+    libelle.textContent = T(cle);
+    item.appendChild(libelle);
     if (options.onClick) item.addEventListener('click', options.onClick);
     return item;
   }
@@ -105,9 +138,12 @@
     bouton.appendChild(icone(ICONES.lune + ICONES.soleil));
 
     function majLibelle() {
-      var vers = window.ChatPyPrefs && window.ChatPyPrefs.themeEffectif() === 'sombre'
-        ? 'clair' : 'sombre';
-      var texte = 'Passer au thème ' + vers;
+      // Une clé par destination plutôt qu'un « Passer au thème » + le nom du
+      // thème : la phrase ne se construit pas de la même façon partout, et en
+      // allemand le verbe ne tient pas au même bout.
+      var texte = window.ChatPyPrefs && window.ChatPyPrefs.themeEffectif() === 'sombre'
+        ? T('nav.theme_clair')
+        : T('nav.theme_sombre');
       bouton.setAttribute('aria-label', texte);
       bouton.title = texte;
     }
@@ -142,13 +178,26 @@
     bouton.className = 'compte-bouton';
     bouton.setAttribute('aria-haspopup', 'menu');
     bouton.setAttribute('aria-expanded', 'false');
-    bouton.setAttribute('aria-label', 'Menu du compte de ' + moi.nom);
+    // Le nom est une donnée, pas un texte du catalogue : cet intitulé se
+    // reconstruit à chaque changement de langue au lieu de porter un data-i18n,
+    // que i18n.js réécrirait sans savoir quel nom y insérer.
+    function majAriaLabel() {
+      bouton.setAttribute('aria-label', T('nav.menu_compte', { nom: moi.nom }));
+    }
+    majAriaLabel();
     bouton.appendChild(avatar(moi, 'nav-photo', 'nav-initiale', 28));
 
     var prenom = document.createElement('span');
     prenom.className = 'compte-bouton-nom';
     // Le prénom seul : le nom complet et l'email sont dans l'en-tête du menu.
-    prenom.textContent = (moi.nom || '').trim().split(/\s+/)[0] || 'Compte';
+    var prenomTexte = (moi.nom || '').trim().split(/\s+/)[0];
+    if (prenomTexte) {
+      prenom.textContent = prenomTexte;
+    } else {
+      // Personne sans nom : le mot « Compte », lui, se traduit.
+      prenom.setAttribute('data-i18n', 'nav.compte');
+      prenom.textContent = T('nav.compte');
+    }
     bouton.appendChild(prenom);
     var chevron = icone(ICONES.chevron, 16);
     chevron.setAttribute('class', 'compte-chevron');
@@ -162,7 +211,12 @@
     entete.className = 'compte-menu-entete';
     var nomComplet = document.createElement('div');
     nomComplet.className = 'compte-menu-nom';
-    nomComplet.textContent = moi.nom || 'Compte ChatPy';
+    if (moi.nom) {
+      nomComplet.textContent = moi.nom;
+    } else {
+      nomComplet.setAttribute('data-i18n', 'commun.compte_chatpy');
+      nomComplet.textContent = T('commun.compte_chatpy');
+    }
     entete.appendChild(nomComplet);
     if (moi.email) {
       var email = document.createElement('div');
@@ -173,17 +227,19 @@
     }
     menu.appendChild(entete);
 
-    menu.appendChild(itemMenu('Ouvrir le chat', ICONES.chat, { href: '/chat' }));
-    menu.appendChild(itemMenu('Mon compte', ICONES.profil, { href: '/compte' }));
+    menu.appendChild(itemMenu('nav.ouvrir_chat', ICONES.chat, { href: '/chat' }));
+    menu.appendChild(itemMenu('nav.mon_compte', ICONES.profil, { href: '/compte' }));
 
     var separateur = document.createElement('div');
     separateur.className = 'compte-menu-separateur';
     menu.appendChild(separateur);
 
-    menu.appendChild(itemMenu('Se déconnecter', ICONES.sortie, {
+    menu.appendChild(itemMenu('nav.deconnexion', ICONES.sortie, {
       classe: 'compte-menu-item--sortie',
       onClick: seDeconnecter
     }));
+
+    document.addEventListener('chatpy:langue', majAriaLabel);
 
     conteneur.appendChild(bouton);
     conteneur.appendChild(menu);

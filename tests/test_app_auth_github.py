@@ -176,7 +176,7 @@ def test_connexion_reussie_remplit_la_session(app_configure):
     client, reponse = _callback(app_configure)
 
     assert reponse.status_code == 302
-    assert reponse.headers["Location"] == "/?connexion=ok"
+    assert reponse.headers["Location"] == "/chat"
 
     moi = client.get("/api/moi").get_json()
     assert moi["connecte"] is True
@@ -203,7 +203,7 @@ def test_repli_sur_une_adresse_verifiee_non_principale(app_configure):
     ]
     client, reponse = _callback(app_configure, emails=emails)
 
-    assert reponse.headers["Location"] == "/?connexion=ok"
+    assert reponse.headers["Location"] == "/chat"
     assert client.get("/api/moi").get_json()["email"] == "autre@example.com"
 
 

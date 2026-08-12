@@ -165,7 +165,7 @@ class TestApiChatQuizRouting(unittest.TestCase):
                 with client.session_transaction() as sess:
                     self.assertNotIn("quiz", sess)
 
-        bot_mock.assert_called_once_with("qu'est-ce qu'une fonction")
+        bot_mock.assert_called_once_with("qu'est-ce qu'une fonction", sensibilite="")
         demarrer_mock.assert_not_called()
         repondre_mock.assert_not_called()
 

@@ -31,6 +31,10 @@ FICHIERS_PUBLICS = frozenset({
     "compte.js",
     # Chargé en tête de chaque page, avant la peinture, pour poser le thème.
     "preferences.js",
+    # Idem, juste après lui : la langue de l'interface. Absent d'ici, il
+    # répondrait 404 et les textes construits en JavaScript s'afficheraient sous
+    # forme de clés (« nav.deconnexion ») sur les trois pages.
+    "i18n.js",
     "nav-compte.js",
     "animations.js",
     "ChatPY_logo.PNG",
@@ -148,9 +152,34 @@ def _oauth_non_configure(fournisseur, variables):
                              f"{variables} dans .env."}), 503
 
 
+# Où atterrit quelqu'un qui vient de se connecter, quel que soit le moyen
+# employé (Google, GitHub, email). Se connecter n'a qu'un intérêt ici :
+# retrouver ses conversations, qui vivent sur /chat. Le renvoyer sur la page
+# d'accueil lui laissait un clic de plus à faire pour arriver là où il allait.
+# Les échecs, eux, continuent de revenir sur "/" : c'est script.js, chargé par
+# Index.html seule, qui porte les messages ?connexion=echec.
+PAGE_APRES_CONNEXION = "/chat"
+
+
 @app.route("/")
 def index():
-    return send_from_directory(_DIR, "Index.html")
+    """L'accueil, ou directement le chat pour qui est déjà connecté.
+
+    L'accueil est une page de présentation : il explique le chatbot et en
+    montre une démo animée à quelqu'un qui ne l'a jamais utilisé. Une fois
+    connecté, cette démonstration n'a plus d'objet — on peut poser de vraies
+    questions. Se déconnecter (menu du compte) rend l'accueil tel qu'il était.
+    """
+    if session.get("utilisateur"):
+        reponse = redirect(PAGE_APRES_CONNEXION)
+    else:
+        reponse = send_from_directory(_DIR, "Index.html")
+    # Seule route dont la réponse dépend du cookie de session. Sans « no-store »,
+    # le navigateur peut resservir la redirection à quelqu'un qui vient de se
+    # déconnecter : l'accueil lui resterait fermé jusqu'à ce qu'il vide son
+    # cache, et rien à l'écran n'expliquerait pourquoi.
+    reponse.headers["Cache-Control"] = "no-store"
+    return reponse
 
 
 @app.route("/auth/google")
@@ -194,7 +223,7 @@ def auth_google_callback():
         # ce champ, rien ne distinguerait l'utilisateur Google 42 du GitHub 42.
         "fournisseur": "google",
     }
-    return redirect("/?connexion=ok")
+    return redirect(PAGE_APRES_CONNEXION)
 
 
 def _api_github(token, chemin):
@@ -275,7 +304,7 @@ def auth_github_callback():
         "photo": profil.get("avatar_url", ""),
         "fournisseur": "github",
     }
-    return redirect("/?connexion=ok")
+    return redirect(PAGE_APRES_CONNEXION)
 
 
 # ── Comptes par email et mot de passe ────────────────────────────────────────
@@ -316,12 +345,20 @@ def auth_inscription():
         corps.get("mot_de_passe"),
         corps.get("confirmation"),
         corps.get("nom"),
+        # La langue de l'interface vit dans le localStorage du navigateur : le
+        # serveur ne peut pas la deviner, le front la joint donc à la requête.
+        # Absente ou inconnue, comptes.normaliser_langue() retombe sur le
+        # français plutôt que de refuser une inscription par ailleurs valable.
+        corps.get("langue"),
     )
     if motif:
         return jsonify({"error": motif}), 400
 
     _ouvrir_session(utilisateur, bool(corps.get("rester_connecte")))
-    return jsonify({"ok": True, "nom": utilisateur["nom"]})
+    # La destination vient du serveur et non du front : les trois moyens de
+    # connexion aboutissent ainsi au même endroit sans avoir à le répéter.
+    return jsonify({"ok": True, "nom": utilisateur["nom"],
+                    "redirection": PAGE_APRES_CONNEXION})
 
 
 @app.route("/auth/connexion", methods=["POST"])
@@ -330,14 +367,17 @@ def auth_connexion():
     if erreur:
         return erreur
 
-    utilisateur, motif = comptes.verifier(corps.get("email"), corps.get("mot_de_passe"))
+    utilisateur, motif = comptes.verifier(
+        corps.get("email"), corps.get("mot_de_passe"), corps.get("langue")
+    )
     if motif:
         # 401 et non 400 : la requête est bien formée, c'est l'authentification
         # qui est refusée.
         return jsonify({"error": motif}), 401
 
     _ouvrir_session(utilisateur, bool(corps.get("rester_connecte")))
-    return jsonify({"ok": True, "nom": utilisateur["nom"]})
+    return jsonify({"ok": True, "nom": utilisateur["nom"],
+                    "redirection": PAGE_APRES_CONNEXION})
 
 
 @app.route("/auth/logout", methods=["POST"])
@@ -411,6 +451,20 @@ def _lire_message(champ="message"):
     return message, None
 
 
+def _lire_sensibilite():
+    """Réglage de sensibilité joint à la requête, "" s'il n'y en a pas.
+
+    Il arrive du navigateur (localStorage, réglé sur /compte) et non de la
+    session : c'est une préférence d'appareil, au même titre que le thème, et
+    elle doit valoir pour les visiteurs sans compte. Tout ce qui n'est pas une
+    chaîne est ignoré dès ici — SENSIBILITES est un dict, et une valeur non
+    hachable y lèverait au lieu de retomber sur la normale.
+    """
+    data = request.get_json(silent=True)
+    valeur = data.get("sensibilite") if isinstance(data, dict) else None
+    return valeur if isinstance(valeur, str) else ""
+
+
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     message, erreur = _lire_message()
@@ -427,7 +481,7 @@ def api_chat():
     else:
         # Les suggestions voyagent à part du texte : le front en fait des boutons
         # cliquables plutôt qu'une liste numérotée que l'utilisateur doit recopier.
-        resultat = bot.repondre(message)
+        resultat = bot.repondre(message, sensibilite=_lire_sensibilite())
         resultat["quiz_actif"] = False
         resultat["feedback_possible"] = True
         return jsonify(resultat)

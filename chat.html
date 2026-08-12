@@ -3,11 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>ChatPy — Chat</title>
+  <title data-i18n="chat.titre_page">ChatPy — Chat</title>
   <link rel="icon" type="image/png" href="ChatPY_logo.PNG">
   <!-- Chargé sans defer, avant tout contenu : le thème doit être posé sur <html>
        avant la première peinture, sinon la page clignote au chargement. -->
   <script src="preferences.js"></script>
+  <!-- Après preferences.js, dont il lit le réglage « langue », et sans defer
+       pour la même raison : il masque brièvement la page hors français plutôt
+       que de la laisser s'afficher puis se réécrire sous les yeux. -->
+  <script src="i18n.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&display=swap">
@@ -18,14 +22,15 @@
 
   <nav class="nav">
     <a class="nav-logo" href="/"><img class="nav-logo-img" src="ChatPY_logo.PNG" alt="" width="54" height="54"> ChatPy</a>
+    <!-- Pas d'entrée « Mon compte » ici : connecté, le menu du compte en porte
+         déjà une, et la répéter dans la barre alourdissait l'en-tête pour rien. -->
     <div class="nav-links">
-      <a href="/">Accueil</a>
-      <a href="/compte">Mon compte</a>
+      <a href="/" data-i18n="nav.accueil">Accueil</a>
     </div>
     <!-- nav-compte.js insère la bascule de thème, puis remplace ce lien par le
          menu du compte si /api/moi signale quelqu'un de connecté. -->
     <div class="nav-compte" id="navCompte">
-      <a class="nav-cta" href="/?inscription=1">Se connecter</a>
+      <a class="nav-cta" href="/?inscription=1" data-i18n="nav.connexion">Se connecter</a>
     </div>
   </nav>
 
@@ -33,16 +38,20 @@
 
     <!-- Historique. Rempli par chat.js depuis /api/conversations quand on est
          connecté, depuis le localStorage sinon. -->
-    <aside class="historique" id="historique" aria-label="Historique des conversations">
+    <aside class="historique" id="historique" aria-label="Historique des conversations"
+           data-i18n-attr="aria-label:chat.historique_aria">
       <div class="historique-entete">
+        <!-- Le libellé est dans un <span> : data-i18n remplace le textContent
+             du nœud qu'il porte, et sur le bouton entier il emporterait l'icône. -->
         <button type="button" class="historique-nouvelle" id="nouvelleBtn">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>
-          Nouvelle conversation
+          <span data-i18n="chat.nouvelle">Nouvelle conversation</span>
         </button>
         <div class="historique-recherche">
           <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg>
           <input type="search" id="rechercheInput" placeholder="Rechercher…"
-                 autocomplete="off" aria-label="Rechercher dans les conversations">
+                 autocomplete="off" aria-label="Rechercher dans les conversations"
+                 data-i18n-attr="placeholder:chat.rechercher;aria-label:chat.rechercher_aria">
         </div>
       </div>
       <div class="historique-liste" id="historiqueListe"></div>
@@ -61,29 +70,40 @@
       <div class="chat-avatar"><img src="ChatPY_logo.PNG" alt="ChatPy" width="44" height="44" decoding="async"></div>
       <div class="chat-header-info">
         <div class="chat-name" id="chatTitre">ChatPy</div>
-        <div class="chat-status"><span class="chat-status-dot"></span> En ligne</div>
+        <div class="chat-status"><span class="chat-status-dot"></span> <span data-i18n="commun.en_ligne">En ligne</span></div>
       </div>
-      <span class="chat-quiz-badge" id="quizBadge" hidden>🎯 Quiz en cours</span>
+      <span class="chat-quiz-badge" id="quizBadge" hidden data-i18n="chat.quiz_badge">🎯 Quiz en cours</span>
     </div>
     <div class="chat-body" id="chatBody">
       <div class="chat-welcome" id="chatWelcome">
         <img class="chat-welcome-logo" src="ChatPY_logo.PNG" alt="" width="64" height="64" decoding="async">
-        <h1 class="chat-welcome-title">Bonjour 👋</h1>
-        <p class="chat-welcome-subtitle">
+        <h1 class="chat-welcome-title" data-i18n="chat.bonjour">Bonjour 👋</h1>
+        <p class="chat-welcome-subtitle" data-i18n="chat.accroche">
           Posez-moi une question sur Python, ou choisissez une suggestion ci-dessous.
         </p>
-        <!-- Personnalisé par chat.js une fois /api/moi connu : « Bonjour Paul 👋 ». -->
+        <!-- Rempli par chat.js hors français : le bot ne comprend que le
+             français, autant le dire avant la première question. -->
+        <p class="chat-welcome-langue" id="chatNoteLangue" hidden></p>
+        <!-- Personnalisé par chat.js une fois /api/moi connu : « Bonjour Paul 👋 ».
+             Les deux premières puces gardent leur libellé français : c'est le
+             texte qui part au bot, et l'afficher traduit ferait apparaître dans
+             la bulle une question que le visiteur n'a pas écrite. Les trois
+             autres envoient une commande (« aide … », « quiz », « help »), pas
+             une phrase : leur libellé se traduit sans mentir sur l'envoi. -->
         <div class="chat-suggestions" id="chatSuggestions">
           <button type="button" class="chat-chip" data-send="C'est quoi une liste en Python ?">C'est quoi une liste ?</button>
           <button type="button" class="chat-chip" data-send="Comment créer une fonction ?">Comment créer une fonction ?</button>
-          <button type="button" class="chat-chip" data-send="aide variable">Explique-moi les variables</button>
-          <button type="button" class="chat-chip chat-chip--accent" data-send="quiz">🎯 Lancer un quiz</button>
-          <button type="button" class="chat-chip" data-send="help">Que sais-tu faire ?</button>
+          <button type="button" class="chat-chip" data-send="aide variable" data-i18n="chat.chip_variables">Explique-moi les variables</button>
+          <button type="button" class="chat-chip chat-chip--accent" data-send="quiz" data-i18n="chat.chip_quiz">🎯 Lancer un quiz</button>
+          <button type="button" class="chat-chip" data-send="help" data-i18n="chat.chip_capacites">Que sais-tu faire ?</button>
         </div>
       </div>
     </div>
     <form class="chat-input-bar" id="chatForm">
-      <input type="text" class="chat-text-input" id="chatInput" placeholder="Posez une question sur Python…" autocomplete="off">
+      <!-- majQuizUI() (chat.js) réécrit ce placeholder à chaque changement
+           d'état du quiz ; l'attribut ici sert au premier affichage. -->
+      <input type="text" class="chat-text-input" id="chatInput" placeholder="Posez une question sur Python…" autocomplete="off"
+             data-i18n-attr="placeholder:chat.placeholder">
       <button type="submit" class="chat-send" id="sendBtn">
         <svg viewBox="0 0 16 16"><path d="M2 2l12 6-12 6V9.5l8-1.5-8-1.5V2z"/></svg>
       </button>

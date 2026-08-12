@@ -49,6 +49,116 @@ MAX_NOM = 60
 # grossières, pas les adresses exotiques mais valides.
 _EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$")
 
+# ── Motifs de refus, traduits ───────────────────────────────────────────────
+# Ces phrases s'affichent dans la modale de connexion, dont la langue est un
+# réglage du navigateur (localStorage) que le serveur ne peut pas connaître
+# seul : le front la joint à la requête, et les routes la passent ici.
+#
+# Un catalogue côté serveur double celui de i18n.js, ce qui n'est pas gratuit —
+# mais l'alternative, renvoyer un code d'erreur que le front traduirait, rendrait
+# ces réponses illisibles pour tout autre appelant de l'API (curl, un test, un
+# script) et ferait dépendre le sens d'un message de la version du front.
+#
+# LANGUES doit rester en phase avec le tableau du même nom dans i18n.js.
+LANGUES = ("fr", "en", "es", "de", "it", "pt")
+LANGUE_DEFAUT = "fr"
+
+MESSAGES = {
+    "email_invalide": {
+        "fr": "Cette adresse email n'est pas valide.",
+        "en": "This email address is not valid.",
+        "es": "Esta dirección de correo no es válida.",
+        "de": "Diese E-Mail-Adresse ist ungültig.",
+        "it": "Questo indirizzo email non è valido.",
+        "pt": "Este endereço de e-mail não é válido.",
+    },
+    "mot_de_passe_manquant": {
+        "fr": "Mot de passe manquant.",
+        "en": "Password missing.",
+        "es": "Falta la contraseña.",
+        "de": "Passwort fehlt.",
+        "it": "Password mancante.",
+        "pt": "Senha ausente.",
+    },
+    "mot_de_passe_court": {
+        "fr": "Le mot de passe doit faire au moins {n} caractères.",
+        "en": "The password must be at least {n} characters long.",
+        "es": "La contraseña debe tener al menos {n} caracteres.",
+        "de": "Das Passwort muss mindestens {n} Zeichen lang sein.",
+        "it": "La password deve contenere almeno {n} caratteri.",
+        "pt": "A senha deve ter pelo menos {n} caracteres.",
+    },
+    "mot_de_passe_long": {
+        "fr": "Le mot de passe ne peut pas dépasser {n} caractères.",
+        "en": "The password cannot exceed {n} characters.",
+        "es": "La contraseña no puede superar los {n} caracteres.",
+        "de": "Das Passwort darf {n} Zeichen nicht überschreiten.",
+        "it": "La password non può superare i {n} caratteri.",
+        "pt": "A senha não pode passar de {n} caracteres.",
+    },
+    "mot_de_passe_email": {
+        "fr": "Le mot de passe ne peut pas être votre adresse email.",
+        "en": "The password cannot be your email address.",
+        "es": "La contraseña no puede ser tu dirección de correo.",
+        "de": "Das Passwort darf nicht Ihre E-Mail-Adresse sein.",
+        "it": "La password non può essere il tuo indirizzo email.",
+        "pt": "A senha não pode ser o seu endereço de e-mail.",
+    },
+    "confirmation_differente": {
+        "fr": "Les deux mots de passe ne correspondent pas.",
+        "en": "The two passwords do not match.",
+        "es": "Las dos contraseñas no coinciden.",
+        "de": "Die beiden Passwörter stimmen nicht überein.",
+        "it": "Le due password non corrispondono.",
+        "pt": "As duas senhas não coincidem.",
+    },
+    "compte_existant": {
+        "fr": "Un compte existe déjà avec cette adresse.",
+        "en": "An account already exists with this address.",
+        "es": "Ya existe una cuenta con esta dirección.",
+        "de": "Mit dieser Adresse besteht bereits ein Konto.",
+        "it": "Esiste già un account con questo indirizzo.",
+        "pt": "Já existe uma conta com este endereço.",
+    },
+    "trop_de_tentatives": {
+        "fr": "Trop de tentatives. Réessayez dans {minutes} minute(s).",
+        "en": "Too many attempts. Try again in {minutes} minute(s).",
+        "es": "Demasiados intentos. Inténtalo de nuevo en {minutes} minuto(s).",
+        "de": "Zu viele Versuche. Versuchen Sie es in {minutes} Minute(n) erneut.",
+        "it": "Troppi tentativi. Riprova tra {minutes} minuto/i.",
+        "pt": "Tentativas demais. Tente novamente em {minutes} minuto(s).",
+    },
+    # Un seul code pour « adresse inconnue » et « mot de passe faux » : les
+    # distinguer révélerait quelles adresses sont inscrites. Ce message doit
+    # rester rigoureusement identique dans les deux cas, dans chaque langue.
+    "identifiants_incorrects": {
+        "fr": "Adresse email ou mot de passe incorrect.",
+        "en": "Incorrect email address or password.",
+        "es": "Dirección de correo o contraseña incorrecta.",
+        "de": "E-Mail-Adresse oder Passwort ist falsch.",
+        "it": "Indirizzo email o password non corretti.",
+        "pt": "Endereço de e-mail ou senha incorretos.",
+    },
+}
+
+
+def normaliser_langue(langue):
+    """Le code de langue s'il est connu, « fr » sinon.
+
+    Tout arrive du réseau ici : une langue absente, inconnue ou d'un autre type
+    qu'une chaîne ne justifie pas de refuser une inscription par ailleurs
+    valable — c'est un confort d'affichage, pas une autorisation.
+    """
+    return langue if isinstance(langue, str) and langue in LANGUES else LANGUE_DEFAUT
+
+
+def _msg(code, langue, **params):
+    traductions = MESSAGES[code]
+    # Repli sur le français plutôt que sur du vide : une phrase dans la mauvaise
+    # langue reste actionnable, une phrase absente non.
+    texte = traductions.get(normaliser_langue(langue)) or traductions[LANGUE_DEFAUT]
+    return texte.format(**params) if params else texte
+
 # ── Limitation des tentatives ───────────────────────────────────────────────
 # En mémoire, donc remise à zéro au redémarrage et non partagée entre plusieurs
 # processus. C'est assez pour ralentir une attaque par dictionnaire depuis un
@@ -119,23 +229,27 @@ def _publier(compte):
 # ── Validation ──────────────────────────────────────────────────────────────
 
 
-def valider(email, mot_de_passe, confirmation=None, nom=None):
-    """Renvoie (None, motif) si quelque chose cloche, (valeurs, None) sinon."""
+def valider(email, mot_de_passe, confirmation=None, nom=None, langue=LANGUE_DEFAUT):
+    """Renvoie (None, motif) si quelque chose cloche, (valeurs, None) sinon.
+
+    `langue` ne change que la rédaction du motif : les règles, elles, sont les
+    mêmes pour tout le monde.
+    """
     email = normaliser_email(email)
     if not email or len(email) > MAX_EMAIL or not _EMAIL.match(email):
-        return None, "Cette adresse email n'est pas valide."
+        return None, _msg("email_invalide", langue)
 
     if not isinstance(mot_de_passe, str):
-        return None, "Mot de passe manquant."
+        return None, _msg("mot_de_passe_manquant", langue)
     if len(mot_de_passe) < MIN_MOT_DE_PASSE:
-        return None, f"Le mot de passe doit faire au moins {MIN_MOT_DE_PASSE} caractères."
+        return None, _msg("mot_de_passe_court", langue, n=MIN_MOT_DE_PASSE)
     if len(mot_de_passe) > MAX_MOT_DE_PASSE:
-        return None, f"Le mot de passe ne peut pas dépasser {MAX_MOT_DE_PASSE} caractères."
+        return None, _msg("mot_de_passe_long", langue, n=MAX_MOT_DE_PASSE)
     if mot_de_passe.strip().lower() == email:
-        return None, "Le mot de passe ne peut pas être votre adresse email."
+        return None, _msg("mot_de_passe_email", langue)
 
     if confirmation is not None and mot_de_passe != confirmation:
-        return None, "Les deux mots de passe ne correspondent pas."
+        return None, _msg("confirmation_differente", langue)
 
     nom = " ".join(nom.split())[:MAX_NOM] if isinstance(nom, str) else ""
     # À défaut de nom, la partie avant l'arobase : afficher l'adresse complète
@@ -146,9 +260,9 @@ def valider(email, mot_de_passe, confirmation=None, nom=None):
 # ── Inscription et connexion ────────────────────────────────────────────────
 
 
-def creer(email, mot_de_passe, confirmation=None, nom=None):
+def creer(email, mot_de_passe, confirmation=None, nom=None, langue=LANGUE_DEFAUT):
     """Crée un compte. Renvoie (utilisateur, None) ou (None, motif)."""
-    valeurs, motif = valider(email, mot_de_passe, confirmation, nom)
+    valeurs, motif = valider(email, mot_de_passe, confirmation, nom, langue)
     if motif:
         return None, motif
 
@@ -159,7 +273,7 @@ def creer(email, mot_de_passe, confirmation=None, nom=None):
             # obligerait à confirmer par email pour lever l'ambiguïté, ce qu'on
             # ne sait pas faire ici — et un message vague ferait tourner en rond
             # quelqu'un qui a simplement oublié qu'il avait déjà un compte.
-            return None, "Un compte existe déjà avec cette adresse."
+            return None, _msg("compte_existant", langue)
 
         compte = {
             # Identifiant tiré au sort, indépendant de l'adresse : il sert de clé
@@ -197,11 +311,11 @@ def _noter_echec(email):
     _tentatives[email] = (nombre + 1, _maintenant())
 
 
-def verifier(email, mot_de_passe):
+def verifier(email, mot_de_passe, langue=LANGUE_DEFAUT):
     """Authentifie. Renvoie (utilisateur, None) ou (None, motif)."""
     email = normaliser_email(email)
     if not email or not isinstance(mot_de_passe, str):
-        return None, "Adresse email ou mot de passe incorrect."
+        return None, _msg("identifiants_incorrects", langue)
     # Tronqué et non refusé : un mot de passe trop long est forcément faux, mais
     # le hacher entier serait précisément le déni de service qu'on veut éviter.
     mot_de_passe = mot_de_passe[:MAX_MOT_DE_PASSE]
@@ -210,7 +324,7 @@ def verifier(email, mot_de_passe):
         reste = _blocage_restant(email)
         if reste:
             minutes = max(1, round(reste / 60))
-            return None, f"Trop de tentatives. Réessayez dans {minutes} minute(s)."
+            return None, _msg("trop_de_tentatives", langue, minutes=minutes)
 
         compte = _charger().get(email)
         # Même sur une adresse inconnue, on paie le prix d'une vérification :
@@ -222,7 +336,7 @@ def verifier(email, mot_de_passe):
             _noter_echec(email)
             # Message unique pour « adresse inconnue » et « mot de passe faux » :
             # les distinguer révélerait quelles adresses sont inscrites.
-            return None, "Adresse email ou mot de passe incorrect."
+            return None, _msg("identifiants_incorrects", langue)
 
         _tentatives.pop(email, None)
 
