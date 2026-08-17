@@ -30,6 +30,7 @@ import re
 import secrets
 import threading
 import time
+import sqlite3
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -324,5 +325,10 @@ def verifier(email, mot_de_passe, langue=LANGUE_DEFAUT):
 
     # Date et compteur de connexions, comme pour Google et GitHub. Hors du
     # verrou : cette écriture ne touche pas au décompte des tentatives.
-    bdd.noter_connexion("local", compte["id"])
+    # Une panne d'écriture ne refuse pas la connexion : le mot de passe est
+    # déjà vérifié, et cette ligne n'est qu'une trace (voir app._memoriser).
+    try:
+        bdd.noter_connexion("local", compte["id"])
+    except (sqlite3.Error, OSError, RuntimeError) as erreur:
+        print(f"⚠️  Connexion locale non enregistrée dans la base : {erreur}")
     return _publier(compte), None
