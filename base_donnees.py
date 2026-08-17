@@ -71,6 +71,9 @@ def maintenant():
 # reparte proprement.
 _verrou_schema = threading.Lock()
 _base_prete = None
+# Le thread qui prépare la base est le seul autorisé à la rouvrir pendant la
+# reprise : c'est lui qui coupe la récursion, pas le drapeau public.
+_en_preparation = threading.local()
 
 
 def _preparer(fichier):
@@ -78,19 +81,22 @@ def _preparer(fichier):
     global _base_prete
     if _base_prete == fichier:
         return
+    if getattr(_en_preparation, "fichier", None) == fichier:
+        return  # appel réentrant depuis _reprendre_comptes_json()
 
     with _verrou_schema:
         if _base_prete == fichier:  # posé pendant qu'on attendait le verrou
             return
 
         _poser_le_schema(fichier)
-
-        # Posé avant la reprise, et non après : celle-ci écrit dans la base par
-        # connexion(), qui repasse par ici. C'est ce drapeau qui coupe la
-        # récursion — et il est posé sous le verrou, sinon un autre thread
-        # pourrait lire la table avant que les anciens comptes n'y soient.
+        _en_preparation.fichier = fichier
+        try:
+            _reprendre_comptes_json()
+        finally:
+            _en_preparation.fichier = None
+        # Publié seulement maintenant : aucun autre thread ne voit la base
+        # « prête » avant que les anciens comptes n'y soient.
         _base_prete = fichier
-        _reprendre_comptes_json()
 
 
 def _poser_le_schema(fichier):
