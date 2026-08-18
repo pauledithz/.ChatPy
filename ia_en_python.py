@@ -33,7 +33,7 @@ HISTORIQUE_MAX_MESSAGES = 2000
 COMMANDES_TERMINAL = ("clear", "historique")
 
 QUIZ_NB_QUESTIONS = 10
-QUIZ_MOTS_ARRET   = ("fin", "exit", "quitter")
+QUIZ_MOTS_ARRET   = ("fin", "exit", "quitter", "terminé")
 QUIZ_SEUIL_BONNE   = 70   # similarité ≥ 70% : réponse comptée juste
 QUIZ_SEUIL_PRESQUE = 35   # entre 35% et 70% : sur la bonne piste
 
@@ -400,8 +400,8 @@ def chatbot_response(message, seuil=None, trace=None):
                 "  cherche <mot>      — questions contenant un mot-clé (ex: cherche liste)\n"
                 "  aide <sujet>       — explication détaillée débutant→avancé (ex: aide boucle)\n"
                 "  quiz               — tester vos connaissances Python\n"
-                "  historique         — relire la conversation\n"
-                "  clear              — effacer l'écran (l'historique reste sauvegardé)\n"
+                "  historique         — relire la conversation ⚠️ utilisable uniquement via terminal\n"
+                "  clear              — effacer l'écran (l'historique reste sauvegardé) ⚠️ utilisable uniquement via terminal\n"
                 "  au revoir          — quitter\n\n"
                 "Ou posez directement une question sur Python.")
 
