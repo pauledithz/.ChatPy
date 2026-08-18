@@ -226,6 +226,8 @@ Les stats (nombre de questions, catégories, concepts) se mettent à jour automa
   - 70–89 % : assez fiable
   - 50–69 % : réponse possible + alternatives proposées
   - moins de 50 % : pas de réponse fiable
+
+![Score de confiance](Score%20de%20confiance.png)
 - **Mémoire persistante** : l'historique est sauvegardé dans `.chatpy_history.json` et rechargé à chaque démarrage
 - **Mode quiz** : questions aléatoires tirées de la FAQ ; citer les bons mots-clés suffit (répondre « append » à « comment ajouter un élément à une liste » compte juste)
 - **Aide détaillée** : 8 concepts Python expliqués sur 3 niveaux (débutant → avancé), chargés depuis `aide_concepts.json`
