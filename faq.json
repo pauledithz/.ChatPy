@@ -5,13 +5,36 @@
     "comment afficher un message": "Utilisez la fonction print().\nExemple :\nprint('Bonjour !')\nprint(f'Hello {nom}')",
     "comment lire une entrée utilisateur": "Utilisez input().\nExemple :\nnom = input('Votre nom ? ')",
     "comment convertir une chaîne en entier": "Utilisez int().\nExemple :\nx = int('5')",
-    "comment convertir un entier en chaîne": "Utilisez str().\nExemple :\ns = str(5)"
+    "comment convertir un entier en chaîne": "Utilisez str().\nExemple :\ns = str(5)",
+    "qu'est-ce qu'un type de données": "Un type de données indique la nature d'une valeur : entier (int), nombre à virgule (float), chaîne de caractères (str), booléen (bool), etc.\nExemple :\nx = 5          # int\ny = 3.14       # float\ns = 'hello'    # str\nb = True       # bool",
+    "comment vérifier le type d'une variable": "Utilisez type().\nExemple :\nprint(type(5))        # <class 'int'>\nprint(type('hello'))  # <class 'str'>",
+    "comment convertir un flottant en entier": "Utilisez int(). Attention : la partie décimale est tronquée, pas arrondie.\nExemple :\nx = int(3.9)   # x vaut 3, pas 4\nPour arrondir, utilisez round() : round(3.9) # 4",
+    "comment arrondir un nombre": "Utilisez round().\nExemple :\nround(3.14159, 2)  # 3.14\nround(3.5)         # 4",
+    "qu'est-ce qu'un opérateur": "Un opérateur est un symbole qui effectue une opération sur des valeurs.\nArithmétiques : + - * / // % **\nComparaison : == != > < >= <=\nLogiques : and or not\nExemple :\n10 // 3   # 3 (division entière)\n10 % 3    # 1 (modulo, le reste)\n2 ** 3    # 8 (puissance)",
+    "comment faire une multiplication": "Utilisez l'astérisque *.\nExemple :\nresultat = 5 * 3   # 15",
+    "qu'est-ce qu'une constante": "En Python, les constantes sont des majuscules par convention, mais rien n'empêche de les modifier. C'est une convention de nommage, pas une protection.\nExemple :\nPI = 3.14159\nMAX_TENTATIVES = 3",
+    "qu'est-ce qu'un booléen": "Un booléen est une valeur True ou False. C'est le résultat d'une comparaison ou d'une condition.\nExemple :\nx = True\ny = 5 > 3   # True\nz = 2 == 5   # False",
+    "comment formatter une chaîne de caractères": "Utilisez les f-strings (Python 3.6+).\nExemple :\nnom = 'Alice'\nage = 25\nprint(f'{nom} a {age} ans')\nprint(f'{10 + 5 = }')  # 10 + 5 = 15 (debug)",
+    "comment obtenir la longueur d'une chaîne": "Utilisez len().\nExemple :\nlen('hello')  # 5",
+    "comment accéder à un caractère d'une chaîne": "Utilisez l'index entre crochets. Les index commencent à 0.\nExemple :\ns = 'Python'\ns[0]   # 'P'\ns[-1]  # 'n' (dernier caractère)",
+    "comment extraire une sous-chaîne": "Utilisez le slicing avec deux-points.\nExemple :\ns = 'Python'\ns[0:3]   # 'Pyt'\ns[2:]    # 'thon'\ns[:2]    # 'Py'\ns[::-1]  # 'nohtyP' (inversé)",
+    "comment vérifier si une chaîne est vide": "Utilisez une simple vérification booléenne.\nExemple :\ns = ''\nif not s:\n    print('La chaîne est vide')\n\n# ou\nif len(s) == 0:\n    print('vide')",
+    "qu'est-ce que None": "None est la valeur qui représente l'absence de valeur. C'est le type NoneType.\nExemple :\nx = None\nif x is None:\n    print('pas de valeur')\n\n# Attention : utiliser 'is' et non '==' pour comparer à None"
   },
   "Fonctions": {
     "qu'est-ce qu'une fonction": "Une fonction en Python est un bloc de code réutilisable qui s'exécute lorsqu'on l'appelle avec son nom.\nExemple :\ndef ma_fonction():\n    print('Hello')",
     "À quoi sert une fonction": "Une fonction sert à regrouper un bloc de code qui peut être réutilisé plusieurs fois dans le programme.\nExemple :\ndef ma_fonction():\n    print('Hello')\n\ndef addition(a, b):\n    return a + b",
     "comment faire une fonction": "Utilisez le mot-clé def.\nExemple :\ndef ma_fonction():\n    print('Hello')\n\ndef addition(a, b):\n    return a + b",
-    "comment documenter une fonction": "Utilisez une docstring.\nExemple :\ndef f():\n    '''Ceci est une docstring'''\n    pass"
+    "comment documenter une fonction": "Utilisez une docstring.\nExemple :\ndef f():\n    '''Ceci est une docstring'''\n    pass",
+    "comment retourner une valeur": "Utilisez le mot-clé return.\nExemple :\ndef addition(a, b):\n    return a + b\n\nresultat = addition(3, 5)  # 8",
+    "qu'est-ce qu'une fonction anonyme": "Une fonction anonyme (lambda) est une petite fonction d'une seule expression, créée à la volée. Utile pour des opérations simples.\nExemple :\ncarre = lambda x: x ** 2\ncarre(5)  # 25\n\n# Utile avec sorted()\nnoms = ['Alice', 'bob', 'Charlie']\nnoms.sort(key=lambda s: s.lower())",
+    "comment définir des arguments par défaut": "Donnez une valeur par défaut dans la signature.\nExemple :\ndef saluer(nom, greeting='Bonjour'):\n    return f'{greeting} {nom} !'\n\nsaluer('Alice')           # 'Bonjour Alice !'\nsaluer('Alice', 'Salut') # 'Salut Alice !'",
+    "qu'est-ce que *args et **kwargs": "args réunit les arguments positionnels supplémentaires en un tuple. kwargs réunit les arguments nommés en un dictionnaire.\nExemple :\ndef f(*args, **kwargs):\n    print(args)    # (1, 2, 3)\n    print(kwargs)  # {'a': 1}\n\nf(1, 2, 3, a=1)",
+    "comment définir des arguments nommés": "Les arguments nommés se passent avec leur nom lors de l'appel.\nExemple :\ndef介绍(nom, age):\n    return f'{nom} a {age} ans'\n\nintroduction(age=25, nom='Alice')  # l'ordre n'a pas d'importance",
+    "qu'est-ce qu'une portée de variable": "La portée détermine où une variable est accessible. Une variable définie dans une fonction est locale (disparaît à la fin). Une variable définie à l'extérieur est globale.\nExemple :\nx = 10  # globale\ndef f():\n    x = 20  # locale, ne touche pas la globale\n    print(x)\n\nf()  # 20\nprint(x)  # 10",
+    "comment utiliser une variable globale dans une fonction": "Utilisez le mot-clé global.\nExemple :\ncount = 0\ndef incrementer():\n    global count\n    count += 1\n\nincrementer()\nprint(count)  # 1",
+    "comment passer une fonction en argument": "Les fonctions sont des objets en Python, on peut les passer comme arguments.\nExemple :\ndef appliquer(fonction, valeur):\n    return fonction(valeur)\n\ndef double(x):\n    return x * 2\n\nappliquer(double, 5)  # 10",
+    "qu'est-ce qu'une fonction récursive": "Une fonction récursive est une fonction qui s'appelle elle-même. Elle doit avoir un cas de base pour éviter une boucle infinie.\nExemple :\ndef factorielle(n):\n    if n <= 1:\n        return 1  # cas de base\n    return n * factorielle(n - 1)\n\nfactorielle(5)  # 120"
   },
   "Conditions et Boucles": {
     "À quoi sert une condition": "Une condition sert à vérifier si une information donnée est vraie ou fausse.\nExemple :\nif x > 0:\n    print('positif')\nelif x < 0:\n    print('négatif')\nelse:\n    print('zéro')",
@@ -20,7 +43,17 @@
     "comment faire une boucle": "En Python, vous pouvez utiliser 'for' ou 'while' pour faire des boucles.\nExemple avec for :\nfor i in range(5):\n    print(i)\n\nExemple avec while :\ni = 0\nwhile i < 5:\n    print(i)\n    i += 1",
     "comment faire une boucle infinie": "Utilisez while True:.\nExemple :\nwhile True:\n    print('boucle infinie')\n    # N'oubliez pas de break pour sortir",
     "comment faire une exception": "Utilisez try/except.\nExemple :\ntry:\n    # code risqué\n    x = 1 / 0\nexcept ZeroDivisionError as e:\n    print(f'Erreur: {e}')",
-    "comment vérifier si un élément est dans une liste": "Utilisez in.\nExemple :\nif 3 in ma_liste:\n    print('Présent')"
+    "comment vérifier si un élément est dans une liste": "Utilisez in.\nExemple :\nif 3 in ma_liste:\n    print('Présent')",
+    "comment sortir d'une boucle prématurément": "Utilisez break.\nExemple :\nfor i in range(100):\n    if i == 5:\n        break\n    print(i)  # affiche 0, 1, 2, 3, 4",
+    "comment passer à l'itération suivante": "Utilisez continue pour sauter le reste du code de la boucle et passer à l'itération suivante.\nExemple :\nfor i in range(10):\n    if i % 2 == 0:\n        continue\n    print(i)  # affiche 1, 3, 5, 7, 9",
+    "comment faire une boucle for sur une chaîne": "Les chaînes sont itérables comme les listes.\nExemple :\nfor lettre in 'Python':\n    print(lettre)",
+    "comment utiliser enumerate": "enumerate() donne l'index et la valeur à chaque itération.\nExemple :\nfruits = ['pomme', 'banane', 'cerise']\nfor i, fruit in enumerate(fruits):\n    print(f'{i}: {fruit}')\n# 0: pomme\n# 1: banane\n# 2: cerise",
+    "comment utiliser zip": "zip() combine deux listes parallèles.\nExemple :\nnoms = ['Alice', 'Bob']\nages = [25, 30]\nfor nom, age in zip(noms, ages):\n    print(f'{nom} a {age} ans')",
+    "qu'est-ce qu'une compréhension de liste": "Une compréhension de liste crée une liste en une seule ligne.\nExemple :\ncarres = [x**2 for x in range(5)]\n# [0, 1, 4, 9, 16]\n\npairs = [x for x in range(10) if x % 2 == 0]\n# [0, 2, 4, 6, 8]",
+    "qu'est-ce qu'une compréhension de dictionnaire": "Crée un dictionnaire en une ligne.\nExemple :\ncarres = {x: x**2 for x in range(5)}\n# {0: 0, 1: 1, 2: 4, 3: 9, 4: 16}",
+    "comment gérer plusieurs exceptions": "Vous pouvez attraper plusieurs types d'erreurs.\nExemple :\ntry:\n    x = int(input('Nombre ? '))\nexcept ValueError:\n    print('Ce n\\est pas un nombre')\nexcept KeyboardInterrupt:\n    print('Interrompu')\nexcept Exception as e:\n    print(f'Erreur inattendue: {e}')",
+    "qu'est-ce que finally": "finally s'exécute toujours, qu'il y ait eu une exception ou non. Utile pour nettoyer des ressources.\nExemple :\ntry:\n    f = open('fichier.txt')\n    contenu = f.read()\nexcept FileNotFoundError:\n    print('Fichier introuvable')\nfinally:\n    print('Fin du traitement')",
+    "qu'est-ce qu'un else après try": "Le bloc else s'exécute seulement si aucune exception n'a été levée.\nExemple :\ntry:\n    x = int('42')\nexcept ValueError:\n    print('Erreur')\nelse:\n    print(f'Pas d'erreur, x = {x}')"
   },
   "Structures de données": {
     "qu'est-ce qu'une liste": "Une liste est une structure de données qui peut contenir plusieurs éléments.\nExemple :\nma_liste = [1, 2, 3, 'hello']",
@@ -35,7 +68,22 @@
     "qu'est-ce qu'un dictionnaire": "Un dictionnaire associe des clés à des valeurs.\nExemple :\nmon_dict = {'a': 1, 'b': 2}",
     "comment faire une boucle sur un dictionnaire": "Utilisez for clé, valeur in mon_dict.items():\nExemple :\nfor cle, val in mon_dict.items():\n    print(f'{cle}: {val}')",
     "comment créer un tuple": "Utilisez des parenthèses.\nExemple :\nt = (1, 2, 3)",
-    "comment décompresser un tuple": "Utilisez l'affectation multiple.\nExemple :\na, b = (1, 2)"
+    "comment décompresser un tuple": "Utilisez l'affectation multiple.\nExemple :\na, b = (1, 2)",
+    "comment vérifier si une clé existe dans un dictionnaire": "Utilisez in.\nExemple :\nif 'nom' in mon_dict:\n    print(mon_dict['nom'])\n\n# Pour une valeur, utilisez values()\nif 1 in mon_dict.values():\n    print('Trouvé')",
+    "comment obtenir la valeur d'une clé avec un défaut": "Utilisez get() pour éviter une erreur si la clé n'existe pas.\nExemple :\nmon_dict.get('cle_absente', 'valeur_par_defaut')",
+    "comment ajouter ou modifier une entrée d'un dictionnaire": "Affectez directement une clé.\nExemple :\nmon_dict['nouvelle_cle'] = 42  # ajoute\nmon_dict['a'] = 99              # modifie",
+    "comment supprimer une clé d'un dictionnaire": "Utilisez del ou pop().\nExemple :\ndel mon_dict['a']\n\nvaleur = mon_dict.pop('b', None)  # retire et renvoie (None si absente)",
+    "comment fusionner deux dictionnaires": "Utilisez ** (Python 3.5+) ou | (Python 3.9+).\nExemple :\nd1 = {'a': 1}\nd2 = {'b': 2}\nfusion = {**d1, **d2}  # {'a': 1, 'b': 2}\n\n# Python 3.9+\nfusion = d1 | d2",
+    "qu'est-ce qu'un ensemble": "Un ensemble (set) est une collection sans doublons, non ordonnée.\nExemple :\ns = {1, 2, 3, 3}  # {1, 2, 3}\ns = set([1, 2, 2, 3])  # {1, 2, 3}",
+    "comment ajouter un élément à un ensemble": "Utilisez add().\nExemple :\ns = {1, 2}\ns.add(3)  # {1, 2, 3}\ns.add(2)  # {1, 2, 3} (pas de doublon)",
+    "comment faire l'union et l'intersection de deux ensembles": "Utilisez | et &.\nExemple :\na = {1, 2, 3}\nb = {2, 3, 4}\na | b  # {1, 2, 3, 4} (union)\na & b  # {2, 3} (intersection)\na - b  # {1} (différence)",
+    "comment inverser une chaîne de caractères": "Utilisez le slicing [::-1].\nExemple :\ns = 'Python'\ns[::-1]  # 'nohtyP'",
+    "comment joindre une liste en chaîne": "Utilisez join().\nExemple :\nfruits = ['pomme', 'banane', 'cerise']\n', '.join(fruits)  # 'pomme, banane, cerise'\n\n' '.join(['Hello', 'World'])  # 'Hello World'",
+    "comment transformer une chaîne en liste": "Utilisez split().\nExemple :\n'hello world'.split()  # ['hello', 'world']\n'a,b,c'.split(',')    # ['a', 'b', 'c']",
+    "comment compter les occurrences dans une liste": "Utilisez count() ou la classe Counter.\nExemple :\n[1, 2, 2, 3].count(2)  # 2\n\nfrom collections import Counter\ncount = Counter([1, 2, 2, 3])\nprint(count[2])  # 2",
+    "comment transformer une liste en dictionnaire": "Utilisez dict() avec une liste de paires ou zip().\nExemple :\nfruits = dict([ ('pomme', 1), ('banane', 2) ])\n\n# avec zip()\nnoms = ['a', 'b']\nvaleurs = [1, 2]\ndict(zip(noms, valeurs))  # {'a': 1, 'b': 2}",
+    "qu'est-ce qu'une liste de listes": "Une liste de listes crée une structure en 2D.\nExemple :\nmatrice = [\n    [1, 2, 3],\n    [4, 5, 6],\n    [7, 8, 9]\n]\nmatrice[1][2]  # 6 (2ème ligne, 3ème colonne)",
+    "comment aplatir une liste de listes": "Utilisez une compréhension.\nExemple :\nmatrice = [[1, 2], [3, 4], [5, 6]]\naplatie = [x for sous in matrice for x in sous]\n# [1, 2, 3, 4, 5, 6]"
   },
   "Modules et Fichiers": {
     "comment importer un module": "Utilisez le mot-clé 'import'.\nExemple :\nimport math\n\nfrom math import sqrt",
@@ -43,14 +91,39 @@
     "comment écrire dans un fichier": "Utilisez open() en mode 'w'.\nExemple :\nwith open('f.txt', 'w') as f:\n    f.write('texte')",
     "comment importer une fonction d'un autre fichier": "Utilisez from nom_fichier import nom_fonction\nExemple :\nfrom mon_module import ma_fonction",
     "comment installer un module": "Utilisez pip dans le terminal.\nExemple :\npip install nom_du_module",
-    "comment installer plusieurs modules à la fois": "Utilisez pip install module1 module2\nExemple :\npip install requests flask"
+    "comment installer plusieurs modules à la fois": "Utilisez pip install module1 module2\nExemple :\npip install requests flask",
+    "comment lire un fichier ligne par ligne": "Itérez directement sur l'objet fichier.\nExemple :\nwith open('fichier.txt') as f:\n    for ligne in f:\n        print(ligne.strip())",
+    "comment ajouter du contenu à un fichier": "Utilisez le mode 'a' (append).\nExemple :\nwith open('log.txt', 'a') as f:\n    f.write('nouvelle ligne\\n')",
+    "comment écrire un fichier JSON": "Utilisez json.dump().\nExemple :\nimport json\ndata = {'nom': 'Alice', 'age': 25}\nwith open('data.json', 'w') as f:\n    json.dump(data, f, indent=2, ensure_ascii=False)",
+    "comment lire un fichier JSON": "Utilisez json.load().\nExemple :\nimport json\nwith open('data.json') as f:\n    data = json.load(f)\nprint(data['nom'])",
+    "comment écrire un fichier CSV": "Utilisez csv.writer().\nExemple :\nimport csv\nwith open('data.csv', 'w', newline='') as f:\n    writer = csv.writer(f)\n    writer.writerow(['Nom', 'Âge'])\n    writer.writerow(['Alice', 25])",
+    "comment lire un fichier CSV": "Utilisez csv.reader().\nExemple :\nimport csv\nwith open('data.csv') as f:\n    reader = csv.reader(f)\n    for ligne in reader:\n        print(ligne)",
+    "comment obtenir la liste des fichiers d'un dossier": "Utilisez os.listdir() ou pathlib.\nExemple :\nimport os\nfichiers = os.listdir('.')\n\n# avec pathlib (plus moderne)\nfrom pathlib import Path\nfichiers = [f.name for f in Path('.').iterdir()]",
+    "comment vérifier si un fichier existe": "Utilisez pathlib ou os.path.\nExemple :\nfrom pathlib import Path\nif Path('fichier.txt').exists():\n    print('Le fichier existe')\n\n# ou\nimport os\nif os.path.exists('fichier.txt'):\n    print('Le fichier existe')",
+    "comment créer un dossier": "Utilisez os.mkdir() ou Path.mkdir().\nExemple :\nimport os\nos.mkdir('nouveau_dossier')\n\n# avec pathlib\nfrom pathlib import Path\nPath('nouveau_dossier').mkdir(exist_ok=True)",
+    "qu'est-ce qu'un module personnalisé": "Un fichier .py est un module. Vous pouvez l'importer dans un autre fichier.\nExemple :\n# utils.py\ndef dire_bonjour(nom):\n    return f'Bonjour {nom} !'\n\n# main.py\nfrom utils import dire_bonjour\nprint(dire_bonjour('Alice'))",
+    "comment exécuter un script directement": "Utilisez if __name__ == '__main__':\nExemple :\ndef ma_fonction():\n    print('Hello')\n\nif __name__ == '__main__':\n    ma_fonction()\n\nCe code ne s'exécute que si le fichier est lancé directement, pas s'il est importé.",
+    "qu'est-ce que pip freeze": "pip freeze affiche les modules installés et leurs versions. Utile pour générer requirements.txt.\nExemple :\npip freeze > requirements.txt"
   },
   "Utile": {
     "comment faire une pause dans un programme": "Utilisez time.sleep().\nExemple :\nimport time\ntime.sleep(2)",
     "comment générer un nombre aléatoire": "Utilisez random.randint().\nExemple :\nimport random\nnombre = random.randint(1, 10)",
     "comment afficher la version de Python": "Utilisez sys.version.\nExemple :\nimport sys\nprint(sys.version)",
     "comment afficher la documentation d'une fonction": "Utilisez help().\nExemple :\nhelp(print)",
-    "comment arrêter un programme": "Utilisez exit() ou break dans une boucle.\nExemple :\nif condition:\n    exit()"
+    "comment arrêter un programme": "Utilisez exit() ou break dans une boucle.\nExemple :\nif condition:\n    exit()",
+    "comment mesurer le temps d'exécution": "Utilisez time.perf_counter().\nExemple :\nimport time\ndebut = time.perf_counter()\n# ... code à mesurer ...\nfin = time.perf_counter()\nprint(f'Durée : {fin - debut:.4f} secondes')",
+    "comment obtenir la date du jour": "Utilisez datetime.\nExemple :\nfrom datetime import date\naujourd_hui = date.today()\nprint(aujourd_hui)  # 2025-01-15",
+    "comment formater une date": "Utilisez strftime().\nExemple :\nfrom datetime import datetime\nmaintenant = datetime.now()\nprint(maintenant.strftime('%d/%m/%Y %H:%M'))\n# 15/01/2025 14:30",
+    "comment trouver le minimum et le maximum d'une liste": "Utilisez min() et max().\nExemple :\nnotes = [12, 15, 8, 19, 14]\nmin(notes)  # 8\nmax(notes)  # 19\nsum(notes)  # 68",
+    "comment calculer la moyenne d'une liste": "Utilisez sum() et len().\nExemple :\nnotes = [12, 15, 8, 19, 14]\nmoyenne = sum(notes) / len(notes)\nprint(f'Moyenne : {moyenne}')",
+    "comment créer un compteur": "Utilisez la classe Counter de collections.\nExemple :\nfrom collections import Counter\ntexte = 'bonjour bonjour salut'\nmots = Counter(texte.split())\nprint(mots)  # Counter({'bonjour': 2, 'salut': 1})",
+    "comment manipuler des chemins de fichiers": "Utilisez pathlib (Python 3.4+), plus moderne que os.path.\nExemple :\nfrom pathlib import Path\np = Path('dossier/fichier.txt')\np.name    # 'fichier.txt'\np.stem    # 'fichier'\np.suffix  # '.txt'\np.parent  # Path('dossier')",
+    "comment ouvrir un site web depuis Python": "Utilisez webbrowser.\nExemple :\nimport webbrowser\nwebbrowser.open('https://www.python.org')",
+    "comment nettoyer un terminal": "Utilisez os.system ou subprocess.\nExemple :\nimport os\nos.system('cls' if os.name == 'nt' else 'clear')\n\n# ou avec subprocess\nimport subprocess\nsubprocess.run('clear' if os.name != 'nt' else 'cls', shell=True)",
+    "comment créer une liste de nombres séquentiels": "Utilisez range() avec une liste ou une compréhension.\nExemple :\n# liste de 0 à 9\nlist(range(10))\n\n# de 2 à 20 par pas de 3\nlist(range(2, 20, 3))  # [2, 5, 8, 11, 14, 17]",
+    "comment mélanger une liste": "Utilisez random.shuffle() (en place) ou random.sample().\nExemple :\nimport random\ncartes = [1, 2, 3, 4, 5]\nrandom.shuffle(cartes)  # modifie la liste\n\n# sans modifier l'original\nmelange = random.sample(cartes, len(cartes))",
+    "comment faire un dé": "Utilisez random.randint().\nExemple :\nimport random\nde = random.randint(1, 6)\nprint(f'Vous avez fait {de}')",
+    "comment éviter les imports circulaires": "Un import circulaire survient quand deux modules s'importent mutuellement. Solutions :\n1. Déplacer l'import à l'intérieur de la fonction\n2. Restructurer le code\nExemple :\ndef ma_fonction():\n    from mon_autre_module import quelque_chose\n    # code ici"
   },
   "À propos": {
     "de quoi tu parles": "Je parle principalement du langage Python et je peux répondre à des questions sur la programmation Python et sur le travail informatique !",
@@ -61,7 +134,11 @@
     "ques-ce-que je peux faire avec Python": "Python est un langage de programmation polyvalent qui peut être utilisé pour de nombreux projets. Voici quelques exemples : \n- Développement web (Django, Flask)\n- Data science (pandas, numpy, matplotlib)\n- Machine learning (scikit-learn, TensorFlow, PyTorch)\n- IA (OpenAI, GPT-3, GPT-4)\n- Automatisation (Selenium, Scrapy)\n- Systèmes d'exploitation (Linux, Windows, MacOS)\n- Base de données (SQLite, MySQL, PostgreSQL)\n- Interface graphique (Tkinter, PyQt, PySide)\n- Réseau (socket, threading, multiprocessing)\n- Sécurité (cryptographie, cybersécurité)\n- Simulation (Pygame, Pysimple2D)",
     "Comment créer une intelligence artificiel": "Concrètement, créer une IA suit en général trois étapes : on rassemble des données (images, textes, chiffres…), on choisit un modèle (souvent un réseau de neurones), puis on l'entraîne en lui faisant comparer ses réponses aux bonnes réponses. À chaque erreur, le modèle se corrige légèrement, et après des milliers de répétitions, il devient capable de généraliser à des cas qu'il n'a jamais vus. Aujourd'hui, on part rarement de zéro : on utilise des modèles déjà entraînés (comme ceux derrière les chatbots) qu'on adapte à un besoin précis. C'est ça, l'essentiel du métier : combiner des données, des modèles et du code pour résoudre un problème concret.",
     "Comment créer un site web": "Pour créer un site web en programmation, vous devez d'abord installer un éditeur de texte comme Visual Studio Code pour écrire votre code, puis créer un fichier nommé index.html dans lequel vous structurez votre contenu (textes, titres, images) grâce au langage HTML. Ensuite, vous connectez ce fichier à un document style.css pour appliquer le design, gérer les couleurs, les polices et la mise en page avec le langage CSS. Pour ajouter de l'interactivité, comme des animations ou des formulaires dynamiques, vous intégrez du code JavaScript. Enfin, il vous suffit d'ouvrir votre fichier HTML dans un navigateur pour tester le résultat, avant de transférer l'ensemble de vos fichiers chez un hébergeur web pour rendre votre site accessible à tout le monde sur Internet.",
-    "Comment créer une application": "Pour créer une application, vous devez d'abord définir son utilité et dessiner ses écrans sur papier, puis choisir votre technologie selon votre cible : le langage Swift (Xcode) pour iOS, Kotlin (Android Studio) pour Android, ou un outil comme Flutter ou React Native pour créer une application unique compatible avec les deux systèmes. Ensuite, vous écrivez le code dans votre éditeur pour concevoir l'interface visuelle et programmer la logique interne, tout en connectant une base de données (comme Firebase ou SQLite) si votre application a besoin de stocker des utilisateurs ou des informations. Tout au long du développement, vous testez l'application sur un simulateur ou directement sur votre téléphone pour corriger les bugs. Enfin, vous créez un compte de développeur pour publier votre application finale sur les magasins officiels comme l'App Store d'Apple et le Google Play Store."
+    "Comment créer une application": "Pour créer une application, vous devez d'abord définir son utilité et dessiner ses écrans sur papier, puis choisir votre technologie selon votre cible : le langage Swift (Xcode) pour iOS, Kotlin (Android Studio) pour Android, ou un outil comme Flutter ou React Native pour créer une application unique compatible avec les deux systèmes. Ensuite, vous écrivez le code dans votre éditeur pour concevoir l'interface visuelle et programmer la logique interne, tout en connectant une base de données (comme Firebase ou SQLite) si votre application a besoin de stocker des utilisateurs ou des informations. Tout au long du développement, vous testez l'application sur un simulateur ou directement sur votre téléphone pour corriger les bugs. Enfin, vous créez un compte de développeur pour publier votre application finale sur les magasins officiels comme l'App Store d'Apple et le Google Play Store.",
+    "qu'est-ce que Flask": "Flask est un micro-framework web en Python. Il est léger et simple pour créer des applications web et des API. Contrairement à Django, il n'impose rien et vous choisissez vos outils.\nExemple :\nfrom flask import Flask\napp = Flask(__name__)\n\n@app.route('/')\ndef accueil():\n    return 'Bonjour !'\n\napp.run(port=5001)",
+    "qu'est-ce que Django": "Django est un framework web complet en Python. Il inclut tout : ORM pour les bases de données, administration automatique, système de templates, authentification. Idéal pour les gros projets.\nExemple :\n# Un model Django\nclass Article(models.Model):\n    titre = models.CharField(max_length=200)\n    contenu = models.TextField()",
+    "qu'est-ce que pip": "pip est le gestionnaire de paquets de Python. Il permet d'installer, mettre à jour et supprimer des bibliothèques tierces.\nExemple :\npip install flask        # installer\npip install --upgrade flask  # mettre à jour\npip uninstall flask      # supprimer\npip list                 # lister les paquets installés",
+    "qu'est-ce qu'un virtual environment": "Un environnement virtuel isole les dépendances d'un projet. Chaque projet a ses propres packages sans conflit avec les autres.\nExemple :\npython3 -m venv .venv          # créer\nsource .venv/bin/activer        # activer (macOS/Linux)\n.venv\\Scripts\\activer           # activer (Windows)\npip install flask              # installer dans le venv\ndeactiver                       # quitter le venv"
   },
   "Job et apprentissage python": {
     "comment devenir un développeur Python": "Pour devenir un développeur Python, il faut apprendre les bases, comprendre les concepts de programmation, et pratiquer régulièrement. Il faut aussi suivre des cours, des tutoriels, et des livres. Et enfin, il faut se mettre à jour avec les nouvelles versions de Python et les nouvelles fonctionnalités.",
@@ -70,6 +147,13 @@
     "comment devenir data scientist": "Pour devenir data scientist, tu dois maîtriser les fondamentaux en programmation (Python surtout), les mathématiques (algèbre linéaire, statistiques, calcul) et les frameworks de data science comme pandas ou numpy.",
     "comment devenir un expert en IA": "Pour devenir un expert en IA, tu dois maîtriser les fondamentaux en programmation (Python surtout), les mathématiques (algèbre linéaire, statistiques, calcul) et les frameworks de machine learning comme TensorFlow ou PyTorch.",
     "comment avoir un job en informatique": "Pour avoir un job en informatique, il faut avoir une bonne expérience en programmation, avoir des compétences dans certains language, et avoir des compétences en mathématiques. Il faut aussi avoir des compétences en ingénierie logicielle, et avoir une bonne maîtrise du code.",
-    "comment devenir software engineer": "Pour devenir software engineer, tu dois maîtriser les fondamentaux en programmation (Python surtout), savoir utiliser les outils de développement (IDE, version control, etc.) et avoir une bonne maîtrise du code ainsi qu'avoir des compétences en déboguage de logicielle."
-    }
+    "comment devenir software engineer": "Pour devenir software engineer, tu dois maîtriser les fondamentaux en programmation (Python surtout), savoir utiliser les outils de développement (IDE, version control, etc.) et avoir une bonne maîtrise du code ainsi qu'avoir des compétences en déboguage de logicielle.",
+    "qu'est-ce qu'un portfolio": "Un portfolio est une vitrine de vos projets. Il montre ce que vous savez faire. Hébergez-le sur GitHub Pages ou un site personnel avec vos meilleurs projets, une description de chacun, et les technologies utilisées.",
+    "comment créer un projet GitHub": "Créez un compte sur github.com, puis un nouveau repository. Ajoutez un README.md, un .gitignore pour Python, et votre code. Utilisez git add, git commit et git push pour envoyer votre code.\nExemple :\ngit init\ngit add .\ngit commit -m 'Premier commit'\ngit remote add origin https://github.com/votre-nom/projet.git\ngit push -u origin main",
+    "comment préparer un entretien technique": "Pour un entretien technique en Python : révisez les structures de données (listes, dicts, sets), les algorithmes de tri et de recherche, les design patterns, et pratiquez sur des plateformes comme LeetCode ou HackerRank. Soyez aussi prêt à expliquer vos projets passés.",
+    "quels sont les salaires en Python en France": "Les salaires varient selon l'expérience et la ville. Débutant : 30-40K€/an. Confirmé : 40-55K€/an. Senior : 55-75K€/an+. Les postes en data science et IA sont souvent mieux rémunérés.",
+    "comment faire un stage en informatique": "Pour trouver un stage : créez un profil LinkedIn, postulez sur Welcome to the Jungle et Indeed, participiez à des hackathons, et n'hésitez pas à contacter directement des startups. Un bon portfolio GitHub fait toute la différence.",
+    "comment devenir développeur freelance": "Pour devenir freelance : maîtrisez au moins un framework Python (Django, Flask), créez un portfolio solide, fixez vos tarifs, et trouvez vos premiers clients sur Malt, Upwork ou par le bouche-à-oreille. Apprenez aussi la facturation et la gestion administrative.",
+    "qu'est-ce que le version control": "Le version control (git) permet de suivre les modifications de votre code dans le temps. Vous pouvez revenir en arrière, collaborer, et identifier les bugs. C'est indispensable en équipe.\nExemple :\ngit add .           # ajouter les fichiers\ngit commit -m 'msg' # sauvegarder\ngit log             # voir l'historique"
+  }
 }
