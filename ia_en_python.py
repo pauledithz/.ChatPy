@@ -868,7 +868,7 @@ def afficher_demarrage():
         f"📚  {nb_questions} questions · {nb_categories} catégories · {nb_concepts} concepts",
         "🐍  Fonctionne 100% hors-ligne",
         "",
-        colorize("💡  Tapez 'help' pour voir les commandes", "blue"),
+        colorize("💡  Tapez 'help' pour voir les commandes", "yellow"),
     ]
 
     largeur = max(len(l) for l in lignes_mascotte)
