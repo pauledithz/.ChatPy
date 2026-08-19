@@ -469,6 +469,10 @@
     'compte.local': ['Compte ChatPy (email et mot de passe)', 'ChatPy account (email and password)', 'Cuenta ChatPy (correo y contraseña)', 'ChatPy-Konto (E-Mail und Passwort)', 'Account ChatPy (email e password)', 'Conta ChatPy (e-mail e senha)'],
     'compte.via': ['Connecté via {fournisseur}', 'Signed in with {fournisseur}', 'Conectado con {fournisseur}', 'Angemeldet über {fournisseur}', 'Connesso tramite {fournisseur}', 'Conectado via {fournisseur}'],
     'compte.fournisseur_inconnu': ['un fournisseur externe', 'an external provider', 'un proveedor externo', 'einen externen Anbieter', 'un fornitore esterno', 'um provedor externo'],
+    'compte.changer_photo': ['Changer la photo', 'Change photo', 'Cambiar foto', 'Foto ändern', 'Cambia foto', 'Alterar foto'],
+    'compte.photo_erreur': ['Erreur lors de l\'envoi.', 'Upload error.', 'Error al enviar.', 'Fehler beim Hochladen.', 'Errore durante il caricamento.', 'Errore durante o envio.'],
+    'compte.photo_format': ['Format non supporté. Utilisez JPEG, PNG ou WebP.', 'Unsupported format. Use JPEG, PNG or WebP.', 'Formato no compatible. Usa JPEG, PNG o WebP.', 'Nicht unterstütztes Format. Verwenden Sie JPEG, PNG oder WebP.', 'Formato non supportato. Usa JPEG, PNG o WebP.', 'Formato não suportado. Use JPEG, PNG ou WebP.'],
+    'compte.photo_taille': ['Fichier trop volumineux (max 2 Mo).', 'File too large (max 2 MB).', 'Archivo demasiado grande (máx. 2 MB).', 'Datei zu groß (max. 2 MB).', 'File troppo grande (max 2 MB).', 'Arquivo muito grande (máx. 2 MB).'],
     'compte.invitation_oauth': [
       'Vous n’êtes pas connecté. Créez un compte, ou connectez-vous avec Google ou GitHub, pour retrouver vos conversations depuis n’importe quel appareil.',
       'You are not signed in. Create an account, or sign in with Google or GitHub, to find your conversations from any device.',

@@ -11,12 +11,21 @@ from flask import (Flask, abort, jsonify, redirect, request, send_from_directory
                    session, url_for)
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+try:
+    from PIL import Image
+    _PILLOW = True
+except ImportError:
+    _PILLOW = False
+
 import base_donnees as bdd
 import comptes
 import conversations as conv
 from ia_en_python import bot, demarrer_quiz, repondre_quiz, signaler_reponse_inutile
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
+DOSSIER_AVATARS = os.path.join(_DIR, "avatars")
+MAX_PHOTO_TAILLE = 2 * 1024 * 1024  # 2 Mo
+PHOTO_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 # Charge .env dans l'environnement. Les variables déjà définies dans le shell
 # gagnent, pour qu'un déploiement puisse imposer ses propres valeurs sans
@@ -426,6 +435,75 @@ def api_moi():
         })
     response.headers["Cache-Control"] = "no-store"
     return response
+
+
+@app.route("/avatars/<nom>")
+def avatar_fichier(nom):
+    """Sert une photo de profil uploadée. Cache 1 jour."""
+    response = send_from_directory(DOSSIER_AVATARS, nom)
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
+@app.route("/api/compte/photo", methods=["POST"])
+def api_compte_photo():
+    """Reçoit une photo de profil, la redimensionne (si Pillow dispo) et la sauvegarde."""
+    utilisateur = session.get("utilisateur")
+    if not utilisateur:
+        return jsonify({"error": "Connexion requise."}), 401
+
+    if "photo" not in request.files:
+        return jsonify({"error": "Aucun fichier envoyé."}), 400
+
+    fichier = request.files["photo"]
+    if not fichier.filename:
+        return jsonify({"error": "Aucun fichier sélectionné."}), 400
+
+    if fichier.content_type not in PHOTO_TYPES:
+        return jsonify({"error": "Format non supporté. Utilisez JPEG, PNG ou WebP."}), 400
+
+    fichier.seek(0, 2)
+    taille = fichier.tell()
+    fichier.seek(0)
+    if taille > MAX_PHOTO_TAILLE:
+        return jsonify({"error": "Fichier trop volumineux (max 2 Mo)."}), 400
+
+    os.makedirs(DOSSIER_AVATARS, exist_ok=True)
+
+    if _PILLOW:
+        try:
+            image = Image.open(fichier.stream)
+            image.verify()
+            fichier.seek(0)
+            image = Image.open(fichier.stream)
+        except Exception:
+            return jsonify({"error": "Fichier image invalide."}), 400
+
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB")
+        image.thumbnail((256, 256), Image.LANCZOS)
+
+        nom_fichier = f"{utilisateur['fournisseur']}_{utilisateur['id']}.webp"
+        chemin = os.path.join(DOSSIER_AVATARS, nom_fichier)
+        image.save(chemin, "WEBP", quality=85)
+    else:
+        EXTENSIONS = {
+            "image/jpeg": ".jpg",
+            "image/png": ".png",
+            "image/webp": ".webp",
+        }
+        ext = EXTENSIONS.get(fichier.content_type, ".jpg")
+        nom_fichier = f"{utilisateur['fournisseur']}_{utilisateur['id']}{ext}"
+        chemin = os.path.join(DOSSIER_AVATARS, nom_fichier)
+        fichier.save(chemin)
+
+    photo_url = f"/avatars/{nom_fichier}"
+    bdd.mettre_a_jour_photo(
+        utilisateur["fournisseur"], utilisateur["id"], photo_url
+    )
+    session["utilisateur"]["photo"] = photo_url
+
+    return jsonify({"photo": photo_url})
 
 
 @app.route("/chat")
