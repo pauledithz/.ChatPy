@@ -24,3 +24,6 @@ export_comptes.csv
 .tmp_chatpy_*.json
 *.corrompu
 
+# Photos de profil uploadées par les utilisateurs.
+avatars/
+

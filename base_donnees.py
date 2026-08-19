@@ -242,6 +242,16 @@ def noter_connexion(fournisseur, identifiant):
         )
 
 
+def mettre_a_jour_photo(fournisseur, id_externe, photo):
+    """Met à jour la photo de profil dans la base."""
+    with connexion() as cnx:
+        cnx.execute(
+            "UPDATE utilisateurs SET photo = ? "
+            "WHERE fournisseur = ? AND id_externe = ?",
+            (photo, fournisseur, id_externe),
+        )
+
+
 def enregistrer_connexion(utilisateur):
     """Note le passage de quelqu'un venu de Google ou GitHub : crée sa ligne,
     ou met la sienne à jour.
