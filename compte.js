@@ -56,117 +56,11 @@
   function rendreProfil(carte, moi) {
     var profil = el('div', 'profil');
 
-    // Conteneur cliquable pour l'upload de photo
-    var avatarWrap = el('div', 'profil-avatar-wrap');
-
     // ChatPyAvatar vient de nav-compte.js : même repli sur l'initiale que dans
     // la barre de navigation, à une autre taille.
-    var avatarEl = window.ChatPyAvatar
+    profil.appendChild(window.ChatPyAvatar
       ? window.ChatPyAvatar(moi, 'profil-photo', 'profil-initiale', 72)
-      : el('span', 'profil-photo profil-initiale', (moi.nom || '?').charAt(0).toUpperCase());
-    avatarWrap.appendChild(avatarEl);
-
-    // Overlay caméra au survol
-    var overlay = el('div', 'profil-avatar-overlay');
-    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('width', '24');
-    svg.setAttribute('height', '24');
-    svg.setAttribute('fill', 'none');
-    svg.setAttribute('stroke', 'white');
-    svg.setAttribute('stroke-width', '1.7');
-    svg.setAttribute('stroke-linecap', 'round');
-    svg.setAttribute('stroke-linejoin', 'round');
-    svg.setAttribute('aria-hidden', 'true');
-    svg.innerHTML = '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>';
-    overlay.appendChild(svg);
-    overlay.setAttribute('title', T('compte.changer_photo'));
-    avatarWrap.appendChild(overlay);
-
-    // Input file caché
-    var input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/jpeg,image/png,image/webp';
-    input.className = 'profil-avatar-input';
-    input.setAttribute('aria-label', T('compte.changer_photo'));
-    avatarWrap.appendChild(input);
-
-    // Clic sur le conteneur → ouvre le sélecteur de fichier
-    avatarWrap.addEventListener('click', function () {
-      input.click();
-    });
-
-    // Message d'erreur temporaire
-    var msgErreur = el('div', 'profil-avatar-msg');
-
-    input.addEventListener('change', function () {
-      var fichier = input.files && input.files[0];
-      if (!fichier) return;
-
-      if (fichier.size > 2 * 1024 * 1024) {
-        msgErreur.textContent = T('compte.photo_taille');
-        msgErreur.className = 'profil-avatar-msg profil-avatar-msg--erreur';
-        input.value = '';
-        return;
-      }
-
-      var typesAcceptes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (typesAcceptes.indexOf(fichier.type) === -1) {
-        msgErreur.textContent = T('compte.photo_format');
-        msgErreur.className = 'profil-avatar-msg profil-avatar-msg--erreur';
-        input.value = '';
-        return;
-      }
-
-      msgErreur.textContent = '';
-      msgErreur.className = 'profil-avatar-msg';
-
-      var formData = new FormData();
-      formData.append('photo', fichier);
-
-      overlay.classList.add('profil-avatar-loading');
-
-      fetch('/api/compte/photo', { method: 'POST', body: formData })
-        .then(function (reponse) { return reponse.json().then(function (data) { return { ok: reponse.ok, data: data }; }); })
-        .then(function (result) {
-          overlay.classList.remove('profil-avatar-loading');
-          if (!result.ok) {
-            msgErreur.textContent = result.data.error || T('compte.photo_erreur');
-            msgErreur.className = 'profil-avatar-msg profil-avatar-msg--erreur';
-            return;
-          }
-          // Met à jour l'image sans recharger la page
-          moi.photo = result.data.photo;
-          if (avatarEl.tagName === 'IMG') {
-            avatarEl.src = moi.photo;
-            avatarEl.referrerPolicy = 'no-referrer';
-          } else {
-            var nouvelleImg = document.createElement('img');
-            nouvelleImg.className = 'profil-photo';
-            nouvelleImg.alt = '';
-            nouvelleImg.width = 72;
-            nouvelleImg.height = 72;
-            nouvelleImg.decoding = 'async';
-            nouvelleImg.referrerPolicy = 'no-referrer';
-            nouvelleImg.src = moi.photo;
-            nouvelleImg.addEventListener('error', function () {
-              nouvelleImg.replaceWith(el('span', 'profil-photo profil-initiale', (moi.nom || '?').charAt(0).toUpperCase()));
-            });
-            avatarEl.replaceWith(nouvelleImg);
-            avatarEl = nouvelleImg;
-          }
-        })
-        .catch(function () {
-          overlay.classList.remove('profil-avatar-loading');
-          msgErreur.textContent = T('compte.photo_erreur');
-          msgErreur.className = 'profil-avatar-msg profil-avatar-msg--erreur';
-        });
-
-      input.value = '';
-    });
-
-    avatarWrap.appendChild(msgErreur);
-    profil.appendChild(avatarWrap);
+      : el('span', 'profil-photo profil-initiale', (moi.nom || '?').charAt(0).toUpperCase()));
 
     var infos = el('div', 'profil-infos');
     infos.appendChild(el('div', 'profil-nom', moi.nom || T('commun.compte_chatpy')));

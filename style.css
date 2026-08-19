@@ -1910,55 +1910,6 @@ a.btn {
 }
 .profil-fournisseur svg { width: 13px; height: 13px; }
 
-/* Upload de photo de profil */
-.profil-avatar-wrap {
-  position: relative;
-  cursor: pointer;
-  flex: none;
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-}
-.profil-avatar-wrap .profil-photo,
-.profil-avatar-wrap .profil-initiale {
-  display: block;
-}
-.profil-avatar-overlay {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
-.profil-avatar-wrap:hover .profil-avatar-overlay {
-  opacity: 1;
-}
-.profil-avatar-loading .profil-avatar-overlay {
-  opacity: 1;
-  background: rgba(0, 0, 0, 0.55);
-}
-.profil-avatar-input {
-  position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-.profil-avatar-msg {
-  width: 100%;
-  font-size: 12.5px;
-  margin-top: 6px;
-  text-align: center;
-}
-.profil-avatar-msg--erreur {
-  color: var(--rouge, #d32f2f);
-}
-
 /* Réglages */
 .reglage {
   display: flex;
