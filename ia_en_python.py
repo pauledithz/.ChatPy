@@ -129,7 +129,7 @@ def _ecrire_json_atomique(chemin, donnees):
 
 
 def _mettre_de_cote(chemin, raison):
-    """Renomme un fichier illisible au lieu de l'écraser en silence."""
+    """Renomme un fichier illisible au lieu de l'écraser en silence dans le project"""
     sauvegarde = chemin + ".corrompu"
     try:
         os.replace(chemin, sauvegarde)
