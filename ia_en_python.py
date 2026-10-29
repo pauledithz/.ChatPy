@@ -37,7 +37,7 @@ QUIZ_MOTS_ARRET   = ("fin", "exit", "quitter", "terminé")
 QUIZ_SEUIL_BONNE   = 70   # similarité ≥ 70% : réponse comptée juste
 QUIZ_SEUIL_PRESQUE = 35   # entre 35% et 70% : sur la bonne piste
 
-MOTS_AU_REVOIR = ["au revoir", "aurevoir", "a bientot", "à bientôt", "bye", "quit", "exit"]
+MOTS_AU_REVOIR = ["au revoir", "aurevoir", "a bientot", "à bientôt", "bye", "quit", "exit", "à plus"]
 
 # Mots (déjà normalisés : sans accents) qui ne portent pas le sujet d'une question.
 # "comment faire une boucle" et "qu'est-ce qu'une boucle" doivent tous deux se
@@ -93,8 +93,8 @@ def seuil_de_sensibilite(nom):
 
 # Réponse d'échec, renvoyée telle quelle : les front-ends la reconnaissent pour
 # proposer des questions proches plutôt que de laisser l'utilisateur sans issue.
-REPONSE_INCOMPRISE = ("❌ Désolé, je ne comprends pas votre question ou elle ne se situe pas dans "
-                      "le catalogue de questions. Essayez de poser une question sur Python ou "
+REPONSE_INCOMPRISE = ("❌ Désolé, je ne comprends pas votre question ou elle ne se situe pas dans ma"
+                      " base de données. Essayez de poser une question sur Python ou "
                       "tapez 'help' pour l'aide.")
 
 TITRE_QUESTIONS_LIEES = "Questions liées"
@@ -497,14 +497,16 @@ def chatbot_response(message, seuil=None, trace=None):
                 response += f"  • {q} ({conf}%)\n"
         return response
 
-    # Réponses conversationnelles
+    # Questions de début de conversation
     if _contient_mot(message, ["bonjour", "salut", "hello", "hi"]):
         return "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
-    elif _contient_mot(message, ["ça va bien", "tu vas bien"]):
+    elif _contient_mot(message, ["ça va bien", "tu vas bien", "comment vas-tu"]):
         return "🤖 Je suis une Intelligence Artificielle, donc je vais toujours bien ! Comment puis-je vous aider avec Python aujourd'hui ?"
+    elif _contient_mot(message, ["que fais-tu", "que fais-tu de ton temps", "que fais-tu en ce moment"]):
+        return "Je suis entrain de te répondre à tes questions sur la programmation informatique en python"
     elif _contient_mot(message, ["ton nom", "appelles", "qui es-tu"]):
         return "📖 Je suis un chatbot Python qui peut répondre à des questions sur le code."
-    elif _contient_mot(message, ["merci"]):
+    elif _contient_mot(message, ["merci", "merci beaucoup"]):
         return "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
     elif _contient_mot(message, MOTS_AU_REVOIR):
         return "👋 Au revoir ! Continue à apprendre Python le plus possible !"
@@ -842,7 +844,7 @@ bot = ChatBot()
 
 
 def afficher_demarrage():
-    VERSION = "v1.5.3"
+    VERSION = "v1.6"
     nb_questions = len(faq)
     nb_categories = len(faq_categories)
     nb_concepts = len(aide_concepts)
@@ -887,7 +889,7 @@ if __name__ == "__main__":
 
     while True:
         try:
-            user_input = input("📝 Vous: ").strip()
+            user_input = input("👤 Vous: ").strip()
             if not user_input:
                 continue
 
@@ -897,7 +899,7 @@ if __name__ == "__main__":
 
             if user_input.lower() == "clear":
                 os.system('cls' if os.name == 'nt' else 'clear')
-                print_colored("🧹 Écran effacé. L'historique est conservé dans le fichier.", "yellow")
+                print_colored("🧹 Conversation effacé. L'historique est conservé dans le fichier.", "yellow")
                 print()
                 continue
 
