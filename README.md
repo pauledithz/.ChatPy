@@ -4,22 +4,26 @@ Petit projet autour de **ChatPy** : un chatbot Python en ligne de commande (FAQ 
 
 ## Contenu du dépôt
 
-| Fichier | Rôle |
-|--------|------|
-| `ia_en_python.py` | Chatbot CLI : questions Python, score de confiance, suggestions, quiz |
-| `chatpy_landing_animated.html` | Page vitrine (HTML) |
-| `style.css`, `script.js` | Styles et démo animée du chat sur la landing |
-| `ChatPY_logo.PNG` | Favicon / logo |
-| `GUIDE_UTILISATION.md` | Guide pas à pas (complément au README) |
-| `.chatpy_history.json` | Historique persistant des conversations (créé automatiquement) |
+
+| Fichier                  | Rôle                                                                  |
+| ------------------------ | --------------------------------------------------------------------- |
+| `ia_en_python.py`        | Chatbot CLI : questions Python, score de confiance, suggestions, quiz |
+| `index.html`             | Page vitrine (HTML)                                                   |
+| `style.css`, `script.js` | Styles et démo animée du chat sur la landing                          |
+| `ChatPY_logo.PNG`        | Favicon / logo                                                        |
+| `GUIDE_UTILISATION.md`   | Guide pas à pas (complément au README)                                |
+| `.chatpy_history.json`   | Historique persistant des conversations (créé automatiquement)        |
+
 
 ---
+
+
 
 ## Page vitrine
 
 La landing est une page **100 % statique** (pas de serveur obligatoire).
 
-1. Ouvrez `chatpy_landing_animated.html` dans votre navigateur (double-clic ou menu *Fichier → Ouvrir*).
+1. Ouvrez `index.html` dans votre navigateur (double-clic ou menu *Fichier → Ouvrir*).
 2. Ou, depuis le dossier du projet, servez les fichiers en local puis ouvrez l'URL affichée :
 
 ```bash
@@ -27,9 +31,11 @@ cd /chemin/vers/ChatPy-2
 python3 -m http.server 8080
 ```
 
-Puis : `http://localhost:8080/chatpy_landing_animated.html`
+Puis : `http://localhost:8080/index.html`
 
 ---
+
+
 
 ## Interface web (Flask)
 
@@ -83,16 +89,20 @@ cp .env.example .env
 python3 -c "import secrets; print(secrets.token_hex(32))"   # CHATPY_SECRET_KEY
 ```
 
-| Fournisseur | Où créer les identifiants | URL de redirection à déclarer |
-|-------------|---------------------------|-------------------------------|
-| Google | [console.cloud.google.com](https://console.cloud.google.com) → Google Auth Platform → Clients → Web application | `http://localhost:5001/auth/google/callback` |
-| GitHub | [github.com/settings/developers](https://github.com/settings/developers) → OAuth Apps → New OAuth App | `http://localhost:5001/auth/github/callback` |
+
+| Fournisseur | Où créer les identifiants                                                                                       | URL de redirection à déclarer                |
+| ----------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Google      | [console.cloud.google.com](https://console.cloud.google.com) → Google Auth Platform → Clients → Web application | `http://localhost:5001/auth/google/callback` |
+| GitHub      | [github.com/settings/developers](https://github.com/settings/developers) → OAuth Apps → New OAuth App           | `http://localhost:5001/auth/github/callback` |
+
 
 L'URL de redirection doit être identique au caractère près, sinon le fournisseur refuse avec `redirect_uri_mismatch`. Tant qu'une paire reste vide, la route `/auth/<fournisseur>` correspondante répond 503 et le reste du site fonctionne normalement : on peut n'en configurer qu'un, ou aucun.
 
 La connexion vit dans le cookie de session. Une fois connecté, vos conversations sont archivées côté serveur (`conversations.json`, cloisonné par compte) et vous les retrouvez depuis n'importe quel appareil ; sans compte, elles restent dans votre navigateur. Le journal `.chatpy_history.json`, lui, alimente le contexte du bot et reste commun à tous.
 
 ---
+
+
 
 ## Mise en ligne
 
@@ -101,6 +111,8 @@ La connexion vit dans le cookie de session. Une fois connecté, vos conversation
 ```bash
 gunicorn --workers 1 --threads 8 --timeout 60 --bind 0.0.0.0:$PORT app:app
 ```
+
+
 
 ### Un seul worker, ce n'est pas négociable
 
@@ -112,28 +124,36 @@ Les comptes, eux, ne risquent plus rien : ils sont dans SQLite, qui verrouille e
 
 > `gunicorn` ne tourne pas sous Windows. Y utiliser `waitress` : `waitress-serve --threads=8 --port=5001 app:app`.
 
+
+
 ### Réglages `.env` en production
 
-| Variable | Valeur | Pourquoi |
-|----------|--------|----------|
-| `CHATPY_SECRET_KEY` | une clé fixe | Sans elle, une clé aléatoire est tirée à chaque démarrage : tout le monde est déconnecté à chaque redéploiement |
-| `CHATPY_COOKIE_SECURE` | `1` | Réserve le cookie de session au HTTPS |
-| `CHATPY_DEBUG` | vide | Le debugger Werkzeug permet l'exécution de code arbitraire |
-| `CHATPY_PROXIES` | `1` derrière un proxy | Sinon les redirections OAuth pointent vers `127.0.0.1` |
+
+| Variable               | Valeur                | Pourquoi                                                                                                        |
+| ---------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `CHATPY_SECRET_KEY`    | une clé fixe          | Sans elle, une clé aléatoire est tirée à chaque démarrage : tout le monde est déconnecté à chaque redéploiement |
+| `CHATPY_COOKIE_SECURE` | `1`                   | Réserve le cookie de session au HTTPS                                                                           |
+| `CHATPY_DEBUG`         | vide                  | Le debugger Werkzeug permet l'exécution de code arbitraire                                                      |
+| `CHATPY_PROXIES`       | `1` derrière un proxy | Sinon les redirections OAuth pointent vers `127.0.0.1`                                                          |
+
 
 **HTTPS est obligatoire** : depuis l'ajout des comptes par mot de passe, ceux-ci circulent sur le réseau.
 
-`CHATPY_PROXIES` ne doit être renseigné **que** si un reverse proxy réécrit réellement les en-têtes `X-Forwarded-*`. Les activer sans proxy devant laisserait n'importe quel visiteur annoncer `X-Forwarded-Host: site-pirate.fr` et détourner la connexion OAuth vers son domaine. La plupart des hébergeurs (Render, Railway, Fly, Heroku) en ont un : `1`.
+`CHATPY_PROXIES` ne doit être renseigné **que** si un reverse proxy réécrit réellement les en-têtes `X-Forwarded-`*. Les activer sans proxy devant laisserait n'importe quel visiteur annoncer `X-Forwarded-Host: site-pirate.fr` et détourner la connexion OAuth vers son domaine. La plupart des hébergeurs (Render, Railway, Fly, Heroku) en ont un : `1`.
 
 ### À faire aussi
 
 - **Déclarer les URL de redirection de production** dans la console Google Cloud et les réglages de l'OAuth App GitHub (`https://votre-domaine/auth/google/callback` et `.../auth/github/callback`). Celles de `localhost` ne fonctionneront pas en ligne.
-- **Renseigner `CHATPY_DB`** avec un chemin sur le disque persistant de l'hébergeur (`/var/data/chatpy.db` par exemple), **avant la première inscription**. La plupart des hébergeurs reconstruisent le dossier du code à chaque déploiement : une base restée là repartirait vide, avec tous les comptes.
-- **Sauvegarder `chatpy.db`.** C'est l'unique copie des comptes, et il n'existe pas de « mot de passe oublié » : le perdre enferme définitivement les utilisateurs dehors. Une copie du fichier serveur arrêté, ou `python3 base_donnees.py --sql > sauvegarde.sql`. `conversations.json` mérite le même soin.
+- **Renseigner** `CHATPY_DB` avec un chemin sur le disque persistant de l'hébergeur (`/var/data/chatpy.db` par exemple), **avant la première inscription**. La plupart des hébergeurs reconstruisent le dossier du code à chaque déploiement : une base restée là repartirait vide, avec tous les comptes.
+- **Sauvegarder** `chatpy.db`**.** C'est l'unique copie des comptes, et il n'existe pas de « mot de passe oublié » : le perdre enferme définitivement les utilisateurs dehors. Une copie du fichier serveur arrêté, ou `python3 base_donnees.py --sql > sauvegarde.sql`. `conversations.json` mérite le même soin.
 
 ---
 
+
+
 ## Chatbot en ligne de commande
+
+
 
 ### Lancer le chatbot
 
@@ -159,17 +179,21 @@ Les stats (nombre de questions, catégories, concepts) se mettent à jour automa
 
 ### Commandes disponibles
 
-| Saisie | Effet |
-|--------|--------|
-| *(une question en langage naturel)* | Réponse + score de confiance + questions liées si disponibles |
-| `liste` | Affiche toutes les questions par catégorie |
-| `liste <catégorie>` | Questions d'une seule catégorie (ex : `liste fonctions`) — accepte les abréviations et les fautes légères |
-| `cherche <mot>` | Toutes les questions contenant ce mot-clé (ex : `cherche liste`) |
-| `aide <sujet>` | Explication détaillée débutant → avancé (ex : `aide boucle`, `aide classe`) |
-| `quiz` | Lance une session de quiz interactif pour tester vos connaissances |
-| `help`, `aide`, `?` | Rappel des commandes |
-| `historique` | Conversation depuis le début (sessions incluses) |
-| `au revoir`, `bye`, `quit`, `exit` | Quitter |
+
+| Saisie                              | Effet                                                                                                     |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| *(une question en langage naturel)* | Réponse + score de confiance + questions liées si disponibles                                             |
+| `liste`                             | Affiche toutes les questions par catégorie                                                                |
+| `liste <catégorie>`                 | Questions d'une seule catégorie (ex : `liste fonctions`) — accepte les abréviations et les fautes légères |
+| `cherche <mot>`                     | Toutes les questions contenant ce mot-clé (ex : `cherche liste`)                                          |
+| `aide <sujet>`                      | Explication détaillée débutant → avancé (ex : `aide boucle`, `aide classe`)                               |
+| `quiz`                              | Lance une session de quiz interactif pour tester vos connaissances                                        |
+| `help`, `aide`, `?`                 | Rappel des commandes                                                                                      |
+| `historique`                        | Conversation depuis le début (sessions incluses)                                                          |
+| `au revoir`, `bye`, `quit`, `exit`  | Quitter                                                                                                   |
+
+
+
 
 ### Exemples
 
@@ -205,6 +229,8 @@ Les stats (nombre de questions, catégories, concepts) se mettent à jour automa
 
 ---
 
+
+
 ## Catégories couvertes par la FAQ
 
 1. **Bases** — variables, affichage, `input`, conversions
@@ -218,6 +244,8 @@ Les stats (nombre de questions, catégories, concepts) se mettent à jour automa
 
 ---
 
+
+
 ## Fonctionnalités du moteur de réponses
 
 - **Normalisation** : accents, ponctuation, espaces, casse
@@ -228,17 +256,22 @@ Les stats (nombre de questions, catégories, concepts) se mettent à jour automa
   - moins de 50 % : pas de réponse fiable
 
 ![Score de confiance](Score%20de%20confiance.png)
+
 - **Mémoire persistante** : l'historique est sauvegardé dans `.chatpy_history.json` et rechargé à chaque démarrage
 - **Mode quiz** : questions aléatoires tirées de la FAQ ; citer les bons mots-clés suffit (répondre « append » à « comment ajouter un élément à une liste » compte juste)
 - **Aide détaillée** : 8 concepts Python expliqués sur 3 niveaux (débutant → avancé), chargés depuis `aide_concepts.json`
 
 ---
 
+
+
 ## Personnaliser le chatbot
+
+
 
 ### Ajouter des questions / réponses FAQ
 
-Ouvrez **`faq.json`** et ajoutez votre question dans la bonne catégorie :
+Ouvrez `faq.json` et ajoutez votre question dans la bonne catégorie :
 
 ```json
 {
@@ -253,7 +286,7 @@ Sauvegardez et relancez — la nouvelle question apparaît dans `liste` et dans 
 
 ### Ajouter un concept détaillé (`aide`)
 
-Ouvrez **`aide_concepts.json`** et ajoutez une entrée en suivant le modèle existant :
+Ouvrez `aide_concepts.json` et ajoutez une entrée en suivant le modèle existant :
 
 ```json
 {
@@ -272,26 +305,34 @@ Ouvrez **`aide_concepts.json`** et ajoutez une entrée en suivant le modèle exi
 }
 ```
 
+
+
 ### Questions liées après une réponse
 
-Dans la classe **`ChatBot`**, attribut **`self.relations`** : associez une question source à une liste de suggestions.
+Dans la classe `ChatBot`, attribut `self.relations` : associez une question source à une liste de suggestions.
 
 ---
+
+
 
 ## Configuration rapide
 
-| Objectif | Où modifier |
-|----------|-------------|
-| Ajouter / modifier des questions FAQ | `faq.json` |
-| Ajouter un concept détaillé | `aide_concepts.json` |
-| Seuil minimum de correspondance | Constante `SEUIL_CORRESPONDANCE` en haut de `ia_en_python.py` |
-| Poids vocabulaire / orthographe dans le score | Constante `POIDS_MOTS` en haut de `ia_en_python.py` |
-| Mots ignorés par le matching | Ensemble `MOTS_VIDES` en haut de `ia_en_python.py` |
-| Nombre de suggestions affichées | Dans `obtenir_suggestions()`, tranche `[:2]` |
-| Couleurs / emojis dans le terminal | Appels à `print_colored()` dans `ia_en_python.py` |
-| Chemins des fichiers JSON | Constantes `FAQ_FILE`, `AIDE_CONCEPTS_FILE`, `HISTORY_FILE` en haut de `ia_en_python.py` |
+
+| Objectif                                      | Où modifier                                                                              |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Ajouter / modifier des questions FAQ          | `faq.json`                                                                               |
+| Ajouter un concept détaillé                   | `aide_concepts.json`                                                                     |
+| Seuil minimum de correspondance               | Constante `SEUIL_CORRESPONDANCE` en haut de `ia_en_python.py`                            |
+| Poids vocabulaire / orthographe dans le score | Constante `POIDS_MOTS` en haut de `ia_en_python.py`                                      |
+| Mots ignorés par le matching                  | Ensemble `MOTS_VIDES` en haut de `ia_en_python.py`                                       |
+| Nombre de suggestions affichées               | Dans `obtenir_suggestions()`, tranche `[:2]`                                             |
+| Couleurs / emojis dans le terminal            | Appels à `print_colored()` dans `ia_en_python.py`                                        |
+| Chemins des fichiers JSON                     | Constantes `FAQ_FILE`, `AIDE_CONCEPTS_FILE`, `HISTORY_FILE` en haut de `ia_en_python.py` |
+
 
 ---
+
+
 
 ## Tests
 
@@ -309,6 +350,8 @@ Les tests qui écrivent redirigent la base et les fichiers d'exécution vers un 
 
 ---
 
+
+
 ## Dépannage
 
 - **Le script ne démarre pas** : `python3 --version` ; fichier en UTF-8 ; chemin avec espaces : gardez les guillemets autour de `"ia_en_python.py"`.
@@ -317,6 +360,8 @@ Les tests qui écrivent redirigent la base et les fichiers d'exécution vers un 
 - **Historique corrompu** : supprimez `.chatpy_history.json` — il sera recréé vide au prochain lancement.
 
 ---
+
+
 
 ## Architecture du script Python
 

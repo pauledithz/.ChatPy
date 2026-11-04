@@ -290,12 +290,64 @@ Une variable, c'est un espace de stockage nommé...
 📊 Score final : 1/2 (50%)
 ```
 
+### **Exemple 4 : Que faire quand le bot ne trouve pas la réponse ?**
+
+Si la question est trop éloignée de la FAQ, le bot l'indique. Tu peux alors
+chercher une formulation connue ou parcourir les questions disponibles :
+
+```
+📝 Vous: comment créer une application mobile
+
+✨ Bot: ❌ Désolé, je ne comprends pas votre question ou elle ne se situe pas dans ma base de données.
+Essayez de poser une question sur Python ou tapez 'help' pour l'aide.
+
+📝 Vous: cherche fonction
+
+✨ Bot: 🔍 Questions contenant 'fonction' :
+
+📚 Fonctions:
+  • qu'est-ce qu'une fonction
+  • comment faire une fonction
+  ...
+
+📝 Vous: comment faire une fonction
+```
+
+Pour explorer le catalogue, tape `liste`. Pour retrouver un thème précis,
+essaie `cherche` suivi d'un mot-clé, par exemple `cherche liste`.
+
+### **Exemple 5 : Commande ou sujet inconnu**
+
+Les commandes qui attendent un nom de catégorie ou de concept affichent des
+exemples quand le nom n'est pas reconnu :
+
+```
+📝 Vous: liste truc
+
+✨ Bot: ❌ Catégorie 'truc' introuvable.
+Catégories disponibles : Bases, Fonctions, Conditions et Boucles, ...
+
+📝 Vous: aide boucle
+```
+
+Choisis un nom dans la liste des catégories, ou utilise l'un des sujets proposés
+par `aide` : `variable`, `fonction`, `boucle`, `condition`, `liste`,
+`dictionnaire`, `exception` et `classe`.
+
 ---
 
 ## 4️⃣ TOUTES LES COMMANDES
 
+Pour connaître la version installée, tape `version` :
+
+```
+📝 Vous: version
+✨ Bot: ChatPy version 1.6
+```
+
 | Commande | Résultat |
 |----------|----------|
+| `version` | Afficher la version de ChatPy |
 | `liste` | Voir toutes les questions par catégorie |
 | `liste <catégorie>` | Questions d'une seule catégorie (ex : `liste fonctions`) |
 | `cherche <mot>` | Toutes les questions contenant un mot-clé (ex : `cherche boucle`) |
