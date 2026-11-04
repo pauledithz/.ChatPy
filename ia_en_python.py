@@ -9,6 +9,7 @@ import unicodedata
 from difflib import get_close_matches, SequenceMatcher
 
 _DIR              = os.path.dirname(os.path.abspath(__file__))
+VERSION           = "1.6"
 HISTORY_FILE      = os.path.join(_DIR, ".chatpy_history.json")
 FAQ_FILE          = os.path.join(_DIR, "faq.json")
 AIDE_CONCEPTS_FILE = os.path.join(_DIR, "aide_concepts.json")
@@ -185,13 +186,24 @@ def _score_correspondance(message_norm, question_norm):
 def _charger_json(chemin, nom):
     try:
         with open(chemin, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            donnees = json.load(f)
     except FileNotFoundError:
-        print(f"⚠️  Fichier '{nom}' introuvable — relancez depuis le dossier du projet.")
+        print(f"⚠️  Le fichier '{nom}' est introuvable dans le dossier du projet. "
+              "Vérifiez qu'il est présent avant de relancer ChatPy.")
+        return {}
+    except PermissionError:
+        print(f"⚠️  Impossible de lire '{nom}' : accès refusé. "
+              "Vérifiez les permissions du fichier.")
         return {}
     except json.JSONDecodeError as e:
-        print(f"⚠️  Erreur de format dans '{nom}' : {e}")
+        print(f"⚠️  Le fichier '{nom}' contient un JSON invalide (ligne {e.lineno}, "
+              f"colonne {e.colno}). Vérifiez sa syntaxe : {e.msg}.")
         return {}
+    if not isinstance(donnees, dict):
+        print(f"⚠️  Le contenu de '{nom}' n'a pas le format attendu : "
+              "un objet JSON (avec des accolades) est nécessaire. Vérifiez le fichier.")
+        return {}
+    return donnees
 
 
 # Chargement de la FAQ et des concepts depuis les fichiers JSON
@@ -393,8 +405,12 @@ def chatbot_response(message, seuil=None, trace=None):
                     f"Exemple : aide variable  |  aide boucle  |  aide classe")
 
     # Commandes spéciales
+    if message == "version":
+        return f"ChatPy version {VERSION}"
+
     if message in ["help", "aide", "?"]:
         return ("Commandes disponibles :\n"
+                "  version            — afficher la version de ChatPy\n"
                 "  liste              — toutes les questions par catégorie\n"
                 "  liste <catégorie>  — questions d'une seule catégorie (ex: liste fonctions)\n"
                 "  cherche <mot>      — questions contenant un mot-clé (ex: cherche liste)\n"
@@ -500,12 +516,12 @@ def chatbot_response(message, seuil=None, trace=None):
     # Questions de début de conversation
     if _contient_mot(message, ["bonjour", "salut", "hello", "hi"]):
         return "👋 Bonjour ! Posez-moi une question sur Python ou tapez 'help' pour l'aide."
-    elif _contient_mot(message, ["ça va bien", "tu vas bien", "comment vas-tu"]):
+    elif _contient_mot(message, ["ça va bien", "tu vas bien", "comment vas-tu", "comment ça va", "ça va ?"]):
         return "🤖 Je suis une Intelligence Artificielle, donc je vais toujours bien ! Comment puis-je vous aider avec Python aujourd'hui ?"
-    elif _contient_mot(message, ["que fais-tu", "que fais-tu de ton temps", "que fais-tu en ce moment"]):
-        return "Je suis entrain de te répondre à tes questions sur la programmation informatique en python"
-    elif _contient_mot(message, ["ton nom", "appelles", "qui es-tu"]):
-        return "📖 Je suis un chatbot Python qui peut répondre à des questions sur le code."
+    elif _contient_mot(message, ["que fais-tu", "que fais-tu de ton temps", "que fais-tu en ce moment", "tu fais quoi", "qu'est-ce que tu fais"]):
+        return "💭 Je répond à tes questions sur la programmation informatique en python"
+    elif _contient_mot(message, ["ton nom", "appelles", "qui es-tu", "comment tu t'appelles", "comment t'appelles-tu"]):
+        return "📖 Je m'appelle CHatPy, je suis un chatbot Python qui peut répondre à des questions sur le code."
     elif _contient_mot(message, ["merci", "merci beaucoup"]):
         return "😊 De rien ! N'hésitez pas si vous avez d'autres questions sur Python."
     elif _contient_mot(message, MOTS_AU_REVOIR):
@@ -844,7 +860,6 @@ bot = ChatBot()
 
 
 def afficher_demarrage():
-    VERSION = "v1.6"
     nb_questions = len(faq)
     nb_categories = len(faq_categories)
     nb_concepts = len(aide_concepts)
@@ -865,7 +880,7 @@ def afficher_demarrage():
     ]
 
     lignes_info = [
-        colorize(f"ChatPy {VERSION}  —  Chatbot FAQ Python", "blue", bold=True),
+        colorize(f"ChatPy v{VERSION}  —  Chatbot FAQ Python", "blue", bold=True),
         "",
         f"📚  {nb_questions} questions · {nb_categories} catégories · {nb_concepts} concepts",
         "🐍  Fonctionne 100% hors-ligne",
