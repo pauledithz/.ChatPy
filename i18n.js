@@ -65,6 +65,7 @@
     'nav.menu_compte': ['Menu du compte de {nom}', 'Account menu for {nom}', 'Menú de la cuenta de {nom}', 'Kontomenü von {nom}', 'Menu dell’account di {nom}', 'Menu da conta de {nom}'],
     'nav.ouvrir_chat': ['Ouvrir le chat', 'Open the chat', 'Abrir el chat', 'Chat öffnen', 'Apri la chat', 'Abrir o chat'],
     'nav.mon_compte': ['Mon compte', 'My account', 'Mi cuenta', 'Mein Konto', 'Il mio account', 'Minha conta'],
+    'nav.signaler': ['Signaler un problème', 'Report a problem', 'Informar de un problema', 'Problem melden', 'Segnala un problema', 'Relatar um problema'],
     'nav.deconnexion': ['Se déconnecter', 'Sign out', 'Cerrar sesión', 'Abmelden', 'Esci', 'Sair'],
     'nav.compte': ['Compte', 'Account', 'Cuenta', 'Konto', 'Account', 'Conta'],
 
@@ -517,6 +518,19 @@
     'compte.theme_auto': ['Auto', 'Auto', 'Auto', 'Auto', 'Auto', 'Auto'],
     'compte.theme_clair': ['Clair', 'Light', 'Claro', 'Hell', 'Chiaro', 'Claro'],
     'compte.theme_sombre': ['Sombre', 'Dark', 'Oscuro', 'Dunkel', 'Scuro', 'Escuro'],
+    'compte.couleur': ['Couleur d’accent', 'Accent color', 'Color de acento', 'Akzentfarbe', 'Colore di accento', 'Cor de destaque'],
+    'compte.couleur_aide': [
+      'Choisissez une palette pour les accents du site. Le réglage clair/sombre reste indépendant.',
+      'Choose an accent palette for the site. The light/dark setting stays independent.',
+      'Elige una paleta de acento para el sitio. El ajuste claro/oscuro sigue siendo independiente.',
+      'Wählen Sie eine Akzentpalette. Die Hell-/Dunkel-Einstellung bleibt unabhängig.',
+      'Scegli una palette di accento. L’impostazione chiaro/scuro resta indipendente.',
+      'Escolha uma paleta de destaque. A configuração clara/escura continua independente.'
+    ],
+    'compte.couleur_neutre': ['Neutre', 'Neutral', 'Neutro', 'Neutral', 'Neutro', 'Neutro'],
+    'compte.couleur_ocean': ['Océan', 'Ocean', 'Océano', 'Ozean', 'Oceano', 'Oceano'],
+    'compte.couleur_foret': ['Forêt', 'Forest', 'Bosque', 'Wald', 'Foresta', 'Floresta'],
+    'compte.couleur_violet': ['Violet', 'Purple', 'Violeta', 'Violett', 'Viola', 'Roxo'],
 
     'compte.animations': ['Animations', 'Animations', 'Animaciones', 'Animationen', 'Animazioni', 'Animações'],
     'compte.animations_aide': [

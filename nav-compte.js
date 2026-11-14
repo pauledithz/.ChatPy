@@ -66,6 +66,7 @@
     chat: '<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"/>',
     profil: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
     sortie: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
+    signalement: '<path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18.1A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
     lune: '<path class="icone-lune" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
     soleil: '<g class="icone-soleil"><circle cx="12" cy="12" r="4.2"/><path d="M12 1.5v2M12 20.5v2M4.5 4.5l1.4 1.4M18.1 18.1l1.4 1.4M1.5 12h2M20.5 12h2M4.5 19.5l1.4-1.4M18.1 5.9l1.4-1.4"/></g>',
     chevron: '<path d="m3 6 5 5 5-5"/>'
@@ -229,6 +230,7 @@
 
     menu.appendChild(itemMenu('nav.ouvrir_chat', ICONES.chat, { href: '/chat' }));
     menu.appendChild(itemMenu('nav.mon_compte', ICONES.profil, { href: '/compte' }));
+    menu.appendChild(itemMenu('nav.signaler', ICONES.signalement, { href: '/signaler' }));
 
     var separateur = document.createElement('div');
     separateur.className = 'compte-menu-separateur';

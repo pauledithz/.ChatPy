@@ -1,4 +1,5 @@
 import os
+import re
 import secrets
 import sqlite3
 from datetime import timedelta
@@ -14,6 +15,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 import base_donnees as bdd
 import comptes
 import conversations as conv
+import signalements
 from ia_en_python import bot, demarrer_quiz, repondre_quiz, signaler_reponse_inutile
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
@@ -32,6 +34,8 @@ FICHIERS_PUBLICS = frozenset({
     "script.js",
     "chat.js",
     "compte.js",
+    "signaler.js",
+    "conditions.html",
     # Chargé en tête de chaque page, avant la peinture, pour poser le thème.
     "preferences.js",
     # Idem, juste après lui : la langue de l'interface. Absent d'ici, il
@@ -443,6 +447,49 @@ def compte_page():
     carte concernée selon ce que répond /api/moi.
     """
     return send_from_directory(_DIR, "compte.html")
+
+
+@app.route("/conditions")
+def conditions_page():
+    """Conditions d’utilisation publiques du site."""
+    return send_from_directory(_DIR, "conditions.html")
+
+
+@app.route("/signaler")
+def signaler_page():
+    """Formulaire public de signalement d’un problème."""
+    return send_from_directory(_DIR, "signaler.html")
+
+
+@app.route("/api/signalements", methods=["POST"])
+def api_signaler():
+    """Valide et enregistre un signalement dans le journal JSON."""
+    donnees = request.get_json(silent=True)
+    if not isinstance(donnees, dict):
+        return jsonify({"error": "Corps de requête JSON invalide."}), 400
+    categorie = donnees.get("categorie")
+    resume = donnees.get("resume")
+    description = donnees.get("description")
+    email = donnees.get("email")
+    categories = {"bug", "affichage", "compte", "reponse", "autre"}
+    if not isinstance(categorie, str) or categorie not in categories:
+        return jsonify({"error": "Choisissez un type de problème valide."}), 400
+    if not isinstance(resume, str) or not resume.strip() or len(resume.strip()) > 120:
+        return jsonify({"error": "Le résumé doit contenir entre 1 et 120 caractères."}), 400
+    if not isinstance(description, str) or not description.strip() or len(description.strip()) > 5000:
+        return jsonify({"error": "La description doit contenir entre 1 et 5 000 caractères."}), 400
+    if not isinstance(email, str) or len(email.strip()) > 254 or not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email.strip()):
+        return jsonify({"error": "Indiquez une adresse e-mail valide pour que nous puissions vous répondre."}), 400
+    utilisateur = session.get("utilisateur") or {}
+    signalements.enregistrer({
+        "categorie": categorie,
+        "resume": resume.strip(),
+        "description": description.strip(),
+        "email_contact": email.strip(),
+        "page": donnees.get("page", "")[:200] if isinstance(donnees.get("page", ""), str) else "",
+        "utilisateur": {"nom": utilisateur.get("nom", ""), "email": utilisateur.get("email", "")} if utilisateur else None,
+    })
+    return jsonify({"ok": True}), 201
 
 
 @app.route("/<path:nom>")
