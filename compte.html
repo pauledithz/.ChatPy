@@ -74,6 +74,20 @@
 
       <div class="reglage">
         <div>
+          <div class="reglage-nom" data-i18n="compte.couleur">Couleur d’accent</div>
+          <p class="reglage-aide" data-i18n="compte.couleur_aide">Choisissez une palette pour les accents du site. Le réglage clair/sombre reste indépendant.</p>
+        </div>
+        <div class="segments" role="radiogroup" aria-label="Couleur d’accent" data-pref="couleur" data-i18n-attr="aria-label:compte.couleur">
+          <span class="segments-curseur sans-transition" aria-hidden="true"></span>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="neutre" data-i18n="compte.couleur_neutre">Neutre</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="ocean" data-i18n="compte.couleur_ocean">Océan</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="foret" data-i18n="compte.couleur_foret">Forêt</button>
+          <button type="button" class="segment" role="radio" aria-checked="false" data-valeur="violet" data-i18n="compte.couleur_violet">Violet</button>
+        </div>
+      </div>
+
+      <div class="reglage">
+        <div>
           <div class="reglage-nom" data-i18n="compte.theme">Thème</div>
           <p class="reglage-aide" data-i18n="compte.theme_aide">
             « Auto » suit le réglage clair/sombre de votre système d'exploitation.
@@ -125,6 +139,8 @@
         fonctionnent que vous soyez connecté ou non.
       </p>
     </section>
+
+    <p class="conditions-lien"><a href="/conditions">Lire les conditions d’utilisation</a> · <a href="/signaler">Signaler un problème</a></p>
 
     <section class="carte">
       <div class="carte-titre" data-i18n="compte.chatbot">Chatbot</div>

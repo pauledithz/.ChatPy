@@ -98,6 +98,11 @@
   --bulle-contour: transparent;
 }
 
+/* Palettes d’accent indépendantes du mode clair/sombre. */
+:root[data-couleur="ocean"] { --accent: #2563eb; --accent-texte: #fff; --accent-survol: #1d4ed8; --msg-user-fond: #1e3a5f; --msg-user-texte: #e8f2ff; --focus: rgba(37, 99, 235, .2); --lueur: rgba(37, 99, 235, .1); }
+:root[data-couleur="foret"] { --accent: #16834a; --accent-texte: #fff; --accent-survol: #116b3b; --msg-user-fond: #173a29; --msg-user-texte: #e5f6ec; --focus: rgba(22, 131, 74, .2); --lueur: rgba(22, 131, 74, .1); }
+:root[data-couleur="violet"] { --accent: #7c3aed; --accent-texte: #fff; --accent-survol: #6d28d9; --msg-user-fond: #34204f; --msg-user-texte: #f2eaff; --focus: rgba(124, 58, 237, .2); --lueur: rgba(124, 58, 237, .1); }
+
 /* Thème clair — appliqué si le système le demande, sauf choix « sombre ». */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="sombre"]) {
@@ -1146,6 +1151,25 @@ body {
 }
 .footer-logo { font-size: 15px; font-weight: 500; color: var(--texte-6); }
 .footer p { font-size: 12px; color: var(--texte-7); }
+.footer-link, .conditions-lien a { color: var(--texte-4); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.footer-link:hover, .conditions-lien a:hover { color: var(--texte-1); }
+.conditions-lien { text-align: center; margin: 1.25rem 0; }
+.conditions-page { width: min(100% - 2rem, 760px); margin: 3rem auto 5rem; }
+.conditions-page h1 { color: var(--texte-0); font: 400 clamp(2rem, 5vw, 3rem)/1.15 var(--font-serif); margin-bottom: .75rem; }
+.conditions-page .conditions-date { color: var(--texte-5); font-size: 13px; margin-bottom: 2rem; }
+.conditions-page section { padding: 1.25rem 0; border-top: 1px solid var(--bord-faible); }
+.conditions-page h2 { color: var(--texte-1); font-size: 1.05rem; font-weight: 500; margin-bottom: .5rem; }
+.conditions-page p, .conditions-page li { color: var(--texte-3); font-size: 14px; line-height: 1.75; }
+.conditions-page ul { padding-left: 1.25rem; }
+.signalement-form { display: grid; gap: .65rem; }
+.signalement-form label { color: var(--texte-2); font-size: 13px; margin-top: .65rem; }
+.signalement-form input, .signalement-form select, .signalement-form textarea { width: 100%; border: 1px solid var(--bord); border-radius: 10px; padding: 11px 12px; background: var(--fond-champ); color: var(--texte-1); font: inherit; font-size: 14px; }
+.signalement-form textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
+.signalement-form input:focus-visible, .signalement-form select:focus-visible, .signalement-form textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.signalement-aide, .signalement-etat { color: var(--texte-5); font-size: 12px; }
+.signalement-envoyer { margin-top: .5rem; justify-self: start; }
+.signalement-etat:empty { display: none; }
+.signalement-etat[data-erreur="true"] { color: var(--danger); }
 
 /* ============================================================
    Formulaire compte (base Uiverse.io by mahiatlinux, thème ChatPy)
@@ -2115,4 +2139,12 @@ a.btn {
     scroll-behavior: auto !important;
   }
   .reveal, .hero > * { opacity: 1; transform: none; }
+}
+
+/* En mode clair, ses variables de base sont plus spécifiques : les palettes
+   reprennent donc la priorité ici tout en gardant leurs mêmes accents. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="sombre"])[data-couleur="ocean"] { --accent: #2563eb; --accent-texte: #fff; --accent-survol: #1d4ed8; --msg-user-fond: #dbeafe; --msg-user-texte: #172554; --focus: rgba(37, 99, 235, .2); --lueur: rgba(37, 99, 235, .1); }
+  :root:not([data-theme="sombre"])[data-couleur="foret"] { --accent: #16834a; --accent-texte: #fff; --accent-survol: #116b3b; --msg-user-fond: #dcfce7; --msg-user-texte: #14532d; --focus: rgba(22, 131, 74, .2); --lueur: rgba(22, 131, 74, .1); }
+  :root:not([data-theme="sombre"])[data-couleur="violet"] { --accent: #7c3aed; --accent-texte: #fff; --accent-survol: #6d28d9; --msg-user-fond: #ede9fe; --msg-user-texte: #3b0764; --focus: rgba(124, 58, 237, .2); --lueur: rgba(124, 58, 237, .1); }
 }

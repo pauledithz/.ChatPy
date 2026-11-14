@@ -33,6 +33,7 @@
     // saurait de toute façon pas faire.
     langue: { valeurs: ['auto', 'fr', 'en', 'es', 'de', 'it', 'pt'], defaut: 'auto', attribut: null },
     theme: { valeurs: ['auto', 'clair', 'sombre'], defaut: 'auto', attribut: 'data-theme' },
+    couleur: { valeurs: ['neutre', 'ocean', 'foret', 'violet'], defaut: 'neutre', attribut: 'data-couleur' },
     animations: { valeurs: ['auto', 'reduites'], defaut: 'auto', attribut: 'data-animations' },
     taille: { valeurs: ['petite', 'normale', 'grande'], defaut: 'normale', attribut: 'data-taille' },
     suggestions: { valeurs: ['visibles', 'masquees'], defaut: 'visibles', attribut: 'data-suggestions' },

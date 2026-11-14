@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Signaler un problème rencontré sur ChatPy.">
+  <title>ChatPy — Signaler un problème</title>
+  <link rel="icon" type="image/png" href="ChatPY_logo.PNG">
+  <script src="preferences.js"></script>
+  <script src="i18n.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page-shell">
+  <nav class="nav">
+    <a class="nav-logo" href="/"><img class="nav-logo-img" src="ChatPY_logo.PNG" alt="" width="54" height="54"> ChatPy</a>
+    <div class="nav-links"><a href="/">Accueil</a><a href="/chat">Chat</a></div>
+    <div class="nav-compte" id="navCompte"><a class="nav-cta" href="/compte">Paramètres</a></div>
+  </nav>
+  <main class="conditions-page signalement-page">
+    <h1>Signaler un problème</h1>
+    <p class="conditions-date">Décrivez le problème rencontré. Votre signalement sera enregistré pour aider à améliorer ChatPy.</p>
+    <form id="formSignalement" class="signalement-form">
+      <label for="categorieSignalement">Type de problème</label>
+      <select id="categorieSignalement" name="categorie" required>
+        <option value="bug">Bug ou erreur</option>
+        <option value="affichage">Affichage ou navigation</option>
+        <option value="compte">Compte ou connexion</option>
+        <option value="reponse">Réponse du chatbot</option>
+        <option value="autre">Autre</option>
+      </select>
+      <label for="resumeSignalement">Résumé</label>
+      <input id="resumeSignalement" name="resume" type="text" maxlength="120" required placeholder="Ex. Le bouton d’envoi ne répond pas">
+      <label for="emailSignalement">Adresse e-mail pour vous répondre</label>
+      <input id="emailSignalement" name="email" type="email" maxlength="254" autocomplete="email" required placeholder="vous@exemple.fr">
+      <label for="descriptionSignalement">Description</label>
+      <textarea id="descriptionSignalement" name="description" rows="7" maxlength="5000" required placeholder="Que s’est-il passé ? Quelles étapes permettent de reproduire le problème ?"></textarea>
+      <p class="signalement-aide">Votre adresse sera enregistrée avec le signalement pour permettre une réponse. N’incluez pas de mot de passe ni d’information personnelle sensible.</p>
+      <button class="btn signalement-envoyer" type="submit">Envoyer le signalement</button>
+      <p id="etatSignalement" class="signalement-etat" role="status" aria-live="polite"></p>
+    </form>
+  </main>
+  <footer class="footer">
+    <div class="footer-logo">ChatPy</div>
+    <p>© 2026 ChatPy — Tous droits réservés</p>
+    <a class="footer-link" href="/conditions">Conditions d’utilisation</a>
+  </footer>
+</div>
+<script src="nav-compte.js"></script>
+<script src="signaler.js"></script>
+</body>
+</html>
